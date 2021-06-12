@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 import "./interfaces.sol";
-import { AaveHelpers } from "./helpers.sol";
+import "./helpers.sol";
 
 contract Resolver is AaveHelpers {
     function getPosition(address user, address[] memory tokens)
