@@ -10,6 +10,8 @@ import {
   InstaCompoundResolver__factory,
   InstaERC20Resolver,
   InstaERC20Resolver__factory,
+  InstaMakerResolver,
+  InstaMakerResolver__factory,
 } from "../typechain";
 import { Tokens } from "./consts";
 
@@ -176,6 +178,21 @@ describe("Resolvers", () => {
       for (let i = 0; i < expectedAmts.length; i++) {
         expect(res[i]).eq(expectedAmts[i]);
       }
+    });
+  });
+
+  describe("Maker Resolver", () => {
+    let resolver: InstaMakerResolver;
+
+    before(async () => {
+      const deployer = new InstaMakerResolver__factory(signer);
+      resolver = await deployer.deploy();
+    });
+
+    it("returns the dai position properly", async () => {
+      const res = await resolver.getDaiPosition(account);
+      expect(res.amt).eq(ethers.BigNumber.from("200005872985130003460"));
+      expect(res.dsr).eq(ethers.BigNumber.from("1000000000003170820659990704"));
     });
   });
 });
