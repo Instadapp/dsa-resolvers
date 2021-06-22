@@ -1,5 +1,5 @@
 import inquirer from "inquirer";
-import fs from "fs/promises";
+import { promises as fs } from "fs";
 import { join } from "path/posix";
 import { spawn } from "child_process";
 
