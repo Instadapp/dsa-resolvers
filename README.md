@@ -7,7 +7,7 @@
 Before running any command, make sure to install dependencies:
 
 ```sh
-$ yarn install
+$ npm install
 ```
 
 ### Compile
@@ -15,7 +15,7 @@ $ yarn install
 Compile the smart contracts with Hardhat:
 
 ```sh
-$ yarn compile
+$ npm run compile
 ```
 
 ### TypeChain
@@ -23,7 +23,7 @@ $ yarn compile
 Compile the smart contracts and generate TypeChain artifacts:
 
 ```sh
-$ yarn typechain
+$ npm run typechain
 ```
 
 ### Lint Solidity
@@ -31,7 +31,7 @@ $ yarn typechain
 Lint the Solidity code:
 
 ```sh
-$ yarn lint:sol
+$ npm run lint:sol
 ```
 
 ### Lint TypeScript
@@ -39,15 +39,21 @@ $ yarn lint:sol
 Lint the TypeScript code:
 
 ```sh
-$ yarn lint:ts
+$ npm run lint:ts
 ```
 
 ### Test
 
-Run the Mocha tests:
+Run tests using interactive CLI
 
 ```sh
-$ yarn test
+$ npm run test:runner
+```
+
+Run all the tests:
+
+```sh
+$ npm run test
 ```
 
 ### Coverage
@@ -55,7 +61,7 @@ $ yarn test
 Generate the code coverage report:
 
 ```sh
-$ yarn coverage
+$ npm run coverage
 ```
 
 ### Report Gas
@@ -63,7 +69,7 @@ $ yarn coverage
 See the gas usage per unit test and average gas per method call:
 
 ```sh
-$ REPORT_GAS=true yarn test
+$ REPORT_GAS=true npm run test
 ```
 
 ### Clean
@@ -79,13 +85,13 @@ $ yarn clean
 Deploy the contracts to Hardhat Network:
 
 ```sh
-$ yarn deploy
+$ npm run deploy
 ```
 
 Deploy the contracts to a specific network, such as the Ropsten testnet:
 
 ```sh
-$ yarn deploy:network ropsten
+$ npm run deploy:network ropsten
 ```
 
 ## Syntax Highlighting
