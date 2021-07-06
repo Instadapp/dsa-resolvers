@@ -11,6 +11,10 @@ contract Helpers is DSMath {
         return 0xF23196DF1C440345DE07feFbe556a5eF0dcD29F0;
     }
 
+    function getManager() public pure returns (BManagerLike) {
+        return BManagerLike(0x3f30c2381CD8B917Dd96EB2f1A4F96D91324BBed);
+    }
+
     struct VaultData {
         uint256 id;
         address owner;
@@ -106,5 +110,9 @@ contract Helpers is DSMath {
         uint256 totalDebtCelling = VatLike(vat).Line();
         uint256 totalDebt = VatLike(vat).debt();
         return (vaultDebtCelling, vaultTotalDebt, vaultDebtFloor, totalDebtCelling, totalDebt);
+    }
+
+    function getAddtionalDebt(uint256 id) internal view returns(uint256) {
+        return getManager().cushion(id);
     }
 }

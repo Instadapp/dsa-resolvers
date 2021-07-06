@@ -5,7 +5,7 @@ import "./helpers.sol";
 
 contract VaultResolver is Helpers {
     function getVaults(address owner) external view returns (VaultData[] memory) {
-        address manager = InstaMcdAddress(getMcdAddresses()).manager();
+        address manager = address(getManager());
         address cdpManger = InstaMcdAddress(getMcdAddresses()).getCdps();
 
         (uint256[] memory ids, address[] memory urns, bytes32[] memory ilks) =
@@ -14,6 +14,7 @@ contract VaultResolver is Helpers {
 
         for (uint256 i = 0; i < ids.length; i++) {
             (uint256 ink, uint256 art) = VatLike(ManagerLike(manager).vat()).urns(ilks[i], urns[i]);
+            art = add(art, getAddtionalDebt(ids[i]));
             (, uint256 rate, uint256 priceMargin, , ) = VatLike(ManagerLike(manager).vat()).ilks(ilks[i]);
             uint256 mat = getColRatio(ilks[i]);
 
@@ -35,11 +36,12 @@ contract VaultResolver is Helpers {
     }
 
     function getVaultById(uint256 id) external view returns (VaultData memory) {
-        address manager = InstaMcdAddress(getMcdAddresses()).manager();
+        address manager = address(getManager());
         address urn = ManagerLike(manager).urns(id);
         bytes32 ilk = ManagerLike(manager).ilks(id);
 
         (uint256 ink, uint256 art) = VatLike(ManagerLike(manager).vat()).urns(ilk, urn);
+        art = add(art, getAddtionalDebt(id));
         (, uint256 rate, uint256 priceMargin, , ) = VatLike(ManagerLike(manager).vat()).ilks(ilk);
 
         uint256 mat = getColRatio(ilk);
@@ -105,6 +107,6 @@ contract DSRResolver is VaultResolver {
     }
 }
 
-contract InstaMakerResolver is DSRResolver {
-    string public constant name = "Maker-Resolver-v1.4";
+contract InstaBMakerResolver is DSRResolver {
+    string public constant name = "B.Maker-Resolver-v1.0";
 }

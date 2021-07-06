@@ -11,6 +11,10 @@ interface ManagerLike {
     function vat() external view returns (address);
 }
 
+interface BManagerLike is ManagerLike {
+    function cushion(uint256) external view returns (uint256);
+}
+
 interface CdpsLike {
     function getCdpsAsc(address, address)
         external
