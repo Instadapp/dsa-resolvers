@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 import { InstaBCompoundResolver, InstaBCompoundResolver__factory } from "../../../typechain";
 import { Tokens } from "../../consts";
 
-describe("Compound Resolvers", () => {
+describe("B.Compound Resolvers", () => {
   let signer: SignerWithAddress;
   const account = "0xf7D44D5a28d5AF27a7F9c8fc6eFe0129e554d7c4";
 
@@ -13,7 +13,7 @@ describe("Compound Resolvers", () => {
     [signer] = await ethers.getSigners();
   });
 
-  describe("Compound Resolver", () => {
+  describe("B.Compound Resolver", () => {
     let resolver: InstaBCompoundResolver;
     before(async () => {
       const deployer = new InstaBCompoundResolver__factory(signer);
