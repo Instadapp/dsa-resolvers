@@ -17,4 +17,9 @@ export const Tokens: TokensObject = {
     decimals: 6,
     caddr: "0x39aa39c021dfbae8fac545936693ac917d5e7563",
   },
+  WBTC: {
+    addr: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    decimals: 8,
+    caddr: "0xccf4429db6322d5c611ee964527d42e5d685dd6a",
+  },  
 };
