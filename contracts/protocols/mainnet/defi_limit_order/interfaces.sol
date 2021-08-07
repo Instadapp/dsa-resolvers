@@ -122,3 +122,33 @@ interface AaveProtocolDataProvider {
             address variableDebtTokenAddress
         );
 }
+
+interface AaveAddressProvider {
+    function getLendingPool() external view returns (address);
+
+    function getPriceOracle() external view returns (address);
+}
+
+interface AaveLendingPool {
+    function getUserAccountData(address user)
+        external
+        view
+        returns (
+            uint256 totalCollateralETH,
+            uint256 totalDebtETH,
+            uint256 availableBorrowsETH,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        );
+}
+
+interface AavePriceOracle {
+    function getAssetPrice(address _asset) external view returns (uint256);
+
+    function getAssetsPrices(address[] calldata _assets) external view returns (uint256[] memory);
+
+    function getSourceOfAsset(address _asset) external view returns (uint256);
+
+    function getFallbackOracle() external view returns (uint256);
+}
