@@ -52,24 +52,29 @@ contract Helpers is DSMath {
         uint256 _toAmount
     ) private view returns (bool, uint256) {
         (uint256 _supplyBal, , , , , , , , ) = aaveData.getUserReserveData(_tokenTo, _dsa);
-        address _lendingPool = aaveAddressProvider.getLendingPool();
-        AavePriceOracle _oracleContract = AavePriceOracle(aaveAddressProvider.getPriceOracle());
-        (uint256 _totalColInEth, , , uint256 _ll, , uint256 _hF) = AaveLendingPool(_lendingPool).getUserAccountData(
-            _dsa
-        );
-        uint256 _tokenFromPrice = _oracleContract.getAssetPrice(_tokenFrom);
-        uint256 _tokenToPrice = _oracleContract.getAssetPrice(_tokenTo);
-        (, , uint256 _llFrom, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenFrom);
-        (, , uint256 _llTo, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenTo);
-        uint256 _inEthFrom = mul(_fromAmount, _tokenFromPrice);
-        uint256 _inEthTo = mul(_toAmount, _tokenToPrice);
-        uint256 _newTotalColInEth = sub(add(_totalColInEth, _inEthFrom), _inEthTo);
-        uint256 _newll = div(
-            sub(add(mul(_totalColInEth, _ll), mul(_inEthFrom, _llFrom)), mul(_inEthTo, _llTo)),
-            _newTotalColInEth
-        );
-        bool _isOk = div(mul(_hF, _newll), _ll) > 1 ? true : false;
-        _isOk = _isOk && _toAmount < _supplyBal ? true : false;
+
+        bool _isOk = _toAmount < _supplyBal ? true : false;
+
+        if (_isOk) {
+            address _lendingPool = aaveAddressProvider.getLendingPool();
+            AavePriceOracle _oracleContract = AavePriceOracle(aaveAddressProvider.getPriceOracle());
+            (uint256 _totalColInEth, , , uint256 _ll, , uint256 _hF) = AaveLendingPool(_lendingPool).getUserAccountData(
+                _dsa
+            );
+            uint256 _tokenFromPrice = _oracleContract.getAssetPrice(_tokenFrom);
+            uint256 _tokenToPrice = _oracleContract.getAssetPrice(_tokenTo);
+            (, , uint256 _llFrom, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenFrom);
+            (, , uint256 _llTo, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenTo);
+            uint256 _inEthFrom = mul(_fromAmount, _tokenFromPrice);
+            uint256 _inEthTo = mul(_toAmount, _tokenToPrice);
+            uint256 _newTotalColInEth = sub(add(_totalColInEth, _inEthFrom), _inEthTo);
+            uint256 _newll = div(
+                sub(add(mul(_totalColInEth, _ll), mul(_inEthFrom, _llFrom)), mul(_inEthTo, _llTo)),
+                _newTotalColInEth
+            );
+            _isOk = div(mul(_hF, _newll), _ll) > 1 ? true : false;
+        }
+
         return (_toAmount < _supplyBal, _supplyBal);
     }
 
@@ -80,9 +85,15 @@ contract Helpers is DSMath {
         uint256 _fromAmount
     ) private view returns (bool, uint256) {
         (, , uint256 _borrowBal, , , , , , ) = aaveData.getUserReserveData(_tokenFrom, _dsa);
-        address _lendingPool = aaveAddressProvider.getLendingPool();
-        (, , uint256 _availableBorrow, , , ) = AaveLendingPool(_lendingPool).getUserAccountData(_dsa);
-        bool _isOk = _availableBorrow > 0 && _fromAmount < _borrowBal ? true : false;
+
+        bool _isOk = _fromAmount < _borrowBal ? true : false;
+
+        if (_isOk) {
+            address _lendingPool = aaveAddressProvider.getLendingPool();
+            (, , uint256 _availableBorrow, , , ) = AaveLendingPool(_lendingPool).getUserAccountData(_dsa);
+            _isOk = _availableBorrow > 0 ? true : false;
+        }
+
         return (_isOk, _borrowBal);
     }
 
