@@ -42,6 +42,18 @@ contract Helpers is DSMath {
         return (_fromAmount < _borrowBal, _borrowBal);
     }
 
+    struct CheckWithdrawAave {
+        uint256 totalColInEth;
+        uint256 ll;
+        uint256 hf;
+        uint256 llFrom;
+        uint256 llTo;
+        uint256 inEthFrom;
+        uint256 inEthTo;
+        uint256 newTotalColInEth;
+        uint256 newll;
+    }
+
     // route = 3
     // TODO: Check throughly
     function checkUserWithdrawAave(
@@ -56,23 +68,27 @@ contract Helpers is DSMath {
         bool _isOk = _toAmount < _supplyBal ? true : false;
 
         if (_isOk) {
-            address _lendingPool = aaveAddressProvider.getLendingPool();
+            CheckWithdrawAave memory _dataStruct;
             AavePriceOracle _oracleContract = AavePriceOracle(aaveAddressProvider.getPriceOracle());
-            (uint256 _totalColInEth, , , uint256 _ll, , uint256 _hF) = AaveLendingPool(_lendingPool).getUserAccountData(
-                _dsa
+            (_dataStruct.totalColInEth, , , _dataStruct.ll, , _dataStruct.hf) = AaveLendingPool(
+                aaveAddressProvider.getLendingPool()
+            ).getUserAccountData(_dsa);
+            (, , _dataStruct.llFrom, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenFrom);
+            (, , _dataStruct.llTo, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenTo);
+            _dataStruct.inEthFrom = mul(_fromAmount, _oracleContract.getAssetPrice(_tokenFrom));
+            _dataStruct.inEthTo = mul(_toAmount, _oracleContract.getAssetPrice(_tokenTo));
+            _dataStruct.newTotalColInEth = sub(
+                add(_dataStruct.totalColInEth, _dataStruct.inEthFrom),
+                _dataStruct.inEthTo
             );
-            uint256 _tokenFromPrice = _oracleContract.getAssetPrice(_tokenFrom);
-            uint256 _tokenToPrice = _oracleContract.getAssetPrice(_tokenTo);
-            (, , uint256 _llFrom, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenFrom);
-            (, , uint256 _llTo, , , , , , , ) = aaveData.getReserveConfigurationData(_tokenTo);
-            uint256 _inEthFrom = mul(_fromAmount, _tokenFromPrice);
-            uint256 _inEthTo = mul(_toAmount, _tokenToPrice);
-            uint256 _newTotalColInEth = sub(add(_totalColInEth, _inEthFrom), _inEthTo);
-            uint256 _newll = div(
-                sub(add(mul(_totalColInEth, _ll), mul(_inEthFrom, _llFrom)), mul(_inEthTo, _llTo)),
-                _newTotalColInEth
+            _dataStruct.newll = div(
+                sub(
+                    add(mul(_dataStruct.totalColInEth, _dataStruct.ll), mul(_dataStruct.inEthFrom, _dataStruct.llFrom)),
+                    mul(_dataStruct.inEthTo, _dataStruct.llTo)
+                ),
+                _dataStruct.newTotalColInEth
             );
-            _isOk = div(mul(_hF, _newll), _ll) > 1 ? true : false;
+            _isOk = div(mul(_dataStruct.hf, _dataStruct.newll), _dataStruct.ll) > 1 ? true : false;
         }
 
         return (_toAmount < _supplyBal, _supplyBal);
