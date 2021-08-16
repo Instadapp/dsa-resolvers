@@ -86,5 +86,8 @@
     "test": "hardhat test",
     "test:runner": "hardhat run scripts/run-tests.ts",
     "typechain": "hardhat typechain"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.1-solc-0.7-2"
   }
 }
