@@ -84,8 +84,18 @@ contract Resolver is Helpers {
         uint256 tokenId,
         address tokenA,
         uint256 amountA
-    ) public view returns (address tokenB, uint256 amountB) {
-        (tokenB, amountB) = singleDepositAmount(tokenId, tokenA, amountA);
+    )
+        public
+        view
+        returns (
+            address,
+            uint256,
+            address,
+            uint256
+        )
+    {
+        (address tokenB, uint256 amountB) = singleDepositAmount(tokenId, tokenA, amountA);
+        return (tokenA, amountA, tokenB, amountB);
     }
 
     function getWithdrawAmount(uint256 tokenId, uint128 liquidity)
@@ -106,6 +116,6 @@ contract Resolver is Helpers {
     }
 }
 
-contract UniswapV3Resolver is Resolver {
+contract InstaUniswapV3Resolver is Resolver {
     string public constant name = "UniswapV3-Resolver-v1";
 }

@@ -16,6 +16,8 @@ import "./contracts/libraries/PositionKey.sol";
 import "./contracts/libraries/PoolAddress.sol";
 import "./interfaces.sol";
 
+import "hardhat/console.sol";
+
 abstract contract Helpers is DSMath {
     /**
      * @dev Return ethereum address
@@ -100,6 +102,7 @@ abstract contract Helpers is DSMath {
             uint128 liquidity
         )
     {
+        console.log("TokenId", tokenId);
         (, , token0, token1, fee, tickLower, tickUpper, liquidity, , , , ) = nftManager.positions(tokenId);
     }
 
