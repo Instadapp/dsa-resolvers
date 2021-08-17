@@ -19,7 +19,7 @@ contract Resolver is Helpers {
         }
     }
 
-    function getPositionInfo(uint256 tokenId)
+    function getPositionInfoByTokenId(uint256 tokenId)
         public
         view
         returns (
@@ -38,9 +38,25 @@ contract Resolver is Helpers {
         uint256 tokenId,
         uint256 amountA,
         uint256 amountB
-    ) public view returns (uint256 liquidity) {
+    )
+        public
+        view
+        returns (
+            uint256 liquidity,
+            uint256 amount0,
+            uint256 amount1
+        )
+    {
         if (tokenId == 0) tokenId = getLastNftId(msg.sender);
-        liquidity = depositAmount(tokenId, amountA, amountB);
+        (liquidity, amount0, amount1) = depositAmount(tokenId, amountA, amountB);
+    }
+
+    function getSigleDepositAmount(
+        uint256 tokenId,
+        address tokenA,
+        uint256 amountA
+    ) public view returns (address tokenB, uint256 amountB) {
+        (tokenB, amountB) = singleDepositAmount(tokenId, tokenA, amountA);
     }
 
     function getWithdrawAmount(uint256 tokenId, uint128 liquidity)
@@ -54,6 +70,10 @@ contract Resolver is Helpers {
 
     function getCollectAmount(uint256 tokenId) public view returns (uint256 amountA, uint256 amountB) {
         (amountA, amountB) = collectInfo(tokenId);
+    }
+
+    function getUserNFTs(address user) public view returns (uint256[] memory tokenIds) {
+        tokenIds = userNfts(user);
     }
 }
 
