@@ -71,6 +71,7 @@ abstract contract Helpers is DSMath {
 
     function userNfts(address user) internal view returns (uint256[] memory tokenIds) {
         uint256 len = nftManager.balanceOf(user);
+        tokenIds = new uint256[](len);
         for (uint256 i = 0; i < len; i++) {
             uint256 tokenId = nftManager.tokenOfOwnerByIndex(user, i);
             tokenIds[i] = tokenId;

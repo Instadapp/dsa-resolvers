@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
+pragma abicoder v2;
 import "./interfaces.sol";
 import "./helpers.sol";
 
@@ -32,6 +33,34 @@ contract Resolver is Helpers {
         )
     {
         (token0, token1, fee, tickLower, tickUpper, liquidity) = positions(tokenId);
+    }
+
+    struct PositionInfo {
+        address token0;
+        address token1;
+        uint24 fee;
+        int24 tickLower;
+        int24 tickUpper;
+        uint128 liquidity;
+    }
+
+    function getPositionsInfo(address user)
+        public
+        view
+        returns (uint256[] memory tokenIds, PositionInfo[] memory positionsInfo)
+    {
+        tokenIds = userNfts(user);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            (
+                positionsInfo[i].token0,
+                positionsInfo[i].token1,
+                positionsInfo[i].fee,
+                positionsInfo[i].tickLower,
+                positionsInfo[i].tickUpper,
+                positionsInfo[i].liquidity
+            ) = positions(tokenId);
+        }
     }
 
     function getDepositAmount(
