@@ -20,28 +20,8 @@ contract Resolver is Helpers {
         }
     }
 
-    function getPositionInfoByTokenId(uint256 tokenId)
-        public
-        view
-        returns (
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity
-        )
-    {
-        (token0, token1, fee, tickLower, tickUpper, liquidity) = positions(tokenId);
-    }
-
-    struct PositionInfo {
-        address token0;
-        address token1;
-        uint24 fee;
-        int24 tickLower;
-        int24 tickUpper;
-        uint128 liquidity;
+    function getPositionInfoByTokenId(uint256 tokenId) public view returns (PositionInfo memory pInfo) {
+        (pInfo) = positions(tokenId);
     }
 
     function getPositionsInfo(address user)
@@ -52,14 +32,7 @@ contract Resolver is Helpers {
         tokenIds = userNfts(user);
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];
-            (
-                positionsInfo[i].token0,
-                positionsInfo[i].token1,
-                positionsInfo[i].fee,
-                positionsInfo[i].tickLower,
-                positionsInfo[i].tickUpper,
-                positionsInfo[i].liquidity
-            ) = positions(tokenId);
+            (positionsInfo[i]) = positions(tokenId);
         }
     }
 

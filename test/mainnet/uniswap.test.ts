@@ -31,11 +31,30 @@ describe("Uniswap", () => {
     });
 
     it("Returns position Info from tokenId", async () => {
-      const [token0, token1, fee, tickLower, tickUpper, liquidity] = await uniswap.getPositionInfoByTokenId(
-        BigNumber.from("86707"),
-      );
+      const [
+        token0,
+        token1,
+        pool,
+        fee,
+        tickLower,
+        tickUpper,
+        currentTick,
+        liquidity,
+        tokenOwed0,
+        tokenOwed1,
+        amount0,
+        amount1,
+        collectAmount0,
+        collectAmount1,
+      ] = await uniswap.getPositionInfoByTokenId(BigNumber.from("86707"));
       console.log("Token0 Address: ", token0);
       console.log("Token1 Address: ", token1);
+      console.log("Pool Address: ", pool);
+      console.log("Liquidity: ", liquidity);
+      console.log("Amount0: ", amount0);
+      console.log("Amount1: ", amount1);
+      console.log("Collect Amount0: ", collectAmount0);
+      console.log("Collect Amount1: ", collectAmount1);
     });
 
     it("Returns sortted token address", async () => {

@@ -4,12 +4,7 @@ pragma abicoder v2;
 import { DSMath } from "../../../utils/dsmath.sol";
 import "./contracts/interfaces/IUniswapV3Pool.sol";
 import "./contracts/libraries/TickMath.sol";
-import "./contracts/libraries/TickBitmap.sol";
-import "./contracts/libraries/SwapMath.sol";
 import "./contracts/libraries/FullMath.sol";
-import "./contracts/libraries/SqrtPriceMath.sol";
-import "./contracts/libraries/LiquidityMath.sol";
-import "./contracts/libraries/FixedPoint96.sol";
 import "./contracts/libraries/FixedPoint128.sol";
 import "./contracts/libraries/LiquidityAmounts.sol";
 import "./contracts/libraries/PositionKey.sol";
@@ -90,20 +85,44 @@ abstract contract Helpers is DSMath {
         minAmt = convert18ToDec(token.decimals(), minAmt);
     }
 
-    function positions(uint256 tokenId)
-        internal
-        view
-        returns (
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity
-        )
-    {
-        console.log("TokenId", tokenId);
-        (, , token0, token1, fee, tickLower, tickUpper, liquidity, , , , ) = nftManager.positions(tokenId);
+    struct PositionInfo {
+        address token0;
+        address token1;
+        address pool;
+        uint24 fee;
+        int24 tickLower;
+        int24 tickUpper;
+        int24 currentTick;
+        uint128 liquidity;
+        uint128 tokenOwed0;
+        uint128 tokenOwed1;
+        uint256 amount0;
+        uint256 amount1;
+        uint256 collectAmount0;
+        uint256 collectAmount1;
+    }
+
+    function positions(uint256 tokenId) internal view returns (PositionInfo memory pInfo) {
+        (
+            ,
+            ,
+            pInfo.token0,
+            pInfo.token1,
+            pInfo.fee,
+            pInfo.tickLower,
+            pInfo.tickUpper,
+            pInfo.liquidity,
+            ,
+            ,
+            ,
+
+        ) = nftManager.positions(tokenId);
+        (, , , , , , , , , , pInfo.tokenOwed0, pInfo.tokenOwed1) = nftManager.positions(tokenId);
+        pInfo.pool = getPoolAddress(pInfo.token0, pInfo.token1, pInfo.fee);
+        IUniswapV3Pool pool = IUniswapV3Pool(pInfo.pool);
+        (, pInfo.currentTick, , , , , ) = pool.slot0();
+        (pInfo.amount0, pInfo.amount1) = withdrawAmount(tokenId, pInfo.liquidity);
+        (pInfo.collectAmount0, pInfo.collectAmount1) = collectInfo(tokenId);
     }
 
     function getPoolAddress(
