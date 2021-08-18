@@ -11,8 +11,6 @@ import "./contracts/libraries/PositionKey.sol";
 import "./contracts/libraries/PoolAddress.sol";
 import "./interfaces.sol";
 
-import "hardhat/console.sol";
-
 abstract contract Helpers is DSMath {
     /**
      * @dev Return ethereum address
