@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
-import {
-    LimitOrderInterface,
-    CTokenInterface,
-    AaveProtocolDataProvider,
-    AaveAddressProvider,
-    AaveLendingPool,
-    AavePriceOracle
-} from "./interfaces.sol";
+import { LimitOrderInterface, CTokenInterface, AaveProtocolDataProvider, AaveAddressProvider, AaveLendingPool, AavePriceOracle } from "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
 contract Helpers is DSMath {
-    LimitOrderInterface public constant limitOrderContract = LimitOrderInterface(address(0)); // TODO: Add address
+    constructor(address _limitOrder) {
+        limitOrderContract = LimitOrderInterface(_limitOrder);
+    }
+
+    LimitOrderInterface public immutable limitOrderContract;
     AaveProtocolDataProvider public constant aaveData =
         AaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
     AaveAddressProvider public constant aaveAddressProvider =

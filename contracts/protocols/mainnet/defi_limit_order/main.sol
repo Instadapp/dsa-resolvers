@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
-import "./interfaces.sol";
+import { LimitOrderInterface, CTokenInterface, AaveProtocolDataProvider, AaveAddressProvider, AaveLendingPool, AavePriceOracle } from "./interfaces.sol";
 import "./helpers.sol";
 
-contract Resolver is Helpers {
+import { IERC20 } from "../../../utils/IERC20.sol";
+
+abstract contract Resolver is Helpers {
+    constructor(address _limitOrder) {
+        Helpers(_limitOrder);
+    }
+
     function getCreatePos(
         address _tokenFrom,
         address _tokenTo,
@@ -67,7 +73,7 @@ contract Resolver is Helpers {
         LimitOrderInterface.OrderLink memory _orderLink = limitOrderContract.ordersLinks(_key);
         bytes8 _key2 = _orderLink.first;
         bool _isOk;
-        uint256 _amountFrom18 = convertTo18(TokenInterface(_tokenFrom).decimals(), _amountFrom);
+        uint256 _amountFrom18 = convertTo18(IERC20(_tokenFrom).decimals(), _amountFrom);
         // TODO: check if borrow/payback & deposit/withdraw is possible on Aave (C.F on Aave & L.L on Compound)
         while (!_isOk) {
             _orderId = _key2;
@@ -78,7 +84,7 @@ contract Resolver is Helpers {
                 (_isOk, _amountTo, _key2) = checkOrderForSell(
                     _key,
                     _orderId,
-                    TokenInterface(_tokenTo).decimals(),
+                    IERC20(_tokenTo).decimals(),
                     _amountFrom,
                     _amountFrom18
                 );
@@ -87,6 +93,10 @@ contract Resolver is Helpers {
     }
 }
 
-contract InstaCompoundResolver is Resolver {
+abstract contract InstaCompoundResolver is Resolver {
     string public constant name = "DeFi-Limit-Order-v1";
+
+    constructor(address _limitOrder) {
+        Resolver(_limitOrder);
+    }
 }
