@@ -39,15 +39,6 @@ abstract contract Helpers is DSMath {
         amt = mul(_amt, 10**(18 - _dec));
     }
 
-    function changeEthAddress(address buy, address sell)
-        internal
-        pure
-        returns (TokenInterface _buy, TokenInterface _sell)
-    {
-        _buy = buy == ethAddr ? TokenInterface(wethAddr) : TokenInterface(buy);
-        _sell = sell == ethAddr ? TokenInterface(wethAddr) : TokenInterface(sell);
-    }
-
     /**
      * @dev Return uniswap v3 Swap Router Address
      */
@@ -119,8 +110,13 @@ abstract contract Helpers is DSMath {
         pInfo.pool = getPoolAddress(pInfo.token0, pInfo.token1, pInfo.fee);
         IUniswapV3Pool pool = IUniswapV3Pool(pInfo.pool);
         (, pInfo.currentTick, , , , , ) = pool.slot0();
-        (pInfo.amount0, pInfo.amount1) = withdrawAmount(tokenId, pInfo.liquidity);
+        {
+            (pInfo.amount0, pInfo.amount1, , ) = withdrawAmount(tokenId, pInfo.liquidity, 0);
+        }
         (pInfo.collectAmount0, pInfo.collectAmount1) = collectInfo(tokenId);
+
+        pInfo.token0 == wethAddr ? (ethAddr) : (pInfo.token0);
+        pInfo.token1 == wethAddr ? (ethAddr) : (pInfo.token1);
     }
 
     function getPoolAddress(
@@ -134,23 +130,96 @@ abstract contract Helpers is DSMath {
         );
     }
 
+    struct MintParams {
+        address tokenA;
+        address tokenB;
+        uint24 fee;
+        int24 lowerTick;
+        int24 upperTick;
+        uint256 amountA;
+        uint256 amountB;
+        uint256 slippage;
+    }
+
+    function mintAmount(MintParams memory mintParams)
+        internal
+        view
+        returns (
+            address token0,
+            address token1,
+            uint256 liquidity,
+            uint256 amount0,
+            uint256 amount1,
+            uint256 amount0Min,
+            uint256 amount1Min
+        )
+    {
+        {
+            (token0, token1) = mintParams.tokenA < mintParams.tokenB
+                ? (mintParams.tokenA, mintParams.tokenB)
+                : (mintParams.tokenB, mintParams.tokenA);
+        }
+
+        // compute the liquidity amount
+        {
+            IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(token0, token1, mintParams.fee));
+            (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
+
+            liquidity = LiquidityAmounts.getLiquidityForAmounts(
+                sqrtPriceX96,
+                TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
+                TickMath.getSqrtRatioAtTick(mintParams.upperTick),
+                mintParams.amountA,
+                mintParams.amountB
+            );
+
+            (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtPriceX96,
+                TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
+                TickMath.getSqrtRatioAtTick(mintParams.upperTick),
+                uint128(liquidity)
+            );
+        }
+
+        amount0Min = getMinAmount(TokenInterface(token0), mintParams.amountA, mintParams.slippage);
+        amount1Min = getMinAmount(TokenInterface(token1), mintParams.amountB, mintParams.slippage);
+    }
+
     function depositAmount(
         uint256 tokenId,
         uint256 amountA,
-        uint256 amountB
+        uint256 amountB,
+        uint256 slippage
     )
         internal
         view
         returns (
-            uint128 liquidity,
+            uint256 liquidity,
             uint256 amount0,
-            uint256 amount1
+            uint256 amount1,
+            uint256 amount0Min,
+            uint256 amount1Min
         )
     {
-        (, , address _token0, address _token1, uint24 _fee, int24 tickLower, int24 tickUpper, , , , , ) = nftManager
-        .positions(tokenId);
+        PositionInfo memory positionInfo;
+        (
+            ,
+            ,
+            positionInfo.token0,
+            positionInfo.token1,
+            positionInfo.fee,
+            positionInfo.tickLower,
+            positionInfo.tickUpper,
+            ,
+            ,
+            ,
+            ,
 
-        IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(_token0, _token1, _fee));
+        ) = nftManager.positions(tokenId);
+
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            getPoolAddress(positionInfo.token0, positionInfo.token1, positionInfo.fee)
+        );
 
         // compute the liquidity amount
         {
@@ -158,31 +227,46 @@ abstract contract Helpers is DSMath {
 
             liquidity = LiquidityAmounts.getLiquidityForAmounts(
                 sqrtPriceX96,
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
                 amountA,
                 amountB
             );
 
             (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
                 sqrtPriceX96,
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
-                liquidity
+                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
+                uint128(liquidity)
             );
 
-            amount0 = sub(amountA, amount0);
-            amount1 = sub(amountB, amount1);
+            // amount0 = sub(amountA, amount0);
+            // amount1 = sub(amountB, amount1);
         }
+
+        amount0Min = getMinAmount(TokenInterface(positionInfo.token0), amountA, slippage);
+        amount1Min = getMinAmount(TokenInterface(positionInfo.token1), amountB, slippage);
     }
 
     function singleDepositAmount(
         uint256 tokenId,
         address tokenA,
-        uint256 amountA
-    ) internal view returns (address tokenB, uint256 amountB) {
-        (, , address _token0, address _token1, uint24 _fee, int24 tickLower, int24 tickUpper, , , , , ) = nftManager
-        .positions(tokenId);
+        uint256 amountA,
+        uint256 slippage
+    )
+        internal
+        view
+        returns (
+            uint256 liquidity,
+            address tokenB,
+            uint256 amountB,
+            uint256 amountAMin,
+            uint256 amountBMin
+        )
+    {
+        (, , address _token0, address _token1, , int24 tickLower, int24 tickUpper, , , , , ) = nftManager.positions(
+            tokenId
+        );
 
         bool reverseFlag = false;
         if (tokenA != _token0) {
@@ -193,7 +277,7 @@ abstract contract Helpers is DSMath {
         }
 
         if (!reverseFlag) {
-            uint128 liquidity = LiquidityAmounts.getLiquidityForAmount0(
+            liquidity = LiquidityAmounts.getLiquidityForAmount0(
                 TickMath.getSqrtRatioAtTick(tickLower),
                 TickMath.getSqrtRatioAtTick(tickUpper),
                 amountA
@@ -201,10 +285,10 @@ abstract contract Helpers is DSMath {
             amountB = LiquidityAmounts.getAmount1ForLiquidity(
                 TickMath.getSqrtRatioAtTick(tickLower),
                 TickMath.getSqrtRatioAtTick(tickUpper),
-                liquidity
+                uint128(liquidity)
             );
         } else {
-            uint128 liquidity = LiquidityAmounts.getLiquidityForAmount1(
+            liquidity = LiquidityAmounts.getLiquidityForAmount1(
                 TickMath.getSqrtRatioAtTick(tickLower),
                 TickMath.getSqrtRatioAtTick(tickUpper),
                 amountA
@@ -212,42 +296,59 @@ abstract contract Helpers is DSMath {
             amountB = LiquidityAmounts.getAmount0ForLiquidity(
                 TickMath.getSqrtRatioAtTick(tickLower),
                 TickMath.getSqrtRatioAtTick(tickUpper),
-                liquidity
+                uint128(liquidity)
             );
         }
+
+        amountAMin = getMinAmount(TokenInterface(tokenA), amountA, slippage);
+        amountBMin = getMinAmount(TokenInterface(tokenB), amountB, slippage);
     }
 
-    function withdrawAmount(uint256 tokenId, uint128 liquidity)
+    function withdrawAmount(
+        uint256 tokenId,
+        uint256 liquidity,
+        uint256 slippage
+    )
         internal
         view
-        returns (uint256 amount0, uint256 amount1)
+        returns (
+            uint256 amount0,
+            uint256 amount1,
+            uint256 amount0Min,
+            uint256 amount1Min
+        )
     {
-        require(liquidity > 0, "liquidity should greater than 0");
+        PositionInfo memory positionInfo;
         (
             ,
             ,
-            address _token0,
-            address _token1,
-            uint24 _fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 positionLiquidity,
+            positionInfo.token0,
+            positionInfo.token1,
+            positionInfo.fee,
+            positionInfo.tickLower,
+            positionInfo.tickUpper,
+            positionInfo.liquidity,
             ,
             ,
             ,
 
         ) = nftManager.positions(tokenId);
 
-        require(positionLiquidity >= liquidity, "Liquidity amount is over than position liquidity amount");
-
-        IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(_token0, _token1, _fee));
-        (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
-        (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
-            sqrtPriceX96,
-            TickMath.getSqrtRatioAtTick(tickLower),
-            TickMath.getSqrtRatioAtTick(tickUpper),
-            liquidity
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            getPoolAddress(positionInfo.token0, positionInfo.token1, positionInfo.fee)
         );
+        {
+            (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
+            (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtPriceX96,
+                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
+                uint128(positionInfo.liquidity >= liquidity ? positionInfo.liquidity : liquidity)
+            );
+        }
+
+        amount0Min = getMinAmount(TokenInterface(positionInfo.token0), amount0, slippage);
+        amount1Min = getMinAmount(TokenInterface(positionInfo.token1), amount1, slippage);
     }
 
     function collectInfo(uint256 tokenId) internal view returns (uint256 amount0, uint256 amount1) {

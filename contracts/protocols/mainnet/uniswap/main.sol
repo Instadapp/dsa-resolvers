@@ -30,54 +30,88 @@ contract Resolver is Helpers {
         returns (uint256[] memory tokenIds, PositionInfo[] memory positionsInfo)
     {
         tokenIds = userNfts(user);
+        positionsInfo = new PositionInfo[](tokenIds.length);
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];
             (positionsInfo[i]) = positions(tokenId);
         }
     }
 
+    function getMintAmount(MintParams memory mintParams)
+        public
+        view
+        returns (
+            address token0,
+            address token1,
+            uint256 liquidity,
+            uint256 amount0,
+            uint256 amount1,
+            uint256 amount0Min,
+            uint256 amount1Min
+        )
+    {
+        mintParams.tokenA = mintParams.tokenA == ethAddr ? (wethAddr) : (mintParams.tokenA);
+        mintParams.tokenB = mintParams.tokenB == ethAddr ? (wethAddr) : (mintParams.tokenB);
+
+        (token0, token1, liquidity, amount0, amount1, amount0Min, amount1Min) = mintAmount(mintParams);
+
+        token0 == wethAddr ? (ethAddr) : (token0);
+        token1 == wethAddr ? (ethAddr) : (token1);
+    }
+
     function getDepositAmount(
         uint256 tokenId,
         uint256 amountA,
-        uint256 amountB
+        uint256 amountB,
+        uint256 slippage
     )
         public
         view
         returns (
             uint256 liquidity,
             uint256 amount0,
-            uint256 amount1
+            uint256 amount1,
+            uint256 amount0Min,
+            uint256 amount1Min
         )
     {
-        if (tokenId == 0) tokenId = getLastNftId(msg.sender);
-        (liquidity, amount0, amount1) = depositAmount(tokenId, amountA, amountB);
+        (liquidity, amount0, amount1, amount0Min, amount1Min) = depositAmount(tokenId, amountA, amountB, slippage);
     }
 
-    function getSigleDepositAmount(
+    function getSingleDepositAmount(
         uint256 tokenId,
         address tokenA,
-        uint256 amountA
+        uint256 amountA,
+        uint256 slippage
     )
         public
         view
         returns (
-            address,
-            uint256,
-            address,
-            uint256
+            uint256 liquidity,
+            address tokenB,
+            uint256 amountB,
+            uint256 amountAMin,
+            uint256 amountBMin
         )
     {
-        (address tokenB, uint256 amountB) = singleDepositAmount(tokenId, tokenA, amountA);
-        return (tokenA, amountA, tokenB, amountB);
+        (liquidity, tokenB, amountB, amountAMin, amountBMin) = singleDepositAmount(tokenId, tokenA, amountA, slippage);
     }
 
-    function getWithdrawAmount(uint256 tokenId, uint128 liquidity)
+    function getWithdrawAmount(
+        uint256 tokenId,
+        uint256 liquidity,
+        uint256 slippage
+    )
         public
         view
-        returns (uint256 amountA, uint256 amountB)
+        returns (
+            uint256 amount0,
+            uint256 amount1,
+            uint256 amount0Min,
+            uint256 amount1Min
+        )
     {
-        if (tokenId == 0) tokenId = getLastNftId(msg.sender);
-        (amountA, amountB) = withdrawAmount(tokenId, liquidity);
+        (amount0, amount1, amount0Min, amount1Min) = withdrawAmount(tokenId, liquidity, slippage);
     }
 
     function getCollectAmount(uint256 tokenId) public view returns (uint256 amountA, uint256 amountB) {
