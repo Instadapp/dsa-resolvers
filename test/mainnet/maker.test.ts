@@ -21,7 +21,7 @@ describe("Maker Resolvers", () => {
 
     it("returns the dai position properly", async () => {
       const res = await resolver.getDaiPosition(account);
-      expect(res.amt).eq(ethers.BigNumber.from("200005872985130003460"));
+      expect(res.amt).eq(ethers.BigNumber.from("200004660040725427446"));
       expect(res.dsr).eq(ethers.BigNumber.from("1000000000003170820659990704"));
     });
   });
