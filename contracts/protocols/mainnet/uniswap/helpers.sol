@@ -74,6 +74,49 @@ abstract contract Helpers is DSMath {
         minAmt = convert18ToDec(token.decimals(), minAmt);
     }
 
+    function isContract(address addr) internal view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
+    }
+
+    struct PoolConfig {
+        address tokenA;
+        address tokenB;
+        uint24 fee;
+    }
+
+    struct PoolData {
+        address token0;
+        address token1;
+        uint24 fee;
+        address pool;
+        bool isCreated;
+        int24 currentTick;
+        uint160 sqrtRatio;
+    }
+
+    function poolDetails(PoolConfig memory poolConfig) internal view returns (PoolData memory poolData) {
+        poolData.token0 = poolConfig.tokenA == ethAddr ? (wethAddr) : (poolConfig.tokenA);
+        poolData.token1 = poolConfig.tokenB == ethAddr ? (wethAddr) : (poolConfig.tokenB);
+        poolData.fee = poolConfig.fee;
+        (poolData.token0, poolData.token1) = poolData.token0 < poolData.token1
+            ? (poolData.token0, poolData.token1)
+            : (poolData.token1, poolData.token0);
+
+        poolData.pool = getPoolAddress(poolData.token0, poolData.token1, poolData.fee);
+        poolData.isCreated = isContract(poolData.pool);
+        if (poolData.isCreated) {
+            IUniswapV3Pool pool = IUniswapV3Pool(poolData.pool);
+            (poolData.sqrtRatio, poolData.currentTick, , , , , ) = pool.slot0();
+        }
+
+        poolData.token0 = poolData.token0 == wethAddr ? (ethAddr) : (poolData.token0);
+        poolData.token1 = poolData.token1 == wethAddr ? (ethAddr) : (poolData.token1);
+    }
+
     struct PositionInfo {
         address token0;
         address token1;
@@ -181,8 +224,8 @@ abstract contract Helpers is DSMath {
             );
         }
 
-        amount0Min = getMinAmount(TokenInterface(token0), mintParams.amountA, mintParams.slippage);
-        amount1Min = getMinAmount(TokenInterface(token1), mintParams.amountB, mintParams.slippage);
+        amount0Min = getMinAmount(TokenInterface(token0), amount0, mintParams.slippage);
+        amount1Min = getMinAmount(TokenInterface(token1), amount1, mintParams.slippage);
     }
 
     function depositAmount(
@@ -244,8 +287,8 @@ abstract contract Helpers is DSMath {
             // amount1 = sub(amountB, amount1);
         }
 
-        amount0Min = getMinAmount(TokenInterface(positionInfo.token0), amountA, slippage);
-        amount1Min = getMinAmount(TokenInterface(positionInfo.token1), amountB, slippage);
+        amount0Min = getMinAmount(TokenInterface(positionInfo.token0), amount0, slippage);
+        amount1Min = getMinAmount(TokenInterface(positionInfo.token1), amount1, slippage);
     }
 
     function singleDepositAmount(
@@ -264,38 +307,65 @@ abstract contract Helpers is DSMath {
             uint256 amountBMin
         )
     {
-        (, , address _token0, address _token1, , int24 tickLower, int24 tickUpper, , , , , ) = nftManager.positions(
-            tokenId
-        );
+        PositionInfo memory positionInfo;
+        (
+            ,
+            ,
+            positionInfo.token0,
+            positionInfo.token1,
+            positionInfo.fee,
+            positionInfo.tickLower,
+            positionInfo.tickUpper,
+            ,
+            ,
+            ,
+            ,
+
+        ) = nftManager.positions(tokenId);
 
         bool reverseFlag = false;
-        if (tokenA != _token0) {
-            (tokenA, tokenB) = (_token0, _token1);
+        if (tokenA != positionInfo.token0) {
+            (tokenB, tokenA) = (positionInfo.token0, positionInfo.token1);
             reverseFlag = true;
         } else {
-            tokenB = _token1;
+            tokenB = positionInfo.token1;
         }
+
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            getPoolAddress(positionInfo.token0, positionInfo.token1, positionInfo.fee)
+        );
+        (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
+
+        // liquidity = LiquidityAmounts.getLiquidityForAmounts(
+        //     sqrtPriceX96,
+        //     TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
+        //     TickMath.getSqrtRatioAtTick(mintParams.upperTick),
+        //     mintParams.amountA,
+        //     mintParams.amountB
+        // );
 
         if (!reverseFlag) {
             liquidity = LiquidityAmounts.getLiquidityForAmount0(
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
                 amountA
             );
-            amountB = LiquidityAmounts.getAmount1ForLiquidity(
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
+            (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtPriceX96,
+                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
                 uint128(liquidity)
             );
         } else {
             liquidity = LiquidityAmounts.getLiquidityForAmount1(
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
                 amountA
             );
-            amountB = LiquidityAmounts.getAmount0ForLiquidity(
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
+            (amountB, ) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtPriceX96,
+                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
                 uint128(liquidity)
             );
         }

@@ -20,6 +20,13 @@ contract Resolver is Helpers {
         }
     }
 
+    function getPoolDetails(PoolConfig[] memory poolConfigs) public view returns (PoolData[] memory poolDatas) {
+        poolDatas = new PoolData[](poolConfigs.length);
+        for (uint256 i = 0; i < poolConfigs.length; i++) {
+            poolDatas[i] = poolDetails(poolConfigs[i]);
+        }
+    }
+
     function getPositionInfoByTokenId(uint256 tokenId) public view returns (PositionInfo memory pInfo) {
         (pInfo) = positions(tokenId);
     }
