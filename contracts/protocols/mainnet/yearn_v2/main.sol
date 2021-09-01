@@ -134,7 +134,7 @@ contract Resolver is Helpers {
     }
 
     /**
-     * @dev Returns the number of vaults for a given want
+     * @dev Retrieve the current vault for a given want
      */
     function latestForWant(address want) public view returns (address) {
         YearnRegistryInterface registry = getRegistry();
