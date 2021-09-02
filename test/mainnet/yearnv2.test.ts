@@ -54,7 +54,7 @@ describe("YearnV2 Resolvers", () => {
       const vaults = await resolver.listVaultsForWant(Tokens.DAI.addr);
       await expect(vaults.length).to.be.gt(0);
       const pricePerShare = await resolver.getPricePerShare(vaults[vaults.length - 1]);
-      await expect(pricePerShare).to.be.gt(0);
+      await expect(pricePerShare).to.be.eq("1045368621962901866");
     });
 
     it("Should check if a vault is in emergencyShutdown", async () => {
@@ -67,7 +67,21 @@ describe("YearnV2 Resolvers", () => {
       const vaults = await resolver.listVaultsForWant(Tokens.DAI.addr);
       await expect(vaults.length).to.be.gt(0);
       const balance = await resolver.getBalance(account, vaults[vaults.length - 1]);
-      await expect(balance).to.be.gte(0);
+      await expect(balance).to.be.eq("116950935355243307616929");
+    });
+
+    it("Should check the expected shares value for an user", async () => {
+      const vaults = await resolver.listVaultsForWant(Tokens.DAI.addr);
+      await expect(vaults.length).to.be.gt(0);
+      const balance = await resolver.getExpectedShareValue(account, vaults[vaults.length - 1]);
+      await expect(balance).to.be.eq("122256838129583115486997");
+    });
+
+    it("Should check the total assets for this vault", async () => {
+      const vaults = await resolver.listVaultsForWant(Tokens.DAI.addr);
+      await expect(vaults.length).to.be.gt(0);
+      const balance = await resolver.getTotalAssets(vaults[vaults.length - 1]);
+      await expect(balance).to.be.eq("509814114742630255838541025");
     });
 
     it("Should check the balance of an user", async () => {

@@ -20,6 +20,8 @@ contract Helpers is DSMath {
         uint256 totalAssets;
         uint256 balanceOf;
         uint256 wantBalanceOf;
+        uint256 expectedShareValue;
+        uint256 decimals;
         bool isDeprecated;
         bool emergencyShutdown;
     }

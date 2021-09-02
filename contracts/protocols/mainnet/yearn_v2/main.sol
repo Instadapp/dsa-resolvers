@@ -7,7 +7,7 @@ contract Resolver is Helpers {
     /**
      * @dev Count the number of positions in Yearn for a given owner.
      */
-    function countPositions(address[] memory wantAddresses) internal view returns (uint256) {
+    function _countPositions(address[] memory wantAddresses) internal view returns (uint256) {
         YearnRegistryInterface registry = getRegistry();
         uint256 arraySize = 0;
         for (uint256 i = 0; i < wantAddresses.length; i++) {
@@ -21,11 +21,41 @@ contract Resolver is Helpers {
     }
 
     /**
+     * @dev Prepare the vaultData for a specific vault, want and owner
+     */
+    function _prepareVaultData(
+        YearnRegistryInterface registry,
+        YearnV2Interface vault,
+        address want,
+        address owner
+    ) internal view returns (VaultData memory vaultData) {
+        address latest = registry.latestVault(want);
+        uint256 pricePerShare = vault.pricePerShare();
+        uint256 balanceOfWant = TokenInterface(want).balanceOf(owner);
+        uint256 decimals = vault.decimals();
+        return
+            VaultData(
+                latest,
+                address(vault),
+                want,
+                pricePerShare,
+                vault.availableDepositLimit(),
+                vault.totalAssets(),
+                vault.balanceOf(owner),
+                balanceOfWant,
+                (pricePerShare * balanceOfWant) / (10**decimals),
+                decimals,
+                latest != address(vault),
+                vault.emergencyShutdown()
+            );
+    }
+
+    /**
      * @dev Returns the current positions in Yearn for a given owner.
      */
     function getPositions(address owner, address[] memory wantAddresses) public view returns (VaultData[] memory) {
         YearnRegistryInterface registry = getRegistry();
-        uint256 arraySize = countPositions(wantAddresses);
+        uint256 arraySize = _countPositions(wantAddresses);
 
         VaultData[] memory vaultData = new VaultData[](arraySize);
         for (uint256 i = 0; i < wantAddresses.length; i++) {
@@ -35,19 +65,7 @@ contract Resolver is Helpers {
             uint256 numVaults = registry.numVaults(wantAddresses[i]);
             for (uint256 vaultIndex = 0; vaultIndex < numVaults; vaultIndex++) {
                 YearnV2Interface vault = YearnV2Interface(registry.vaults(wantAddresses[i], vaultIndex));
-                address latest = registry.latestVault(wantAddresses[i]);
-                vaultData[i] = VaultData(
-                    latest,
-                    address(vault),
-                    wantAddresses[i],
-                    vault.pricePerShare(),
-                    vault.availableDepositLimit(),
-                    vault.totalAssets(),
-                    vault.balanceOf(owner),
-                    TokenInterface(wantAddresses[i]).balanceOf(owner),
-                    latest != address(vault),
-                    vault.emergencyShutdown()
-                );
+                vaultData[i] = _prepareVaultData(registry, vault, wantAddresses[i], owner);
             }
         }
 
@@ -70,19 +88,7 @@ contract Resolver is Helpers {
                 continue;
             }
             YearnV2Interface vault = YearnV2Interface(registry.latestVault(wantAddresses[i]));
-            address latest = registry.latestVault(wantAddresses[i]);
-            vaultData[i] = VaultData(
-                latest,
-                address(vault),
-                wantAddresses[i],
-                vault.pricePerShare(),
-                vault.availableDepositLimit(),
-                vault.totalAssets(),
-                vault.balanceOf(owner),
-                TokenInterface(wantAddresses[i]).balanceOf(owner),
-                latest != address(vault),
-                vault.emergencyShutdown()
-            );
+            vaultData[i] = _prepareVaultData(registry, vault, wantAddresses[i], owner);
         }
 
         return vaultData;
@@ -110,7 +116,14 @@ contract Resolver is Helpers {
     }
 
     /**
-     * @dev Get the total number of assets in the vault (aka shares)
+     * @dev Get the total quantity of all assets under control of this vault
+     */
+    function getTotalAssets(YearnV2Interface vault) public view returns (uint256) {
+        return vault.totalAssets();
+    }
+
+    /**
+     * @dev Get the total number of assets in the vault (aka shares) for this user
      */
     function getBalance(address owner, YearnV2Interface vault) public view returns (uint256) {
         return vault.balanceOf(owner);
@@ -122,7 +135,8 @@ contract Resolver is Helpers {
     function getExpectedShareValue(address owner, YearnV2Interface vault) public view returns (uint256) {
         uint256 _pricePerShare = vault.pricePerShare();
         uint256 _balanceOfOwner = vault.balanceOf(owner);
-        return _pricePerShare * _balanceOfOwner;
+        uint256 _decimals = vault.decimals();
+        return (_pricePerShare * _balanceOfOwner) / (10**_decimals);
     }
 
     /**
