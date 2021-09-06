@@ -97,6 +97,33 @@ contract Resolver is Helpers {
         (liquidity, tokenB, amountB, amountAMin, amountBMin) = singleDepositAmount(tokenId, tokenA, amountA, slippage);
     }
 
+    function getSingleMintAmount(
+        address tokenA,
+        uint256 amountA,
+        address tokenB,
+        uint256 slippage,
+        int24 tickLower,
+        int24 tickUpper
+    )
+        public
+        view
+        returns (
+            uint256 liquidity,
+            uint256 amountB,
+            uint256 amountAMin,
+            uint256 amountBMin
+        )
+    {
+        (liquidity, amountB, amountAMin, amountBMin) = singleMintAmount(
+            tokenA,
+            amountA,
+            tokenB,
+            slippage,
+            tickLower,
+            tickUpper
+        );
+    }
+
     function getWithdrawAmount(
         uint256 tokenId,
         uint256 liquidity,

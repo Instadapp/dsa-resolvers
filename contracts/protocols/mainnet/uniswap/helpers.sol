@@ -31,6 +31,11 @@ abstract contract Helpers is DSMath {
         return 0xC36442b4a4522E871399CD717aBDD847Ab11FE88;
     }
 
+    function changeETHtoWETH(address token) internal pure returns (address) {
+        if (token == ethAddr) return wethAddr;
+        return token;
+    }
+
     function convert18ToDec(uint256 _dec, uint256 _amt) internal pure returns (uint256 amt) {
         amt = (_amt / 10**(18 - _dec));
     }
@@ -264,6 +269,7 @@ abstract contract Helpers is DSMath {
             uint256 amountBMin
         )
     {
+        tokenA = changeETHtoWETH(tokenA);
         (, , address _token0, address _token1, , int24 tickLower, int24 tickUpper, , , , , ) = nftManager.positions(
             tokenId
         );
@@ -274,6 +280,59 @@ abstract contract Helpers is DSMath {
             reverseFlag = true;
         } else {
             tokenB = _token1;
+        }
+
+        if (!reverseFlag) {
+            liquidity = LiquidityAmounts.getLiquidityForAmount0(
+                TickMath.getSqrtRatioAtTick(tickLower),
+                TickMath.getSqrtRatioAtTick(tickUpper),
+                amountA
+            );
+            amountB = LiquidityAmounts.getAmount1ForLiquidity(
+                TickMath.getSqrtRatioAtTick(tickLower),
+                TickMath.getSqrtRatioAtTick(tickUpper),
+                uint128(liquidity)
+            );
+        } else {
+            liquidity = LiquidityAmounts.getLiquidityForAmount1(
+                TickMath.getSqrtRatioAtTick(tickLower),
+                TickMath.getSqrtRatioAtTick(tickUpper),
+                amountA
+            );
+            amountB = LiquidityAmounts.getAmount0ForLiquidity(
+                TickMath.getSqrtRatioAtTick(tickLower),
+                TickMath.getSqrtRatioAtTick(tickUpper),
+                uint128(liquidity)
+            );
+        }
+
+        amountAMin = getMinAmount(TokenInterface(tokenA), amountA, slippage);
+        amountBMin = getMinAmount(TokenInterface(tokenB), amountB, slippage);
+    }
+
+    function singleMintAmount(
+        address tokenA,
+        uint256 amountA,
+        address tokenB,
+        uint256 slippage,
+        int24 tickLower,
+        int24 tickUpper
+    )
+        internal
+        view
+        returns (
+            uint256 liquidity,
+            uint256 amountB,
+            uint256 amountAMin,
+            uint256 amountBMin
+        )
+    {
+        tokenA = changeETHtoWETH(tokenA);
+        tokenB = changeETHtoWETH(tokenB);
+        bool reverseFlag = false;
+        if (tokenA > tokenB) {
+            (tokenA, tokenB) = (tokenB, tokenA);
+            reverseFlag = true;
         }
 
         if (!reverseFlag) {
