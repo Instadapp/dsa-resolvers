@@ -1,5 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, network, config } from "hardhat";
+import userDepositedToken from "../../scripts/getUsersToken";
 import { expect } from "chai";
 import { InstaUniswapStakerResolver, InstaUniswapStakerResolver__factory } from "../../typechain";
 import { abi as nftManagerABI } from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
@@ -134,6 +135,11 @@ describe("Uniswap", () => {
     it("Should return Pool's liquidity", async () => {
       const liquidity = await uniswapStakeResolver.getUsersLiquidity(tokenId);
       console.log("Pool's liquidity", liquidity);
+    });
+
+    it("should test successfully", async () => {
+      let tokenInfo = await userDepositedToken(signer.address);
+      console.log("TokenID", tokenInfo);
     });
   });
 });
