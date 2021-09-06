@@ -385,6 +385,7 @@ abstract contract Helpers is DSMath {
         uint256 amountA,
         address tokenB,
         uint256 slippage,
+        uint24 fee,
         int24 tickLower,
         int24 tickUpper
     )
@@ -405,13 +406,17 @@ abstract contract Helpers is DSMath {
             reverseFlag = true;
         }
 
+        IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(tokenA, tokenB, fee));
+        (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
+
         if (!reverseFlag) {
             liquidity = LiquidityAmounts.getLiquidityForAmount0(
                 TickMath.getSqrtRatioAtTick(tickLower),
                 TickMath.getSqrtRatioAtTick(tickUpper),
                 amountA
             );
-            amountB = LiquidityAmounts.getAmount1ForLiquidity(
+            (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(tickLower),
                 TickMath.getSqrtRatioAtTick(tickUpper),
                 uint128(liquidity)
@@ -422,7 +427,8 @@ abstract contract Helpers is DSMath {
                 TickMath.getSqrtRatioAtTick(tickUpper),
                 amountA
             );
-            amountB = LiquidityAmounts.getAmount0ForLiquidity(
+            (amountB, ) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(tickLower),
                 TickMath.getSqrtRatioAtTick(tickUpper),
                 uint128(liquidity)

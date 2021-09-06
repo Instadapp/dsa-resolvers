@@ -106,9 +106,10 @@ contract Resolver is Helpers {
 
     function getSingleMintAmount(
         address tokenA,
-        uint256 amountA,
         address tokenB,
+        uint256 amountA,
         uint256 slippage,
+        uint24 fee,
         int24 tickLower,
         int24 tickUpper
     )
@@ -126,6 +127,7 @@ contract Resolver is Helpers {
             amountA,
             tokenB,
             slippage,
+            fee,
             tickLower,
             tickUpper
         );
