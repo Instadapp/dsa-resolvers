@@ -88,13 +88,14 @@ describe("Uniswap", () => {
     });
 
     it("Returns single deposit Amount", async () => {
-      const [liquidity, amount1, amount0Min, amount1Min] = await uniswap.getSingleDepositAmount(
+      const [liquidity, token1, amount1, amount0Min, amount1Min] = await uniswap.getSingleDepositAmount(
         BigNumber.from("86707"),
-        wethAddr,
+        ethAddr,
         ethers.utils.parseEther("1"),
         "50000000000000000",
       );
       console.log("liquidity", liquidity);
+      console.log("token1", token1);
       console.log("amount1", amount1);
       console.log("amount0Min", amount0Min);
       console.log("amount1Min", amount1Min);
@@ -102,10 +103,11 @@ describe("Uniswap", () => {
 
     it("Returns single mint Amount", async () => {
       const [liquidity, amount1, amount0Min, amount1Min] = await uniswap.getSingleMintAmount(
-        wethAddr,
+        ethAddr,
+        Tokens.USDC.addr,
         ethers.utils.parseEther("1"),
-        Tokens.DAI.addr,
         "50000000000000000",
+        FeeAmount.MEDIUM,
         getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       );

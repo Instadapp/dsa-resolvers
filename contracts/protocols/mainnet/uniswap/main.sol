@@ -124,8 +124,8 @@ contract Resolver is Helpers {
     {
         (liquidity, amountB, amountAMin, amountBMin) = singleMintAmount(
             tokenA,
-            amountA,
             tokenB,
+            amountA,
             slippage,
             fee,
             tickLower,

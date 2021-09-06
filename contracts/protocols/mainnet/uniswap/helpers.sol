@@ -382,8 +382,8 @@ abstract contract Helpers is DSMath {
 
     function singleMintAmount(
         address tokenA,
-        uint256 amountA,
         address tokenB,
+        uint256 amountA,
         uint256 slippage,
         uint24 fee,
         int24 tickLower,
