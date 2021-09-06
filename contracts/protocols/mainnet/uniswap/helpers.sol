@@ -313,9 +313,21 @@ abstract contract Helpers is DSMath {
         )
     {
         tokenA = changeETHtoWETH(tokenA);
-        (, , address _token0, address _token1, , int24 tickLower, int24 tickUpper, , , , , ) = nftManager.positions(
-            tokenId
-        );
+        PositionInfo memory positionInfo;
+        (
+            ,
+            ,
+            positionInfo.token0,
+            positionInfo.token1,
+            positionInfo.fee,
+            positionInfo.tickLower,
+            positionInfo.tickUpper,
+            ,
+            ,
+            ,
+            ,
+
+        ) = nftManager.positions(tokenId);
 
         bool reverseFlag = false;
         if (tokenA != positionInfo.token0) {
