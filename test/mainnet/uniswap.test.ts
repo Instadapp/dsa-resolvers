@@ -10,6 +10,18 @@ const { BigNumber } = ethers;
 const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 const wethAddr = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
+const FeeAmount = {
+  LOW: 500,
+  MEDIUM: 3000,
+  HIGH: 10000,
+};
+
+const TICK_SPACINGS: any = {
+  500: 10,
+  3000: 60,
+  10000: 200,
+};
+
 describe("Uniswap", () => {
   let signer: SignerWithAddress;
   const account = "0xa8ABe411d1A3F524a2aB9C54f8427066a1F9f266";
@@ -68,6 +80,7 @@ describe("Uniswap", () => {
         BigNumber.from("86707"),
         ethers.utils.parseEther("1"),
         ethers.utils.parseEther("1"),
+        "50000000000000000",
       );
       console.log("Liquidity", liquidity);
       console.log("Amount0", amount0);
@@ -75,14 +88,28 @@ describe("Uniswap", () => {
     });
 
     it("Returns single deposit Amount", async () => {
-      const [token0, amount0, token1, amount1] = await uniswap.getSigleDepositAmount(
+      const [liquidity, amount1, amount0Min, amount1Min] = await uniswap.getSingleDepositAmount(
         BigNumber.from("86707"),
-        ethAddr,
+        wethAddr,
         ethers.utils.parseEther("1"),
+        "50000000000000000",
       );
-      console.log("token0", token0);
-      console.log("amount0", amount0);
-      console.log("token1", token1);
+      console.log("liquidity", liquidity);
+      console.log("amount1", amount1);
+      console.log("amount0Min", amount0Min);
+      console.log("amount1Min", amount1Min);
+    });
+
+    it("Returns single mint Amount", async () => {
+      const [liquidity, amount1, amount0Min, amount1Min] = await uniswap.getSingleMintAmount(
+        wethAddr,
+        ethers.utils.parseEther("1"),
+        Tokens.DAI.addr,
+        "50000000000000000",
+        getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      );
+      console.log("liquidity", liquidity);
       console.log("amount1", amount1);
     });
 
@@ -90,6 +117,7 @@ describe("Uniswap", () => {
       const [amount0, amount1] = await uniswap.getWithdrawAmount(
         BigNumber.from("86707"),
         ethers.utils.parseEther("0.001"),
+        "50000000000000000",
       );
       console.log("amount0", amount0);
       console.log("amount1", amount1);
@@ -102,3 +130,6 @@ describe("Uniswap", () => {
     });
   });
 });
+
+const getMinTick = (tickSpacing: any) => Math.ceil(-887272 / tickSpacing) * tickSpacing;
+const getMaxTick = (tickSpacing: any) => Math.floor(887272 / tickSpacing) * tickSpacing;
