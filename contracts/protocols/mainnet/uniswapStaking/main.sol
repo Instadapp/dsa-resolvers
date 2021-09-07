@@ -51,15 +51,36 @@ contract Resolver is Helpers {
         amount = staker.rewards(IERC20Minimal(token), user);
     }
 
+    struct Deposit {
+        address owner;
+        uint48 numberOfStakes;
+        int24 tickLower;
+        int24 tickUpper;
+    }
+
+    struct Incentive {
+        uint256 totalRewardUnclaimed;
+        uint160 totalSecondsClaimedX128;
+        uint96 numberOfStakes;
+    }
+
     /**
      * @dev get rewards rate of incentive
      * @param key incentive key
      */
     function getRewardsRate(IUniswapV3Staker.IncentiveKey memory key) public view returns (uint256 rate) {
-        bytes32 incentiveId = getIncentiveId(key);
-        (uint256 totalRewards, , ) = staker.incentives(incentiveId);
-        uint256 totalSeconds = key.endTime - key.startTime;
-        rate = uint256(uint256(totalRewards) / uint256(totalSeconds));
+        if (key.startTime >= block.timestamp) return 0;
+
+        bytes32 incentiveId = keccak256(abi.encode(key));
+
+        Incentive memory incentive;
+        (incentive.totalRewardUnclaimed, incentive.totalSecondsClaimedX128, incentive.numberOfStakes) = staker
+        .incentives(incentiveId);
+
+        uint256 totalSecondsUnclaimedX128 = ((Math.max(key.endTime, block.timestamp) - key.startTime) << 128) -
+            incentive.totalSecondsClaimedX128;
+
+        rate = uint256(incentive.totalRewardUnclaimed / uint256(totalSecondsUnclaimedX128));
     }
 
     /**
@@ -100,36 +121,36 @@ contract Resolver is Helpers {
         );
     }
 
-    function getPositions(
-        uint256[] memory tokenIds,
-        IUniswapV3Staker.IncentiveKey[] memory incentiveKeys,
-        address[] memory rewardTokens,
-        address user
-    )
+    struct PositionParams {
+        uint256 tokenId;
+        IUniswapV3Staker.IncentiveKey incentiveKey;
+    }
+
+    struct PositionInformation {
+        uint256 unclaimed;
+        uint256 rates;
+        uint256 userLiquidities;
+        uint256 totalLiquidities;
+    }
+
+    /**
+     * @dev get positions info
+     */
+    function getPositions(PositionParams[] memory paramArray, address user)
         external
         view
-        returns (
-            uint256[] memory,
-            uint256[] memory,
-            uint256[] memory,
-            uint256[] memory
-        )
+        returns (PositionInformation[] memory)
     {
-        require(tokenIds.length == incentiveKeys.length, "no-equal-length");
-        require(tokenIds.length == rewardTokens.length, "no-equal-length");
-        uint256[] memory unclaimed = new uint256[](tokenIds.length);
-        uint256[] memory rates = new uint256[](tokenIds.length);
-        uint256[] memory userLiquidities = new uint256[](tokenIds.length);
-        uint256[] memory totalLiquidities = new uint256[](tokenIds.length);
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            unclaimed[i] = getUnclaimedRewards(rewardTokens[i], user);
-            rates[i] = getRewardsRate(incentiveKeys[i]);
-            userLiquidities[i] = positions(tokenIds[i]).liquidity;
-            IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(tokenIds[i]));
-            totalLiquidities[i] = pool.liquidity();
+        PositionInformation[] memory positionInfo = new PositionInformation[](paramArray.length);
+        for (uint256 i = 0; i < paramArray.length; i++) {
+            positionInfo[i].unclaimed = getUnclaimedRewards(address(paramArray[i].incentiveKey.rewardToken), user);
+            positionInfo[i].rates = getRewardsRate(paramArray[i].incentiveKey);
+            positionInfo[i].userLiquidities = positions(paramArray[i].tokenId).liquidity;
+            IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(paramArray[i].tokenId));
+            positionInfo[i].totalLiquidities = pool.liquidity();
         }
 
-        return (unclaimed, rates, userLiquidities, totalLiquidities);
+        return positionInfo;
     }
 }
 

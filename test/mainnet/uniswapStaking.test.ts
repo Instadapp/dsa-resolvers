@@ -11,7 +11,7 @@ import { abi as stakerABI } from "../../artifacts/contracts/protocols/mainnet/un
 import addLiquidity from "../../scripts/addLiquidity";
 import { BigNumber } from "ethers";
 
-let tokenId: BigNumber;
+let tokenId: any;
 let key: any;
 
 const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
@@ -143,7 +143,7 @@ describe("Uniswap", () => {
     });
 
     it("Should return positions info", async () => {
-      const result: any = await uniswapStakeResolver.getPositions([tokenId], [key], [USDT_ADDRESS], signer.address);
+      const result: any = await uniswapStakeResolver.getPositions([{ tokenId, incentiveKey: key }], signer.address);
       console.log("result", result);
     });
   });

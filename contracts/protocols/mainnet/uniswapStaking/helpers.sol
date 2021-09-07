@@ -8,6 +8,7 @@ import "./contracts/libraries/FixedPoint128.sol";
 import "./contracts/libraries/LiquidityAmounts.sol";
 import "./contracts/libraries/PositionKey.sol";
 import "./contracts/libraries/PoolAddress.sol";
+import "@openzeppelin/contracts/math/Math.sol";
 import "./interfaces.sol";
 
 abstract contract Helpers is DSMath {
