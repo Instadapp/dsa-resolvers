@@ -141,6 +141,11 @@ describe("Uniswap", () => {
       let tokenInfo = await userDepositedToken(signer.address);
       console.log("TokenID", tokenInfo);
     });
+
+    it("Should return positions info", async () => {
+      const result: any = await uniswapStakeResolver.getPositions([tokenId], [key], [USDT_ADDRESS], signer.address);
+      console.log("result", result);
+    });
   });
 });
 
