@@ -50,6 +50,24 @@ interface TokenFaucetInterface {
     function claim(address user) external returns (uint256);
 }
 
+interface TokenDropInterface {
+    function asset() external view returns (address);
+
+    function measure() external view returns (address);
+
+    function dripRatePerSecond() external view returns (uint256);
+
+    function exchangeRateMantissa() external view returns (uint112);
+
+    function totalUnclaimed() external view returns (uint112);
+
+    function lastDripTimestamp() external view returns (uint32);
+
+    function userStates(address addr) external view returns (uint128, uint128);
+
+    function claim(address user) external returns (uint256);
+}
+
 interface TokenFaucetProxyFactoryInterface {
     function claimAll(address user, TokenFaucetInterface[] calldata tokenFaucets) external;
 }

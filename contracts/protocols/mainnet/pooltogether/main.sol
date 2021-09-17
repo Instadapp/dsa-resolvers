@@ -4,6 +4,24 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
+    function getTokenDropData(address owner, address tokenDropAddress) public view returns (TokenDropData memory) {
+        TokenDropInterface tokenDrop = TokenDropInterface(tokenDropAddress);
+
+        (uint128 lastExchangeRateMantissa, uint128 balance) = tokenDrop.userStates(owner);
+
+        TokenDropData memory tokenDropData = TokenDropData(
+            tokenDrop.asset(),
+            tokenDrop.measure(),
+            tokenDrop.exchangeRateMantissa(),
+            tokenDrop.totalUnclaimed(),
+            tokenDrop.lastDripTimestamp(),
+            lastExchangeRateMantissa,
+            balance
+        );
+
+        return tokenDropData;
+    }
+
     function getTokenFaucetData(address owner, address tokenFaucetAddress) public returns (TokenFaucetData memory) {
         TokenFaucetInterface tokenFaucet = TokenFaucetInterface(tokenFaucetAddress);
 
@@ -95,7 +113,7 @@ contract Resolver is Helpers {
                 pod.balanceOf(owner),
                 pod.balanceOfUnderlying(owner),
                 pod.totalSupply(),
-                pod.tokenDrop(),
+                getTokenDropData(owner, pod.tokenDrop()),
                 pod.faucet()
             );
         }
@@ -106,7 +124,7 @@ contract Resolver is Helpers {
         return (getPoolTogetherData(owner, prizePoolAddress));
     }
 
-    function getPodPosition(address owner, address[] memory podAddress) public returns (PodData[] memory) {
+    function getPodPosition(address owner, address[] memory podAddress) public view returns (PodData[] memory) {
         return (getPodData(owner, podAddress));
     }
 }

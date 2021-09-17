@@ -46,12 +46,12 @@ describe("PoolTogether Resolvers", () => {
         console.log("\t\t\t\tAddress: ", tokenFaucetData.asset);
       }
       console.log("\t\t\tDrip Rate Per Second: ", tokenFaucetData.dripRatePerSecond.toString());
-      console.log("\t\t\tExchange Rate Mantissa: : ", tokenFaucetData.exchangeRateMantissa.toString());
-      console.log("\t\t\tTotal Unclaimed: : ", tokenFaucetData.totalUnclaimed.toString());
-      console.log("\t\t\tLast Drip Timestamp: : ", tokenFaucetData.lastDripTimestamp);
-      console.log("\t\t\tLast Exchange Rate Mantissa: : ", tokenFaucetData.lastExchangeRateMantissa.toString());
-      console.log("\t\t\tBalance: : ", tokenFaucetData.balance.toString());
-      console.log("\t\t\tOwner Balance: : ", tokenFaucetData.ownerBalance.toString());
+      console.log("\t\t\tExchange Rate Mantissa: ", tokenFaucetData.exchangeRateMantissa.toString());
+      console.log("\t\t\tTotal Unclaimed: ", tokenFaucetData.totalUnclaimed.toString());
+      console.log("\t\t\tLast Drip Timestamp: ", tokenFaucetData.lastDripTimestamp);
+      console.log("\t\t\tLast Exchange Rate Mantissa: ", tokenFaucetData.lastExchangeRateMantissa.toString());
+      console.log("\t\t\tOwner Balance last calculated: ", tokenFaucetData.balance.toString());
+      console.log("\t\t\tOwner Balance when claiming: ", tokenFaucetData.ownerBalance.toString());
     }
 
     it("Returns the positions correctly for a DAI Prize Pool", async () => {
@@ -62,10 +62,12 @@ describe("PoolTogether Resolvers", () => {
 
       for (let i = 0; i < prizePoolData.length; i++) {
         console.log("PrizePool: ", DAI_PRIZE_POOL_ADDR);
-        console.log("Underlying Token", prizePoolData[i].token);
+        console.log("Underlying Token: ", prizePoolData[i].token);
+        // The total underlying balance of all assets. This includes both principal and interest.
+        console.log("Balance: ", formatEther(prizePoolData[i].balance));
+        // The total of all controlled tokens
         console.log("AccountedBalance: ", formatEther(prizePoolData[i].accountedBalance));
         console.log("AwardBalance: ", formatEther(prizePoolData[i].awardBalance));
-        console.log("Balance: ", formatEther(prizePoolData[i].balance));
         console.log("Max Exit Fee Mantissa: ", formatEther(prizePoolData[i].maxExitFeeMantissa));
         console.log("Reserve Total Supply: ", formatEther(prizePoolData[i].reserveTotalSupply));
         console.log("Liquidity Cap: ", formatEther(prizePoolData[i].liquidityCap));
@@ -148,16 +150,28 @@ describe("PoolTogether Resolvers", () => {
         console.log("Decimals: ", podsData[i].decimals.toString());
         console.log("PrizePool: ", podsData[i].prizePool);
         console.log("Price Per Share: ", podsData[i].pricePerShare.toString());
-        console.log("Balance: ", podsData[i].balance.toString());
-        console.log("User Balance: ", podsData[i].balanceOf.toString());
-        console.log("Balance of Underlying: ", podsData[i].balanceOfUnderlying.toString());
+        console.log("Pod Balance: ", podsData[i].balance.toString());
+        console.log("Owner Balance: ", podsData[i].balanceOf.toString());
+        // Balance of Underlying should be equal when price per share is 1
+        console.log("Owner Balance of Underlying: ", podsData[i].balanceOfUnderlying.toString());
         console.log("Total Supply: ", podsData[i].totalSupply.toString());
-        console.log("Token Drop: ", podsData[i].tokenDrop);
-        console.log("Faucet: ", podsData[i].faucet);
+
+        // Faucet for the Pod
+        console.log("Token Faucet: ", podsData[i].faucet);
         const tokenFaucetData = await resolver.callStatic.getTokenFaucetData(owner, podsData[i].faucet);
         const assetData = await resolverERC20.getTokenDetails([tokenFaucetData.asset]);
         console.log("\t\tTokenFaucet Address: ", podsData[i].faucet);
         await outputTokenFaucetData(owner, tokenFaucetData, assetData);
+
+        // Token Drop distributes token faucet reweards to users
+        console.log("Token Drop: ");
+        console.log("\tAsset: ", podsData[i].tokenDrop.asset);
+        console.log("\tMeasure: ", podsData[i].tokenDrop.measure);
+        console.log("\tExchange Rate Mantissa: ", podsData[i].tokenDrop.exchangeRateMantissa.toString());
+        console.log("\tTotal Unclaimed: ", podsData[i].tokenDrop.totalUnclaimed.toString());
+        console.log("\tLast Drip Timestamp: ", podsData[i].tokenDrop.lastDripTimestamp);
+        console.log("\tLast Exchange Rate Mantissa: ", podsData[i].tokenDrop.lastExchangeRateMantissa.toString());
+        console.log("\tOwner Balance: ", podsData[i].tokenDrop.ownerBalance.toString());
       }
     });
   });

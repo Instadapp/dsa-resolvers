@@ -58,8 +58,8 @@ contract Helpers is DSMath {
         uint112 totalUnclaimed; // The total amount of tokens that have been dripped but not claimed
         uint32 lastDripTimestamp; // The timestamp at which the tokens were last dripped
         uint128 lastExchangeRateMantissa;
-        uint128 balance;
-        uint256 ownerBalance;
+        uint128 balance; // Owner Balance last calculated
+        uint256 ownerBalance; // True balance when claiming
     }
 
     struct PodData {
@@ -72,17 +72,17 @@ contract Helpers is DSMath {
         uint256 balanceOf; // User balance
         uint256 balanceOfUnderlying; // Calculate the underlying assets relative to users balance.
         uint256 totalSupply;
-        address tokenDrop;
+        TokenDropData tokenDrop;
         address faucet;
     }
 
-    struct TokenDrop {
+    struct TokenDropData {
         address asset; // The token that is being disbursed
         address measure; // The token that is used to measure a user's portion of disbursed tokens
         uint112 exchangeRateMantissa; // The cumulative exchange rate of measure token supply : dripped tokens
         uint112 totalUnclaimed; // The total amount of tokens that have been dripped but not claimed
         uint32 lastDripTimestamp; // The timestamp at which the tokens were last dripped
         uint128 lastExchangeRateMantissa;
-        uint128 balance;
+        uint128 ownerBalance; // Owner Balance
     }
 }
