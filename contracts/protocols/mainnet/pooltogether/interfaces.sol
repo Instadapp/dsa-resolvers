@@ -55,15 +55,37 @@ interface TokenFaucetProxyFactoryInterface {
 }
 
 interface PodInterface {
-    function depositTo(address to, uint256 tokenAmount) external returns (uint256);
+    function prizePool() external view returns (address);
 
-    function withdraw(uint256 shareAmount, uint256 maxFee) external returns (uint256);
+    function getPricePerShare() external view returns (uint256);
 
     function balanceOf(address account) external view returns (uint256);
+
+    function getEarlyExitFee(uint256 amount) external returns (uint256);
+
+    function balanceOfUnderlying(address user) external view returns (uint256 amount);
+
+    function balance() external view returns (uint256);
+
+    function faucet() external view returns (address);
+
+    function tokenDrop() external view returns (address);
+
+    function name() external view returns (string memory);
+
+    function symbol() external view returns (string memory);
+
+    function decimals() external view returns (uint8);
+
+    function totalSupply() external view returns (uint256);
+
+    function token() external view returns (address);
+
+    function ticket() external view returns (address);
 }
 
 interface TokenInterface {
-    function decimals() external view returns (uint256);
+    function decimals() external view returns (uint8);
 
     function balanceOf(address) external view returns (uint256);
 

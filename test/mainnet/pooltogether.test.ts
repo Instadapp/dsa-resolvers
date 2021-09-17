@@ -11,8 +11,10 @@ import {
 const DAI_PRIZE_POOL_ADDR = "0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a"; // DAI Prize Pool
 const POOL_PRIZE_POOL_ADDR = "0x396b4489da692788e327e2e4b2b0459a5ef26791"; // POOL Prize Pool
 const USDC_PRIZE_POOL_ADDR = "0xde9ec95d7708b8319ccca4b8bc92c0a3b70bf416"; // USDC Prize Pool
+const DAI_POD_ADDR = "0x2f994e2E4F3395649eeE8A89092e63Ca526dA829"; // DAI Pod
 
 const MULTI_TOKEN_LISTENER_ABI = ["function getAddresses() view external returns(address[] memory)"];
+const WETH_PRIZE_POOL_ADDR = "0xa88ca010b32a54d446fc38091ddbca55750cbfc3"; // Community WETH Prize Pool (Rari)
 
 describe("PoolTogether Resolvers", () => {
   let signer: SignerWithAddress;
@@ -35,8 +37,26 @@ describe("PoolTogether Resolvers", () => {
       await resolverERC20.deployed();
     });
 
+    async function outputTokenFaucetData(owner: string, tokenFaucetData: any, assetData: any) {
+      console.log("\t\t\tAsset Data: ");
+      for (let i = 0; i < assetData.length; i++) {
+        console.log("\t\t\t\tName: ", assetData[i].name);
+        console.log("\t\t\t\tSymbol: ", assetData[i].symbol);
+        console.log("\t\t\t\tDecimals: ", assetData[i].decimals.toString());
+        console.log("\t\t\t\tAddress: ", tokenFaucetData.asset);
+      }
+      console.log("\t\t\tDrip Rate Per Second: ", tokenFaucetData.dripRatePerSecond.toString());
+      console.log("\t\t\tExchange Rate Mantissa: : ", tokenFaucetData.exchangeRateMantissa.toString());
+      console.log("\t\t\tTotal Unclaimed: : ", tokenFaucetData.totalUnclaimed.toString());
+      console.log("\t\t\tLast Drip Timestamp: : ", tokenFaucetData.lastDripTimestamp);
+      console.log("\t\t\tLast Exchange Rate Mantissa: : ", tokenFaucetData.lastExchangeRateMantissa.toString());
+      console.log("\t\t\tBalance: : ", tokenFaucetData.balance.toString());
+      console.log("\t\t\tOwner Balance: : ", tokenFaucetData.ownerBalance.toString());
+    }
+
     it("Returns the positions correctly for a DAI Prize Pool", async () => {
-      const owner = "0x30030383d959675ec884e7ec88f05ee0f186cc06";
+      //   const owner = "0x30030383d959675ec884e7ec88f05ee0f186cc06";
+      const owner = "0x64bcca4ba670cb6777faf79a2406f655d85cf402";
       const prizePools = [DAI_PRIZE_POOL_ADDR];
       const prizePoolData = await resolver.callStatic.getPoolTogetherData(owner, prizePools);
 
@@ -57,7 +77,7 @@ describe("PoolTogether Resolvers", () => {
           console.log("\t\tAddress: ", controlledToken.addr);
           console.log("\t\tSymbol: ", controlledToken.symbol);
           console.log("\t\tDecimals: ", controlledToken.decimals.toString());
-          console.log("\t\tUser Balance: ", formatUnits(controlledToken.balance, controlledToken.decimals));
+          console.log("\t\tUser Balance: ", formatUnits(controlledToken.balanceOf, controlledToken.decimals));
           console.log("\t\tCredit Limit: ", controlledToken.creditLimitMantissa.toString());
           console.log("\t\tCredit Rate: ", controlledToken.creditRateMantissa.toString());
         }
@@ -77,6 +97,8 @@ describe("PoolTogether Resolvers", () => {
           console.log("\t\t\tSymbol: ", assetData[k].symbol);
           console.log("\t\t\tDecimals: ", assetData[k].decimals.toString());
           console.log("\t\t\tAddress: ", strategyData.getExternalErc20Awards[k]);
+          const balance = await resolverERC20.getBalances(prizePools[i], [strategyData.getExternalErc20Awards[k]]);
+          console.log("\t\t\tBalance: ", balance.toString());
         }
         console.log("\tGet ExternalErc721 Awards: ", strategyData.getExternalErc721Awards);
         console.log("\tToken Listener: ", tokenListener);
@@ -90,17 +112,9 @@ describe("PoolTogether Resolvers", () => {
           for (let k = 0; k < addresses.length; k++) {
             try {
               const tokenFaucetData = await resolver.callStatic.getTokenFaucetData(owner, addresses[k]);
-              console.log("\t\tTokenFaucet Address: ", addresses[k]);
-              console.log("\t\t\tAsset: ", tokenFaucetData.asset);
               const assetData = await resolverERC20.getTokenDetails([tokenFaucetData.asset]);
-              console.log("Asset Data: ", assetData);
-              console.log("\t\t\tDrip Rate Per Second: ", tokenFaucetData.dripRatePerSecond.toString());
-              console.log("\t\t\tExchange Rate Mantissa: : ", tokenFaucetData.exchangeRateMantissa.toString());
-              console.log("\t\t\tTotal Unclaimed: : ", tokenFaucetData.totalUnclaimed.toString());
-              console.log("\t\t\tLast Drip Timestamp: : ", tokenFaucetData.lastDripTimestamp);
-              console.log("\t\t\tLast Exchange Rate Mantissa: : ", tokenFaucetData.lastExchangeRateMantissa.toString());
-              console.log("\t\t\tBalance: : ", tokenFaucetData.balance.toString());
-              console.log("\t\t\tOwner Balance: : ", tokenFaucetData.ownerBalance.toString());
+              console.log("\t\tTokenFaucet Address: ", addresses[k]);
+              await outputTokenFaucetData(owner, tokenFaucetData, assetData);
             } catch (e) {
               // Ignore if not token faucet
               console.log("\t\tNon TokenFaucet Address: ", addresses[k]);
@@ -113,25 +127,37 @@ describe("PoolTogether Resolvers", () => {
 
         try {
           const tokenFaucetData = await resolver.callStatic.getTokenFaucetData(owner, tokenListener);
-          console.log("\t\tTokenFaucet Address: ", tokenListener);
           const assetData = await resolverERC20.getTokenDetails([tokenFaucetData.asset]);
-          console.log("\t\t\tAsset Data: ");
-          for (let i = 0; i < assetData.length; i++) {
-            console.log("\t\t\t\tName: ", assetData[i].name);
-            console.log("\t\t\t\tSymbol: ", assetData[i].symbol);
-            console.log("\t\t\t\tDecimals: ", assetData[i].decimals.toString());
-            console.log("\t\t\t\tAddress: ", tokenFaucetData.asset);
-          }
-          console.log("\t\t\tDrip Rate Per Second: ", tokenFaucetData.dripRatePerSecond.toString());
-          console.log("\t\t\tExchange Rate Mantissa: : ", tokenFaucetData.exchangeRateMantissa.toString());
-          console.log("\t\t\tTotal Unclaimed: : ", tokenFaucetData.totalUnclaimed.toString());
-          console.log("\t\t\tLast Drip Timestamp: : ", tokenFaucetData.lastDripTimestamp);
-          console.log("\t\t\tLast Exchange Rate Mantissa: : ", tokenFaucetData.lastExchangeRateMantissa.toString());
-          console.log("\t\t\tBalance: : ", tokenFaucetData.balance.toString());
-          console.log("\t\t\tOwner Balance: : ", tokenFaucetData.ownerBalance.toString());
+          console.log("\t\tTokenFaucet Address: ", tokenListener);
+          await outputTokenFaucetData(owner, tokenFaucetData, assetData);
         } catch (e) {
-          console.log("Non Token Faucet");
+          console.log("\t\tNon Token Faucet");
         }
+      }
+    });
+
+    it("Returns the pod positions correctly for a Pod DAI Prize Pool", async () => {
+      const owner = "0xb0bd53e103dbd9efba9e4c07ff5b3883a666b78a";
+      const pods = [DAI_POD_ADDR];
+      const podsData = await resolver.callStatic.getPodPosition(owner, pods);
+
+      for (let i = 0; i < podsData.length; i++) {
+        console.log("Pod: ", pods[i]);
+        console.log("Name: ", podsData[i].name);
+        console.log("Symbol: ", podsData[i].symbol);
+        console.log("Decimals: ", podsData[i].decimals.toString());
+        console.log("PrizePool: ", podsData[i].prizePool);
+        console.log("Price Per Share: ", podsData[i].pricePerShare.toString());
+        console.log("Balance: ", podsData[i].balance.toString());
+        console.log("User Balance: ", podsData[i].balanceOf.toString());
+        console.log("Balance of Underlying: ", podsData[i].balanceOfUnderlying.toString());
+        console.log("Total Supply: ", podsData[i].totalSupply.toString());
+        console.log("Token Drop: ", podsData[i].tokenDrop);
+        console.log("Faucet: ", podsData[i].faucet);
+        const tokenFaucetData = await resolver.callStatic.getTokenFaucetData(owner, podsData[i].faucet);
+        const assetData = await resolverERC20.getTokenDetails([tokenFaucetData.asset]);
+        console.log("\t\tTokenFaucet Address: ", podsData[i].faucet);
+        await outputTokenFaucetData(owner, tokenFaucetData, assetData);
       }
     });
   });

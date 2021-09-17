@@ -43,7 +43,7 @@ contract Helpers is DSMath {
 
     struct ControlledTokenData {
         address addr;
-        uint256 balance;
+        uint256 balanceOf; // User Balance
         string name;
         string symbol;
         uint256 decimals;
@@ -60,5 +60,29 @@ contract Helpers is DSMath {
         uint128 lastExchangeRateMantissa;
         uint128 balance;
         uint256 ownerBalance;
+    }
+
+    struct PodData {
+        string name;
+        string symbol;
+        uint8 decimals;
+        address prizePool; // The Pod PrizePool reference
+        uint256 pricePerShare; // Calculate the cost of the Pod's token price per share. Until a Pod has won it's 1.
+        uint256 balance; // Measure's the Pod's total balance by adding the vaultTokenBalance and _podTicketBalance
+        uint256 balanceOf; // User balance
+        uint256 balanceOfUnderlying; // Calculate the underlying assets relative to users balance.
+        uint256 totalSupply;
+        address tokenDrop;
+        address faucet;
+    }
+
+    struct TokenDrop {
+        address asset; // The token that is being disbursed
+        address measure; // The token that is used to measure a user's portion of disbursed tokens
+        uint112 exchangeRateMantissa; // The cumulative exchange rate of measure token supply : dripped tokens
+        uint112 totalUnclaimed; // The total amount of tokens that have been dripped but not claimed
+        uint32 lastDripTimestamp; // The timestamp at which the tokens were last dripped
+        uint128 lastExchangeRateMantissa;
+        uint128 balance;
     }
 }

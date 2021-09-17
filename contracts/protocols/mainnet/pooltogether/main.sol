@@ -80,8 +80,34 @@ contract Resolver is Helpers {
         return prizePoolsData;
     }
 
+    function getPodData(address owner, address[] memory podAddress) public view returns (PodData[] memory) {
+        PodData[] memory podsData = new PodData[](podAddress.length);
+        for (uint256 i = 0; i < podAddress.length; i++) {
+            PodInterface pod = PodInterface(podAddress[i]);
+
+            podsData[i] = PodData(
+                pod.name(),
+                pod.symbol(),
+                pod.decimals(),
+                pod.prizePool(),
+                pod.getPricePerShare(),
+                pod.balance(),
+                pod.balanceOf(owner),
+                pod.balanceOfUnderlying(owner),
+                pod.totalSupply(),
+                pod.tokenDrop(),
+                pod.faucet()
+            );
+        }
+        return podsData;
+    }
+
     function getPosition(address owner, address[] memory prizePoolAddress) public returns (PrizePoolData[] memory) {
         return (getPoolTogetherData(owner, prizePoolAddress));
+    }
+
+    function getPodPosition(address owner, address[] memory podAddress) public returns (PodData[] memory) {
+        return (getPodData(owner, podAddress));
     }
 }
 
