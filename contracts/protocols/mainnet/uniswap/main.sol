@@ -31,16 +31,21 @@ contract Resolver is Helpers {
         (pInfo) = positions(tokenId);
     }
 
-    function getPositionsInfo(address user)
+    function getPositionsInfo(address user, uint256[] memory stakedTokenIds)
         public
         view
         returns (uint256[] memory tokenIds, PositionInfo[] memory positionsInfo)
     {
         tokenIds = userNfts(user);
-        positionsInfo = new PositionInfo[](tokenIds.length);
+        positionsInfo = new PositionInfo[](tokenIds.length + stakedTokenIds.length);
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];
             (positionsInfo[i]) = positions(tokenId);
+        }
+
+        for (uint256 i = 0; i < stakedTokenIds.length; i++) {
+            uint256 tokenId = stakedTokenIds[i];
+            (positionsInfo[tokenIds.length + i]) = positions(tokenId);
         }
     }
 
@@ -124,8 +129,8 @@ contract Resolver is Helpers {
     {
         (liquidity, amountB, amountAMin, amountBMin) = singleMintAmount(
             tokenA,
-            tokenB,
             amountA,
+            tokenB,
             slippage,
             fee,
             tickLower,
@@ -150,7 +155,7 @@ contract Resolver is Helpers {
         (amount0, amount1, amount0Min, amount1Min) = withdrawAmount(tokenId, liquidity, slippage);
     }
 
-    function getCollectAmount(uint256 tokenId) public view returns (uint256 amountA, uint256 amountB) {
+    function getCollectAmount(uint256 tokenId) public returns (uint256 amountA, uint256 amountB) {
         (amountA, amountB) = collectInfo(tokenId);
     }
 
