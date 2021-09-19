@@ -68,6 +68,16 @@ contract Resolver is Helpers {
         uint96 numberOfStakes;
     }
 
+    struct RewardDetailsMinAndMax {
+        uint256 rate;
+        uint128 liquidity;
+        uint256 minAmount0;
+        uint256 minAmount1;
+        uint256 maxAmount0;
+        uint256 maxAmount1;
+        int24 tick;
+    }
+
     struct RewardDetails {
         uint256 rate;
         uint128 liquidity;
@@ -76,19 +86,61 @@ contract Resolver is Helpers {
         int24 tick;
     }
 
-    function getRewardsDetails(IUniswapV3Staker.IncentiveKey memory key)
-        public
-        view
-        returns (RewardDetails memory rewardDetails)
-    {
+    function getPositionRewardsDetails(
+        IUniswapV3Staker.IncentiveKey memory key,
+        uint128 positionLiquidity,
+        int24 upperTick,
+        int24 lowerTick
+    ) public view returns (RewardDetails memory rewardDetails) {
         IUniswapV3Pool pool = IUniswapV3Pool(key.pool);
         uint160 sqrtRatioX96;
         (sqrtRatioX96, rewardDetails.tick, , , , , ) = pool.slot0();
         rewardDetails.liquidity = pool.liquidity();
         (rewardDetails.amount0, rewardDetails.amount1) = LiquidityAmounts.getAmountsForLiquidity(
             sqrtRatioX96,
-            TickMath.getSqrtRatioAtTick((int24(rewardDetails.tick - 1))),
-            TickMath.getSqrtRatioAtTick((int24(rewardDetails.tick + 1))),
+            TickMath.getSqrtRatioAtTick((int24(lowerTick))),
+            TickMath.getSqrtRatioAtTick((int24(upperTick))),
+            uint128(positionLiquidity)
+        );
+
+        if (key.startTime < block.timestamp) {
+            bytes32 incentiveId = keccak256(abi.encode(key));
+
+            Incentive memory incentive;
+            (incentive.totalRewardUnclaimed, incentive.totalSecondsClaimedX128, incentive.numberOfStakes) = staker
+            .incentives(incentiveId);
+
+            uint256 totalSecondsUnclaimedX128 = ((Math.max(key.endTime, block.timestamp) - key.startTime) << 128) -
+                incentive.totalSecondsClaimedX128;
+            rewardDetails.rate = uint256(
+                (incentive.totalRewardUnclaimed * 0x100000000000000000000000000000000) /
+                    uint256(totalSecondsUnclaimedX128)
+            );
+        }
+    }
+
+    function getRewardsDetailsMinAndMax(
+        IUniswapV3Staker.IncentiveKey memory key,
+        int24 minUpperTick,
+        int24 minLowerTick,
+        int24 maxUpperTick,
+        int24 maxLowerTick
+    ) public view returns (RewardDetailsMinAndMax memory rewardDetails) {
+        IUniswapV3Pool pool = IUniswapV3Pool(key.pool);
+        uint160 sqrtRatioX96;
+        (sqrtRatioX96, rewardDetails.tick, , , , , ) = pool.slot0();
+        rewardDetails.liquidity = pool.liquidity();
+        (rewardDetails.maxAmount0, rewardDetails.maxAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+            sqrtRatioX96,
+            TickMath.getSqrtRatioAtTick((int24(minLowerTick))),
+            TickMath.getSqrtRatioAtTick((int24(minUpperTick))),
+            uint128(rewardDetails.liquidity)
+        );
+
+        (rewardDetails.minAmount0, rewardDetails.minAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+            sqrtRatioX96,
+            TickMath.getSqrtRatioAtTick((int24(maxLowerTick))),
+            TickMath.getSqrtRatioAtTick((int24(maxUpperTick))),
             uint128(rewardDetails.liquidity)
         );
 
@@ -187,11 +239,16 @@ contract Resolver is Helpers {
                 user,
                 address(paramArray[i].incentiveKey.rewardToken)
             );
-            positionInfo[i].rewardDetails = getRewardsDetails(paramArray[i].incentiveKey);
             PositionInfo memory pInfo = positions(paramArray[i].tokenId);
             positionInfo[i].userLiquidity = pInfo.liquidity;
             positionInfo[i].lowerTick = pInfo.tickLower;
             positionInfo[i].upperTick = pInfo.tickUpper;
+            positionInfo[i].rewardDetails = getPositionRewardsDetails(
+                paramArray[i].incentiveKey,
+                uint128(positionInfo[i].userLiquidity),
+                positionInfo[i].lowerTick,
+                positionInfo[i].upperTick
+            );
 
             IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(paramArray[i].tokenId));
             positionInfo[i].totalLiquidity = pool.liquidity();
