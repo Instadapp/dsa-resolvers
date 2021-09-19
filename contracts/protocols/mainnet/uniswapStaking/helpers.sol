@@ -22,7 +22,7 @@ abstract contract Helpers is DSMath {
      */
     address internal constant wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
-    INonfungiblePositionManager private nftManager = INonfungiblePositionManager(getUniswapNftManagerAddr());
+    INonfungiblePositionManager internal nftManager = INonfungiblePositionManager(getUniswapNftManagerAddr());
 
     IUniswapV3Staker public staker = IUniswapV3Staker(0x1f98407aaB862CdDeF78Ed252D6f557aA5b0f00d);
 
