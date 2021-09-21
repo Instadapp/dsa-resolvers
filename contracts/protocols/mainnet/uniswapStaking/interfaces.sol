@@ -487,6 +487,7 @@ interface IUniswapV3Staker is IERC721Receiver, IMulticall {
     /// @return reward The reward accrued to the NFT for the given incentive thus far
     function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
         external
+        view
         returns (uint256 reward, uint160 secondsInsideX128);
 
     /// @notice Event emitted when a liquidity mining incentive has been created
