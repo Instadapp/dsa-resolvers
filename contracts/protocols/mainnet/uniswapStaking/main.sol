@@ -27,6 +27,7 @@ contract Resolver is Helpers {
                 counter++;
             }
         }
+
         return tokenIds;
     }
 
@@ -130,14 +131,14 @@ contract Resolver is Helpers {
         uint160 sqrtRatioX96;
         (sqrtRatioX96, rewardDetails.tick, , , , , ) = pool.slot0();
         rewardDetails.liquidity = pool.liquidity();
-        (rewardDetails.maxAmount0, rewardDetails.maxAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+        (rewardDetails.minAmount0, rewardDetails.minAmount1) = LiquidityAmounts.getAmountsForLiquidity(
             sqrtRatioX96,
             TickMath.getSqrtRatioAtTick((int24(minLowerTick))),
             TickMath.getSqrtRatioAtTick((int24(minUpperTick))),
             uint128(rewardDetails.liquidity)
         );
 
-        (rewardDetails.minAmount0, rewardDetails.minAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+        (rewardDetails.maxAmount0, rewardDetails.maxAmount1) = LiquidityAmounts.getAmountsForLiquidity(
             sqrtRatioX96,
             TickMath.getSqrtRatioAtTick((int24(maxLowerTick))),
             TickMath.getSqrtRatioAtTick((int24(maxUpperTick))),
