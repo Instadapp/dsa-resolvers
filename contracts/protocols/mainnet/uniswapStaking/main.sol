@@ -50,7 +50,7 @@ contract Resolver is Helpers {
         uint256 tokenId,
         address user,
         address rewardToken
-    ) public view returns (uint256 reward, uint256 rewardToCollect) {
+    ) public returns (uint256 reward, uint256 rewardToCollect) {
         (uint256 liquidity, ) = staker.stakes(tokenId, getIncentiveId(key));
         if (liquidity > 0) (reward, ) = staker.getRewardInfo(key, tokenId);
         rewardToCollect = staker.rewards(IERC20Minimal(rewardToken), user);
@@ -109,7 +109,7 @@ contract Resolver is Helpers {
 
             Incentive memory incentive;
             (incentive.totalRewardUnclaimed, incentive.totalSecondsClaimedX128, incentive.numberOfStakes) = staker
-            .incentives(incentiveId);
+                .incentives(incentiveId);
 
             uint256 totalSecondsUnclaimedX128 = ((Math.max(key.endTime, block.timestamp) - key.startTime) << 128) -
                 incentive.totalSecondsClaimedX128;
@@ -150,7 +150,7 @@ contract Resolver is Helpers {
 
             Incentive memory incentive;
             (incentive.totalRewardUnclaimed, incentive.totalSecondsClaimedX128, incentive.numberOfStakes) = staker
-            .incentives(incentiveId);
+                .incentives(incentiveId);
 
             uint256 totalSecondsUnclaimedX128 = ((Math.max(key.endTime, block.timestamp) - key.startTime) << 128) -
                 incentive.totalSecondsClaimedX128;
@@ -167,7 +167,7 @@ contract Resolver is Helpers {
 
         Incentive memory incentive;
         (incentive.totalRewardUnclaimed, incentive.totalSecondsClaimedX128, incentive.numberOfStakes) = staker
-        .incentives(incentiveId);
+            .incentives(incentiveId);
 
         uint256 totalSecondsUnclaimedX128 = ((Math.max(key.endTime, block.timestamp) - key.startTime) << 128) -
             incentive.totalSecondsClaimedX128;
@@ -229,7 +229,6 @@ contract Resolver is Helpers {
 
     function getPositions(address user, PositionParams[] memory paramArray)
         external
-        view
         returns (PositionInformation[] memory)
     {
         PositionInformation[] memory positionInfo = new PositionInformation[](paramArray.length);
