@@ -57,10 +57,7 @@ contract Resolver is Helpers {
         return prizeStrategyData;
     }
 
-    function getPoolTogetherData(address owner, address[] memory prizePoolAddress)
-        public
-        returns (PrizePoolData[] memory)
-    {
+    function getPosition(address owner, address[] memory prizePoolAddress) public returns (PrizePoolData[] memory) {
         PrizePoolData[] memory prizePoolsData = new PrizePoolData[](prizePoolAddress.length);
         for (uint256 i = 0; i < prizePoolAddress.length; i++) {
             PrizePoolInterface prizePool = PrizePoolInterface(prizePoolAddress[i]);
@@ -98,7 +95,7 @@ contract Resolver is Helpers {
         return prizePoolsData;
     }
 
-    function getPodData(address owner, address[] memory podAddress) public view returns (PodData[] memory) {
+    function getPodPosition(address owner, address[] memory podAddress) public view returns (PodData[] memory) {
         PodData[] memory podsData = new PodData[](podAddress.length);
         for (uint256 i = 0; i < podAddress.length; i++) {
             PodInterface pod = PodInterface(podAddress[i]);
@@ -118,14 +115,6 @@ contract Resolver is Helpers {
             );
         }
         return podsData;
-    }
-
-    function getPosition(address owner, address[] memory prizePoolAddress) public returns (PrizePoolData[] memory) {
-        return (getPoolTogetherData(owner, prizePoolAddress));
-    }
-
-    function getPodPosition(address owner, address[] memory podAddress) public view returns (PodData[] memory) {
-        return (getPodData(owner, podAddress));
     }
 }
 

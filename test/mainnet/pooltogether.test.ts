@@ -58,7 +58,7 @@ describe("PoolTogether Resolvers", () => {
       //   const owner = "0x30030383d959675ec884e7ec88f05ee0f186cc06";
       const owner = "0x64bcca4ba670cb6777faf79a2406f655d85cf402";
       const prizePools = [DAI_PRIZE_POOL_ADDR];
-      const prizePoolData = await resolver.callStatic.getPoolTogetherData(owner, prizePools);
+      const prizePoolData = await resolver.callStatic.getPosition(owner, prizePools);
 
       for (let i = 0; i < prizePoolData.length; i++) {
         console.log("PrizePool: ", DAI_PRIZE_POOL_ADDR);
