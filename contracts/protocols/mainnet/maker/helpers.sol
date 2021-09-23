@@ -98,8 +98,9 @@ contract Helpers is DSMath {
         )
     {
         address vat = InstaMcdAddress(getMcdAddresses()).vat();
-        (uint256 totalArt, uint256 rate, , uint256 vaultDebtCellingRad, uint256 vaultDebtFloor) =
-            VatLike(vat).ilks(ilk);
+        (uint256 totalArt, uint256 rate, , uint256 vaultDebtCellingRad, uint256 vaultDebtFloor) = VatLike(vat).ilks(
+            ilk
+        );
         uint256 vaultDebtCelling = vaultDebtCellingRad / 10**45;
         uint256 vaultTotalDebt = rmul(totalArt, rate);
 

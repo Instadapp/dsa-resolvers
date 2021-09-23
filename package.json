@@ -88,6 +88,7 @@
     "typechain": "hardhat typechain"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.4.1-solc-0.7-2"
+    "@openzeppelin/contracts": "^3.4.1-solc-0.7-2",
+    "@uniswap/v3-periphery": "^1.2.0"
   }
 }
