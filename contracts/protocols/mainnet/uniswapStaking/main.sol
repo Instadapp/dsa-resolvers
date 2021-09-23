@@ -50,7 +50,7 @@ contract Resolver is Helpers {
         uint256 tokenId,
         address user,
         address rewardToken
-    ) public returns (uint256 reward, uint256 rewardToCollect) {
+    ) public view returns (uint256 reward, uint256 rewardToCollect) {
         (uint256 liquidity, ) = staker.stakes(tokenId, getIncentiveId(key));
         if (liquidity > 0) (reward, ) = staker.getRewardInfo(key, tokenId);
         rewardToCollect = staker.rewards(IERC20Minimal(rewardToken), user);
@@ -229,6 +229,7 @@ contract Resolver is Helpers {
 
     function getPositions(address user, PositionParams[] memory paramArray)
         external
+        view
         returns (PositionInformation[] memory)
     {
         PositionInformation[] memory positionInfo = new PositionInformation[](paramArray.length);
