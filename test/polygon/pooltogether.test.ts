@@ -7,19 +7,31 @@ import {
   InstaERC20Resolver,
   InstaERC20Resolver__factory,
 } from "../../typechain";
+const hre = require("hardhat");
 
-const DAI_PRIZE_POOL_ADDR = "0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a"; // DAI Prize Pool
-const POOL_PRIZE_POOL_ADDR = "0x396b4489da692788e327e2e4b2b0459a5ef26791"; // POOL Prize Pool
-const USDC_PRIZE_POOL_ADDR = "0xde9ec95d7708b8319ccca4b8bc92c0a3b70bf416"; // USDC Prize Pool
-const DAI_POD_ADDR = "0x2f994e2E4F3395649eeE8A89092e63Ca526dA829"; // DAI Pod
+const ALCHEMY_ID = process.env.ALCHEMY_POLYGON_API_KEY;
+
+const USDC_PRIZE_POOL_ADDR = "0xEE06AbE9e2Af61cabcb13170e01266Af2DEFa946"; // USDC Prize Pool
+const POOL_PRIZE_POOL_ADDR = "0x25788a1a171ec66Da6502f9975a15B609fF54CF6"; // POOL Prize Pool
 
 const MULTI_TOKEN_LISTENER_ABI = ["function getAddresses() view external returns(address[] memory)"];
-const WETH_PRIZE_POOL_ADDR = "0xa88ca010b32a54d446fc38091ddbca55750cbfc3"; // Community WETH Prize Pool (Rari)
 
 describe("PoolTogether Resolvers", () => {
   let signer: SignerWithAddress;
 
   before(async () => {
+    await hre.network.provider.request({
+      method: "hardhat_reset",
+      params: [
+        {
+          forking: {
+            jsonRpcUrl: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
+            blockNumber: 18717337,
+          },
+        },
+      ],
+    });
+
     [signer] = await ethers.getSigners();
   });
 
@@ -54,14 +66,14 @@ describe("PoolTogether Resolvers", () => {
       console.log("\t\t\tOwner Balance when claiming: ", tokenFaucetData.ownerBalance.toString());
     }
 
-    it("Returns the positions correctly for a DAI Prize Pool", async () => {
+    it("Returns the positions correctly for a USDC Prize Pool", async () => {
       //   const owner = "0x30030383d959675ec884e7ec88f05ee0f186cc06";
-      const owner = "0x64bcca4ba670cb6777faf79a2406f655d85cf402";
-      const prizePools = [DAI_PRIZE_POOL_ADDR];
+      const owner = "0xf212af1ff475f18ea01d2886f9710c773f5cf6ea";
+      const prizePools = [USDC_PRIZE_POOL_ADDR];
       const prizePoolData = await resolver.callStatic.getPosition(owner, prizePools);
 
       for (let i = 0; i < prizePoolData.length; i++) {
-        console.log("PrizePool: ", DAI_PRIZE_POOL_ADDR);
+        console.log("PrizePool: ", USDC_PRIZE_POOL_ADDR);
         console.log("Underlying Token: ", prizePoolData[i].token);
         // The total underlying balance of all assets. This includes both principal and interest.
         console.log("Balance: ", formatEther(prizePoolData[i].balance));
@@ -135,43 +147,6 @@ describe("PoolTogether Resolvers", () => {
         } catch (e) {
           console.log("\t\tNon Token Faucet");
         }
-      }
-    });
-
-    it("Returns the pod positions correctly for a Pod DAI Prize Pool", async () => {
-      const owner = "0xb0bd53e103dbd9efba9e4c07ff5b3883a666b78a";
-      const pods = [DAI_POD_ADDR];
-      const podsData = await resolver.callStatic.getPodPosition(owner, pods);
-
-      for (let i = 0; i < podsData.length; i++) {
-        console.log("Pod: ", pods[i]);
-        console.log("Name: ", podsData[i].name);
-        console.log("Symbol: ", podsData[i].symbol);
-        console.log("Decimals: ", podsData[i].decimals.toString());
-        console.log("PrizePool: ", podsData[i].prizePool);
-        console.log("Price Per Share: ", podsData[i].pricePerShare.toString());
-        console.log("Pod Balance: ", podsData[i].balance.toString());
-        console.log("Owner Balance: ", podsData[i].balanceOf.toString());
-        // Balance of Underlying should be equal when price per share is 1
-        console.log("Owner Balance of Underlying: ", podsData[i].balanceOfUnderlying.toString());
-        console.log("Total Supply: ", podsData[i].totalSupply.toString());
-
-        // Faucet for the Pod
-        console.log("Token Faucet: ", podsData[i].faucet);
-        const tokenFaucetData = await resolver.callStatic.getTokenFaucetData(owner, podsData[i].faucet);
-        const assetData = await resolverERC20.getTokenDetails([tokenFaucetData.asset]);
-        console.log("\t\tTokenFaucet Address: ", podsData[i].faucet);
-        await outputTokenFaucetData(owner, tokenFaucetData, assetData);
-
-        // Token Drop distributes token faucet reweards to users
-        console.log("Token Drop: ");
-        console.log("\tAsset: ", podsData[i].tokenDrop.asset);
-        console.log("\tMeasure: ", podsData[i].tokenDrop.measure);
-        console.log("\tExchange Rate Mantissa: ", podsData[i].tokenDrop.exchangeRateMantissa.toString());
-        console.log("\tTotal Unclaimed: ", podsData[i].tokenDrop.totalUnclaimed.toString());
-        console.log("\tLast Drip Timestamp: ", podsData[i].tokenDrop.lastDripTimestamp);
-        console.log("\tLast Exchange Rate Mantissa: ", podsData[i].tokenDrop.lastExchangeRateMantissa.toString());
-        console.log("\tOwner Balance: ", podsData[i].tokenDrop.ownerBalance.toString());
       }
     });
   });
