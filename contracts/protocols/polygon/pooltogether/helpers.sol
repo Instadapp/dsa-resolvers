@@ -61,28 +61,4 @@ contract Helpers is DSMath {
         uint128 balance; // Owner Balance last calculated
         uint256 ownerBalance; // True balance when claiming
     }
-
-    struct PodData {
-        string name;
-        string symbol;
-        uint8 decimals;
-        address prizePool; // The Pod PrizePool reference
-        uint256 pricePerShare; // Calculate the cost of the Pod's token price per share. Until a Pod has won it's 1.
-        uint256 balance; // Measure's the Pod's total balance by adding the vaultTokenBalance and _podTicketBalance
-        uint256 balanceOf; // User balance
-        uint256 balanceOfUnderlying; // Calculate the underlying assets relative to users balance.
-        uint256 totalSupply;
-        TokenDropData tokenDrop;
-        address faucet;
-    }
-
-    struct TokenDropData {
-        address asset; // The token that is being disbursed
-        address measure; // The token that is used to measure a user's portion of disbursed tokens
-        uint112 exchangeRateMantissa; // The cumulative exchange rate of measure token supply : dripped tokens
-        uint112 totalUnclaimed; // The total amount of tokens that have been dripped but not claimed
-        uint32 lastDripTimestamp; // The timestamp at which the tokens were last dripped
-        uint128 lastExchangeRateMantissa;
-        uint128 ownerBalance; // Owner Balance
-    }
 }

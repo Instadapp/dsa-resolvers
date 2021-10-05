@@ -4,24 +4,6 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
-    function getTokenDropData(address owner, address tokenDropAddress) public view returns (TokenDropData memory) {
-        TokenDropInterface tokenDrop = TokenDropInterface(tokenDropAddress);
-
-        (uint128 lastExchangeRateMantissa, uint128 balance) = tokenDrop.userStates(owner);
-
-        TokenDropData memory tokenDropData = TokenDropData(
-            tokenDrop.asset(),
-            tokenDrop.measure(),
-            tokenDrop.exchangeRateMantissa(),
-            tokenDrop.totalUnclaimed(),
-            tokenDrop.lastDripTimestamp(),
-            lastExchangeRateMantissa,
-            balance
-        );
-
-        return tokenDropData;
-    }
-
     function getTokenFaucetData(address owner, address tokenFaucetAddress) public returns (TokenFaucetData memory) {
         TokenFaucetInterface tokenFaucet = TokenFaucetInterface(tokenFaucetAddress);
 
@@ -93,28 +75,6 @@ contract Resolver is Helpers {
             );
         }
         return prizePoolsData;
-    }
-
-    function getPodPosition(address owner, address[] memory podAddress) public view returns (PodData[] memory) {
-        PodData[] memory podsData = new PodData[](podAddress.length);
-        for (uint256 i = 0; i < podAddress.length; i++) {
-            PodInterface pod = PodInterface(podAddress[i]);
-
-            podsData[i] = PodData(
-                pod.name(),
-                pod.symbol(),
-                pod.decimals(),
-                pod.prizePool(),
-                pod.getPricePerShare(),
-                pod.balance(),
-                pod.balanceOf(owner),
-                pod.balanceOfUnderlying(owner),
-                pod.totalSupply(),
-                getTokenDropData(owner, pod.tokenDrop()),
-                pod.faucet()
-            );
-        }
-        return podsData;
     }
 }
 
