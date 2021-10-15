@@ -155,7 +155,7 @@ contract Resolver is Helpers {
         (amount0, amount1, amount0Min, amount1Min) = withdrawAmount(tokenId, liquidity, slippage);
     }
 
-    function getCollectAmount(uint256 tokenId) public returns (uint256 amountA, uint256 amountB) {
+    function getCollectAmount(uint256 tokenId) public view returns (uint256 amountA, uint256 amountB) {
         (amountA, amountB) = collectInfo(tokenId);
     }
 
