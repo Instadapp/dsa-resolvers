@@ -4,9 +4,9 @@ pragma solidity >=0.8.0;
 interface QiTokenInterface {
     function exchangeRateStored() external view returns (uint256);
 
-    function borrowRatePerBlock() external view returns (uint256);
+    function borrowRatePerTimestamp() external view returns (uint256);
 
-    function supplyRatePerBlock() external view returns (uint256);
+    function supplyRatePerTimestamp() external view returns (uint256);
 
     function borrowBalanceStored(address) external view returns (uint256);
 
