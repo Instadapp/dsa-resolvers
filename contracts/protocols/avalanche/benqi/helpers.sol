@@ -41,8 +41,8 @@ contract Helpers is DSMath {
         uint256 totalBorrows;
         uint256 totalSupplied;
         uint256 borrowCap;
-        uint256 supplyRatePerBlock;
-        uint256 borrowRatePerBlock;
+        uint256 supplyRatePerTimestamp;
+        uint256 borrowRatePerTimestamp;
         uint256 collateralFactor;
         uint256 rewardSpeed;
         bool isQied;
