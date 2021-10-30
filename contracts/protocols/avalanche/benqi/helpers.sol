@@ -44,8 +44,13 @@ contract Helpers is DSMath {
         uint256 supplyRatePerTimestamp;
         uint256 borrowRatePerTimestamp;
         uint256 collateralFactor;
-        uint256 rewardSpeed;
+        uint256 rewardSpeedQi;
+        uint256 rewardSpeedAvax;
         bool isQied;
         bool isBorrowPaused;
+    }
+    struct MetadataExt {
+        uint256 avaxAccrued;
+        uint256 qiAccrued;
     }
 }

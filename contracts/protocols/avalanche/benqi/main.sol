@@ -39,12 +39,29 @@ contract Resolver is Helpers {
                 qiToken.borrowRatePerTimestamp(),
                 collateralFactor,
                 troller.rewardSpeeds(rewardQi, qiAddress[i]),
+                troller.rewardSpeeds(rewardAvax, qiAddress[i]),
                 isQied,
                 troller.borrowGuardianPaused(qiAddress[i])
             );
         }
 
         return tokensData;
+    }
+
+    function getRewardsData(address owner, ComptrollerLensInterface comptroller)
+        public
+        view
+        returns (MetadataExt memory)
+    {
+        return MetadataExt(comptroller.rewardAccrued(0, owner), comptroller.rewardAccrued(1, owner));
+    }
+
+    function getPosition(address owner, address[] memory qiAddress)
+        public
+        view
+        returns (BenqiData[] memory, MetadataExt memory)
+    {
+        return (getBenqiData(owner, qiAddress), getRewardsData(owner, getComptroller()));
     }
 }
 
