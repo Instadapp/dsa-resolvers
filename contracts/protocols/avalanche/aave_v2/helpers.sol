@@ -8,14 +8,14 @@ contract AaveHelpers is DSMath {
      * @dev Return ethereum address
      */
     function getEthAddr() internal pure returns (address) {
-        return 0xf20d962a6c8f70c731bd838a3a388D7d48fA6e15; // Avalanche mainnet
+        return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // Avalanche mainnet avax address
     }
 
     /**
      * @dev Return Weth address
      */
     function getWethAddr() internal pure returns (address) {
-        return 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB; // Avalanche mainnet
+        return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // Avalanche mainnet Wavax address
     }
 
     /**
@@ -36,7 +36,7 @@ contract AaveHelpers is DSMath {
      * @dev get Chainlink ETH price feed Address
      */
     function getChainlinkEthFeed() internal pure returns (address) {
-        return 0x3CA13391E9fb38a75330fb28f8cc2eB3D9ceceED; // Avalanche mainnet
+        return 0x976B3D034E162d8bD72D6b9C989d545b839003b0; // Avalanche mainnet
     }
 
     /**
