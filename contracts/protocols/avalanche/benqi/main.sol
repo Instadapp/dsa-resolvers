@@ -48,12 +48,18 @@ contract Resolver is Helpers {
         return tokensData;
     }
 
-    function getRewardsData(address owner, ComptrollerLensInterface comptroller)
-        public
-        view
-        returns (MetadataExt memory)
-    {
-        return MetadataExt(comptroller.rewardAccrued(0, owner), comptroller.rewardAccrued(1, owner));
+    function getRewardsData(
+        address owner,
+        ComptrollerLensInterface comptroller,
+        TokenInterface qiToken
+    ) public view returns (MetadataExt memory) {
+        return
+            MetadataExt(
+                comptroller.rewardAccrued(0, owner),
+                comptroller.rewardAccrued(1, owner),
+                qiToken.delegates(owner),
+                qiToken.getCurrentVotes(owner)
+            );
     }
 
     function getPosition(address owner, address[] memory qiAddress)
@@ -61,7 +67,7 @@ contract Resolver is Helpers {
         view
         returns (BenqiData[] memory, MetadataExt memory)
     {
-        return (getBenqiData(owner, qiAddress), getRewardsData(owner, getComptroller()));
+        return (getBenqiData(owner, qiAddress), getRewardsData(owner, getComptroller(), getQiToken()));
     }
 }
 

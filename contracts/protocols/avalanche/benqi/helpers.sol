@@ -52,5 +52,7 @@ contract Helpers is DSMath {
     struct MetadataExt {
         uint256 avaxAccrued;
         uint256 qiAccrued;
+        address delegate;
+        uint96 votes;
     }
 }
