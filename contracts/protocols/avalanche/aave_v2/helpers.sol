@@ -5,16 +5,16 @@ import { DSMath } from "../../../utils/dsmath.sol";
 
 contract AaveHelpers is DSMath {
     /**
-     * @dev Return ethereum address
+     * @dev Return Avax address
      */
-    function getEthAddr() internal pure returns (address) {
-        return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // Avalanche mainnet avax address
+    function getAvaxAddr() internal pure returns (address) {
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // Avalanche mainnet avax address
     }
 
     /**
-     * @dev Return Weth address
+     * @dev Return Wavax address
      */
-    function getWethAddr() internal pure returns (address) {
+    function getWavaxAddr() internal pure returns (address) {
         return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // Avalanche mainnet Wavax address
     }
 

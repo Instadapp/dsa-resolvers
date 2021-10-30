@@ -14,11 +14,11 @@ contract Resolver is AaveHelpers {
         address[] memory _tokens = new address[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
+            _tokens[i] = tokens[i] == getAvaxAddr() ? getWavaxAddr() : tokens[i];
         }
 
         AaveUserTokenData[] memory tokensData = new AaveUserTokenData[](length);
-        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, _tokens);
+        (TokenPrice[] memory tokenPrices, uint256 avaxPrice) = getTokensPrices(addrProvider, _tokens);
 
         for (uint256 i = 0; i < length; i++) {
             tokensData[i] = getTokenData(
@@ -30,7 +30,7 @@ contract Resolver is AaveHelpers {
             );
         }
 
-        return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, ethPrice, _tokens));
+        return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, avaxPrice, _tokens));
     }
 }
 
