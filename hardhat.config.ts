@@ -64,6 +64,9 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
+        // Avalanche mainnet:
+        // url: "https://api.avax.network/ext/bc/C/rpc",
+        // Ethereum mainnet:
         url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
         blockNumber: 12878959,
       },
