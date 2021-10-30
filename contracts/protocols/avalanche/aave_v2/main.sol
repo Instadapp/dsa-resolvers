@@ -34,6 +34,6 @@ contract Resolver is AaveHelpers {
     }
 }
 
-contract InstaAaveV2Resolver is Resolver {
+contract InstaAaveV2ResolverAvalanche is Resolver {
     string public constant name = "AaveV2-Resolver-v1.6";
 }

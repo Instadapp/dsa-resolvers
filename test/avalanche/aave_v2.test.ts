@@ -2,7 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
-import { InstaAaveV2Resolver, InstaAaveV2Resolver__factory } from "../../typechain";
+import { InstaAaveV2Resolver, InstaAaveV2ResolverAvalanche__factory } from "../../typechain";
 import { Tokens } from "../consts";
 
 describe("Aave V2 Resolvers", () => {
@@ -16,7 +16,7 @@ describe("Aave V2 Resolvers", () => {
   describe("Aave V2 Resolver", () => {
     let resolver: InstaAaveV2Resolver;
     before(async () => {
-      const deployer = new InstaAaveV2Resolver__factory(signer);
+      const deployer = new InstaAaveV2ResolverAvalanche__factory(signer);
       resolver = await deployer.deploy();
       await resolver.deployed();
     });
