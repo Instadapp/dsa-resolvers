@@ -49,6 +49,7 @@ contract Helpers is DSMath {
         bool isQied;
         bool isBorrowPaused;
     }
+
     struct MetadataExt {
         uint256 avaxAccrued;
         uint256 qiAccrued;
