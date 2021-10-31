@@ -22,6 +22,7 @@ const chainIds = {
   mainnet: 1,
   rinkeby: 4,
   ropsten: 3,
+  avalanche: 43114,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -66,9 +67,10 @@ const config: HardhatUserConfig = {
       forking: {
         // Avalanche mainnet:
         // url: "https://api.avax.network/ext/bc/C/rpc",
+
         // Ethereum mainnet:
         url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
-        blockNumber: 12878959,
+        //blockNumber: 12878959,
       },
     },
     goerli: createTestnetConfig("goerli"),
