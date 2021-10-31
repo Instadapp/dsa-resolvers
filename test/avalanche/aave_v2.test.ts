@@ -26,7 +26,8 @@ describe("Aave V2 Resolvers", () => {
     });
 
     it("Returns the positions on AaveV2", async () => {
-      const results = await resolver.getPosition(account, ["0xd586E7F844cEa2F87f50152665BCbc2C279D8d70"]);
+      const daiAddr = "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70";
+      const results = await resolver.getPosition(account, [daiAddr]);
       const userTokenData = results[0];
       const userData = results[1];
 
