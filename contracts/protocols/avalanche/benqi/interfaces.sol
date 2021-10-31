@@ -23,6 +23,10 @@ interface TokenInterface {
     function decimals() external view returns (uint256);
 
     function balanceOf(address) external view returns (uint256);
+
+    function delegates(address) external view returns (address);
+
+    function getCurrentVotes(address) external view returns (uint96);
 }
 
 interface OrcaleQi {
