@@ -34,20 +34,13 @@ async function testRunner() {
     },
   ]);
 
-  let networkType;
+  assert(currentNetwork === chain, "Please select suitable network otherwise change hardhat config");
+
   const testsPath = join(__dirname, "../test", chain);
   await fs.access(testsPath);
   const availableTests = await fs.readdir(testsPath);
   if (availableTests.length === 0) {
     throw new Error(`No tests available for ${chain}`);
-  }
-
-  if (chain === "mainnet") {
-    networkType = "hardhat";
-  } else if (chain === "polygon") {
-    networkType = "polygon";
-  } else if (chain === "avalanche") {
-    networkType = "avalanche";
   }
 
   const { testName } = await inquirer.prompt([
@@ -66,7 +59,6 @@ async function testRunner() {
     path = join(testsPath, testName);
   }
 
-  assert(String(network.name) === networkType, "Please select suitable network otherwise change hardhat config");
   await execScript("npx hardhat test " + path);
 }
 
