@@ -2,12 +2,12 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
-import { InstaAaveV2Resolver, InstaAaveV2Resolver__factory } from "../../typechain";
+import { InstaAaveV2Resolver, InstaAaveV2ResolverAvalanche__factory } from "../../typechain";
 import { Tokens } from "../consts";
 
 describe("Aave V2 Resolvers", () => {
   let signer: SignerWithAddress;
-  const account = "0xa8ABe411d1A3F524a2aB9C54f8427066a1F9f266";
+  const account = "0xE8549B7CE9634C98D0cdAE8b74CEF4C853756f1C";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -16,13 +16,18 @@ describe("Aave V2 Resolvers", () => {
   describe("Aave V2 Resolver", () => {
     let resolver: InstaAaveV2Resolver;
     before(async () => {
-      const deployer = new InstaAaveV2Resolver__factory(signer);
+      const deployer = new InstaAaveV2ResolverAvalanche__factory(signer);
       resolver = await deployer.deploy();
       await resolver.deployed();
     });
 
+    it("Should successfully deploy", async () => {
+      console.log("deployed");
+    });
+
     it("Returns the positions on AaveV2", async () => {
-      const results = await resolver.getPosition(account, [Tokens.DAI.addr]);
+      const daiAddr = "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70";
+      const results = await resolver.getPosition(account, [daiAddr]);
       const userTokenData = results[0];
       const userData = results[1];
 

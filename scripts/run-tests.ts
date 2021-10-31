@@ -2,6 +2,7 @@ import inquirer from "inquirer";
 import { promises as fs } from "fs";
 import { join } from "path/posix";
 import { spawn } from "child_process";
+import { assert } from "chai";
 
 export async function execScript(cmd: string): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -19,14 +20,21 @@ export async function execScript(cmd: string): Promise<number> {
 }
 
 async function testRunner() {
+  let currentNetwork = String(network.name);
+  if (String(network.name) === "hardhat") {
+    currentNetwork = "mainnet";
+  }
+  console.log(`Current Network: ${currentNetwork}`);
   const { chain } = await inquirer.prompt([
     {
       name: "chain",
       message: "What chain do you want to run tests on?",
       type: "list",
-      choices: ["mainnet", "polygon"],
+      choices: ["mainnet", "polygon", "avalanche"],
     },
   ]);
+
+  assert(currentNetwork === chain, "Please select suitable network otherwise change hardhat config");
 
   const testsPath = join(__dirname, "../test", chain);
   await fs.access(testsPath);
