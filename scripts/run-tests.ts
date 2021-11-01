@@ -1,8 +1,9 @@
 import inquirer from "inquirer";
 import { promises as fs } from "fs";
 import { join } from "path/posix";
-import { spawn } from "child_process";
+import { execFile, spawn } from "child_process";
 import { assert } from "chai";
+import config from "../hardhat.config";
 
 export async function execScript(cmd: string): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -19,11 +20,22 @@ export async function execScript(cmd: string): Promise<number> {
   });
 }
 
-async function testRunner() {
-  let currentNetwork = String(network.name);
-  if (String(network.name) === "hardhat") {
-    currentNetwork = "mainnet";
+function getNetworkType(currentNetworkURL: string) {
+  if (currentNetworkURL.includes("eth-mainnet")) {
+    return "mainnet";
+  } else if (currentNetworkURL.includes("api.avax.network")) {
+    return "avalanche";
+  } else if (currentNetworkURL.includes("polygon-mainnet")) {
+    return "polygon";
+  } else if (currentNetworkURL.includes("arb-mainnet")) {
+    return "arbitrum";
   }
+}
+
+async function testRunner() {
+  let currentNetworkURL = String(config.networks?.hardhat?.forking?.url);
+  let currentNetwork = getNetworkType(currentNetworkURL);
+
   console.log(`Current Network: ${currentNetwork}`);
   const { chain } = await inquirer.prompt([
     {
@@ -34,7 +46,10 @@ async function testRunner() {
     },
   ]);
 
-  assert(currentNetwork === chain, "Please select suitable network otherwise change hardhat config");
+  assert(
+    currentNetwork === chain,
+    `Current network is ${currentNetwork}, and you are selecting ${chain}, Please select suitable network otherwise change hardhat config`,
+  );
 
   const testsPath = join(__dirname, "../test", chain);
   await fs.access(testsPath);
