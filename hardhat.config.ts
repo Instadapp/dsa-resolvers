@@ -60,6 +60,14 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
   };
 }
 
+function getNetworkUrl(networkType: string) {
+  //console.log(process.env);
+  if (networkType === "avalanche") return "https://api.avax.network/ext/bc/C/rpc";
+  else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyPolyApiKey}`;
+  else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyArbApiKey}`;
+  else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyEthApiKey}`;
+}
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   gasReporter: {
@@ -75,18 +83,7 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-        // Avalanche mainnet:
-        // url: "https://api.avax.network/ext/bc/C/rpc",
-
-        // Ethereum mainnet:
-        url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyEthApiKey}`,
-        blockNumber: 12878959,
-
-        // Polygon mainnet:
-        // url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyPolyApiKey}`
-
-        // Arbitrum mainnet:
-        // url: `https://arb-mainnet.g.alchemy.com/v2/${alchemyArbApiKey}`
+        url: String(getNetworkUrl(String(process.env.networkType))),
       },
     },
     goerli: createTestnetConfig("goerli"),
