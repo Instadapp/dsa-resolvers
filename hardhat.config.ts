@@ -31,23 +31,13 @@ if (!mnemonic) {
   throw new Error("Please set your MNEMONIC in a .env file");
 }
 
-const alchemyEthApiKey = process.env.ALCHEMY_ETH_API_KEY;
-if (!alchemyEthApiKey) {
+const alchemyApiKey = process.env.ALCHEMY_API_KEY;
+if (!alchemyApiKey) {
   throw new Error("Please set your ALCHEMY_ETH_API_KEY in a .env file");
 }
 
-const alchemyPolyApiKey = process.env.ALCHEMY_POLY_API_KEY;
-if (!alchemyPolyApiKey) {
-  throw new Error("Please set your ALCHEMY_POLY_API_KEY in a .env file");
-}
-
-const alchemyArbApiKey = process.env.ALCHEMY_ARB_API_KEY;
-if (!alchemyArbApiKey) {
-  throw new Error("Please set your ALCHEMY_ARB_API_KEY in a .env file");
-}
-
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  const url: string = "https://eth-" + network + ".alchemyapi.io/v2/" + alchemyEthApiKey;
+  const url: string = "https://eth-" + network + ".alchemyapi.io/v2/" + alchemyApiKey;
   return {
     accounts: {
       count: 10,
@@ -63,9 +53,9 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
 function getNetworkUrl(networkType: string) {
   //console.log(process.env);
   if (networkType === "avalanche") return "https://api.avax.network/ext/bc/C/rpc";
-  else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyPolyApiKey}`;
-  else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyArbApiKey}`;
-  else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyEthApiKey}`;
+  else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
 const config: HardhatUserConfig = {
