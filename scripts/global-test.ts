@@ -19,9 +19,9 @@ export async function execScript(cmd: string): Promise<number> {
 }
 
 async function testRunner() {
-  const chain = ["mainnet", "polygon", "avalanche"];
+  const chain = ["avalanche", "mainnet", "polygon"];
   for (let ch of chain) {
-    console.log(`📗:Running test for %c${ch}: `, "blue");
+    console.log(`📗Running test for %c${ch}: `, "blue");
     let path: string;
     const testsPath = join(__dirname, "../test", ch);
     await fs.access(testsPath);

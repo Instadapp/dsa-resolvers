@@ -11,6 +11,7 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
+import Web3 from "web3";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -58,6 +59,16 @@ function getNetworkUrl(networkType: string) {
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
+function getBlockNumber(networkType: string) {
+  let web3 = new Web3(new Web3.providers.HttpProvider(getNetworkUrl(networkType)));
+  let blockNumber;
+  web3.eth.getBlockNumber().then((x: any) => {
+    blockNumber = x;
+  });
+
+  return blockNumber;
+}
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   gasReporter: {
@@ -74,6 +85,7 @@ const config: HardhatUserConfig = {
       chainId: chainIds.hardhat,
       forking: {
         url: String(getNetworkUrl(String(process.env.networkType))),
+        blockNumber: getBlockNumber(String(process.env.networkType)),
       },
     },
     goerli: createTestnetConfig("goerli"),
