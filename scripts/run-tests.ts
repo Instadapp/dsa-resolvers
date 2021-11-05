@@ -1,13 +1,12 @@
 import inquirer from "inquirer";
 import { promises as fs } from "fs";
 import { join } from "path/posix";
-import { spawn } from "child_process";
-import { assert } from "chai";
+import { execFile, spawn } from "child_process";
 
 export async function execScript(cmd: string): Promise<number> {
   return new Promise((resolve, reject) => {
     const parts = cmd.split(" ");
-    const proc = spawn(parts[0], parts.slice(1), { shell: true, stdio: "inherit" });
+    const proc = spawn(parts[1], parts.slice(2), { env: { networkType: parts[0] }, shell: true, stdio: "inherit" });
     proc.on("exit", code => {
       if (code !== 0) {
         reject(code);
@@ -20,11 +19,6 @@ export async function execScript(cmd: string): Promise<number> {
 }
 
 async function testRunner() {
-  let currentNetwork = String(network.name);
-  if (String(network.name) === "hardhat") {
-    currentNetwork = "mainnet";
-  }
-  console.log(`Current Network: ${currentNetwork}`);
   const { chain } = await inquirer.prompt([
     {
       name: "chain",
@@ -33,8 +27,6 @@ async function testRunner() {
       choices: ["mainnet", "polygon", "avalanche"],
     },
   ]);
-
-  assert(currentNetwork === chain, "Please select suitable network otherwise change hardhat config");
 
   const testsPath = join(__dirname, "../test", chain);
   await fs.access(testsPath);
@@ -59,7 +51,7 @@ async function testRunner() {
     path = join(testsPath, testName);
   }
 
-  await execScript("npx hardhat test " + path);
+  await execScript(chain + " npx hardhat test " + path);
 }
 
 testRunner()
