@@ -11,6 +11,7 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
+import Web3 from "web3";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -33,7 +34,7 @@ if (!mnemonic) {
 
 const alchemyApiKey = process.env.ALCHEMY_API_KEY;
 if (!alchemyApiKey) {
-  throw new Error("Please set your ALCHEMY_API_KEY in a .env file");
+  throw new Error("Please set your ALCHEMY_ETH_API_KEY in a .env file");
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
@@ -48,6 +49,24 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
     chainId: chainIds[network],
     url,
   };
+}
+
+function getNetworkUrl(networkType: string) {
+  //console.log(process.env);
+  if (networkType === "avalanche") return "https://api.avax.network/ext/bc/C/rpc";
+  else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
+}
+
+function getBlockNumber(networkType: string) {
+  let web3 = new Web3(new Web3.providers.HttpProvider(getNetworkUrl(networkType)));
+  let blockNumber;
+  web3.eth.getBlockNumber().then((x: any) => {
+    blockNumber = x;
+  });
+
+  return blockNumber;
 }
 
 const config: HardhatUserConfig = {
@@ -65,12 +84,8 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-        // Avalanche mainnet:
-        // url: "https://api.avax.network/ext/bc/C/rpc",
-
-        // Ethereum mainnet:
-        url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
-        //blockNumber: 12878959,
+        url: String(getNetworkUrl(String(process.env.networkType))),
+        blockNumber: getBlockNumber(String(process.env.networkType)),
       },
     },
     goerli: createTestnetConfig("goerli"),

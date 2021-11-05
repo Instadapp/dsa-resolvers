@@ -1,5 +1,6 @@
 import inquirer from "inquirer";
 import { promises as fs } from "fs";
+
 import { join } from "path";
 import { execScript } from "./command";
 
@@ -21,6 +22,7 @@ async function testRunner() {
           networkType: ch,
         },
       });
+
     }
   }
 }

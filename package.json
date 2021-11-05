@@ -83,12 +83,14 @@
     "postinstall": "husky install",
     "prettier": "prettier --config ./.prettierrc --write \"**/*.{js,json,md,sol,ts}\"",
     "prettier:check": "prettier --check --config ./.prettierrc \"**/*.{js,json,md,sol,ts}\"",
-    "test": "hardhat test",
+    "test": "hardhat run scripts/global-test.ts",
     "test:runner": "hardhat run scripts/run-tests.ts",
     "typechain": "hardhat typechain"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.1-solc-0.7-2",
-    "@uniswap/v3-periphery": "^1.2.0"
+    "@uniswap/v3-periphery": "^1.2.0",
+    "web3": "^1.6.0"
   }
 }
