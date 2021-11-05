@@ -1,23 +1,7 @@
 import inquirer from "inquirer";
 import { promises as fs } from "fs";
-import { join } from "path/posix";
-import { spawn } from "child_process";
-import { assert } from "chai";
-
-export async function execScript(cmd: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const parts = cmd.split(" ");
-    const proc = spawn(parts[0], parts.slice(1), { shell: true, stdio: "inherit" });
-    proc.on("exit", code => {
-      if (code !== 0) {
-        reject(code);
-        return;
-      }
-
-      resolve(code);
-    });
-  });
-}
+import { join } from "path";
+import { execScript } from "./command";
 
 async function testRunner() {
   let currentNetwork = String(network.name);
@@ -59,7 +43,13 @@ async function testRunner() {
     path = join(testsPath, testName);
   }
 
-  await execScript("npx hardhat test " + path);
+  await execScript({
+    cmd: "npx",
+    args: ["hardhat", "test", path],
+    env: {
+      networkType: chain,
+    },
+  });
 }
 
 testRunner()
