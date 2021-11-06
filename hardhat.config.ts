@@ -24,6 +24,7 @@ const chainIds = {
   rinkeby: 4,
   ropsten: 3,
   avalanche: 43114,
+  polygon: 137,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -129,7 +130,7 @@ const config: HardhatUserConfig = {
     target: "ethers-v5",
   },
   mocha: {
-    timeout: 100 * 1000,
+    timeout: 10000 * 1000,
   },
 };
 

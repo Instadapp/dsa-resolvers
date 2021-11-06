@@ -47,7 +47,7 @@ contract AaveHelpers is DSMath {
      * @dev Aave Incentives address
      */
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5; // polygon mainnet
+        return 0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5; // mainnet
     }
 
     struct AaveUserTokenData {

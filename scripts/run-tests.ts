@@ -4,6 +4,8 @@ import { promises as fs } from "fs";
 import { join } from "path";
 import { execScript } from "./command";
 
+let start: number, end: number;
+
 async function testRunner() {
   const { chain } = await inquirer.prompt([
     {
@@ -13,7 +15,6 @@ async function testRunner() {
       choices: ["mainnet", "polygon", "avalanche"],
     },
   ]);
-
   const testsPath = join(__dirname, "../test", chain);
   await fs.access(testsPath);
   const availableTests = await fs.readdir(testsPath);
@@ -29,7 +30,7 @@ async function testRunner() {
       choices: ["all", ...availableTests],
     },
   ]);
-
+  start = Date.now();
   let path: string;
   if (testName === "all") {
     path = availableTests.map(file => join(testsPath, file)).join(" ");
@@ -44,8 +45,9 @@ async function testRunner() {
       networkType: chain,
     },
   });
+  end = Date.now();
 }
 
 testRunner()
-  .then(() => console.log("🙌 finished the test runner"))
+  .then(() => console.log(`🙌 finished the test runner, time taken ${(end - start) / 1000} sec`))
   .catch(err => console.error("❌ failed due to error: ", err));
