@@ -35,6 +35,7 @@ contract Helpers is DSMath {
         address addr;
         uint256 balanceOf; // User Balance
         uint256 balanceAt;
+        uint256 totalSupply; // Total supply of tickets = amount deposited
         string name;
         string symbol;
         uint256 decimals;

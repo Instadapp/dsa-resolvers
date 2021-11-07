@@ -129,6 +129,7 @@ contract Resolver is Helpers {
                 address(ticket),
                 ticket.balanceOf(owner),
                 ticket.getBalanceAt(owner, uint64(block.timestamp)),
+                ticket.getTotalSupplyAt(uint64(block.timestamp)),
                 ticket.name(),
                 ticket.symbol(),
                 ticket.decimals(),

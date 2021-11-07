@@ -84,8 +84,11 @@ describe("PoolTogether Resolvers", () => {
         console.log("\t\tAddress: ", ticketData.addr);
         console.log("\t\tSymbol: ", ticketData.symbol);
         console.log("\t\tDecimals: ", ticketData.decimals.toString());
+        // User balances at current block
         console.log("\t\tUser BalanceOf: ", formatUnits(ticketData.balanceOf, ticketData.decimals));
         console.log("\t\tUser BalanceAt eligible for prize: ", formatUnits(ticketData.balanceAt, ticketData.decimals));
+        // Total supply is total amount deposited in prize pool by everyone
+        console.log("\t\tTotal Supply/Amount deposited: ", formatUnits(ticketData.totalSupply, ticketData.decimals));
         console.log("\t\tDelegateOf: ", ticketData.delegateOf);
 
         // Draw data
