@@ -5,49 +5,45 @@ import { DSMath } from "../../../utils/dsmath.sol";
 
 contract AaveHelpers is DSMath {
     /**
-     * @dev Return ethereum address
+     * @dev Return Avax address
      */
-    function getEthAddr() internal pure returns (address) {
-        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // ETH Address
+    function getAvaxAddr() internal pure returns (address) {
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // Avalanche mainnet avax address
     }
 
     /**
-     * @dev Return Weth address
+     * @dev Return Wavax address
      */
-    function getWethAddr() internal pure returns (address) {
-        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Mainnet WETH Address
-        // return 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // Kovan WETH Address
+    function getWavaxAddr() internal pure returns (address) {
+        return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // Avalanche mainnet Wavax address
     }
 
     /**
      * @dev get Aave Provider Address
      */
     function getAaveAddressProvider() internal pure returns (address) {
-        return 0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5; // Mainnet
-        // return 0x652B2937Efd0B5beA1c8d54293FC1289672AFC6b; // Kovan
+        return 0xb6A86025F0FE1862B372cb0ca18CE3EDe02A318f; // Avalanche mainnet
     }
 
     /**
      * @dev get Aave Protocol Data Provider
      */
     function getAaveProtocolDataProvider() internal pure returns (address) {
-        return 0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d; // Mainnet
-        // return 0x744C1aaA95232EeF8A9994C4E0b3a89659D9AB79; // Kovan
+        return 0x65285E9dfab318f57051ab2b139ccCf232945451; // Avalanche mainnet
     }
 
     /**
      * @dev get Chainlink ETH price feed Address
      */
     function getChainlinkEthFeed() internal pure returns (address) {
-        return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419; //mainnet
-        // return 0x9326BFA02ADD2366b30bacB125260Af641031331; //kovan
+        return 0x976B3D034E162d8bD72D6b9C989d545b839003b0; // Avalanche mainnet
     }
 
     /**
      * @dev Aave Incentives address
      */
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5; // mainnet
+        return 0x01D83Fe6A10D2f2B7AF17034343746188272cAc9; // Avalanche mainnet
     }
 
     struct AaveUserTokenData {

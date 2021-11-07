@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-interface CTokenInterface {
+interface QiTokenInterface {
     function exchangeRateStored() external view returns (uint256);
 
-    function borrowRatePerBlock() external view returns (uint256);
+    function borrowRatePerTimestamp() external view returns (uint256);
 
-    function supplyRatePerBlock() external view returns (uint256);
+    function supplyRatePerTimestamp() external view returns (uint256);
 
     function borrowBalanceStored(address) external view returns (uint256);
 
@@ -23,9 +23,13 @@ interface TokenInterface {
     function decimals() external view returns (uint256);
 
     function balanceOf(address) external view returns (uint256);
+
+    function delegates(address) external view returns (address);
+
+    function getCurrentVotes(address) external view returns (uint96);
 }
 
-interface OrcaleComp {
+interface OrcaleQi {
     function getUnderlyingPrice(address) external view returns (uint256);
 }
 
@@ -48,9 +52,9 @@ interface ComptrollerLensInterface {
             uint256
         );
 
-    function claimComp(address) external;
+    function claimReward(uint8, address) external;
 
-    function compAccrued(address) external view returns (uint256);
+    function rewardAccrued(uint8, address) external view returns (uint256);
 
     function borrowCaps(address) external view returns (uint256);
 
@@ -58,24 +62,5 @@ interface ComptrollerLensInterface {
 
     function oracle() external view returns (address);
 
-    function compSpeeds(address) external view returns (uint256);
-
-    function compSupplySpeeds(address) external view returns (uint256);
-
-    function compBorrowSpeeds(address) external view returns (uint256);
-}
-
-interface CompReadInterface {
-    struct CompBalanceMetadataExt {
-        uint256 balance;
-        uint256 votes;
-        address delegate;
-        uint256 allocated;
-    }
-
-    function getCompBalanceMetadataExt(
-        TokenInterface comp,
-        ComptrollerLensInterface comptroller,
-        address account
-    ) external returns (CompBalanceMetadataExt memory);
+    function rewardSpeeds(uint8, address) external view returns (uint256);
 }
