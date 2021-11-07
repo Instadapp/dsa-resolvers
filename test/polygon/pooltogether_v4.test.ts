@@ -2,8 +2,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { formatEther, formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import {
-  InstaPoolTogetherV4Resolver,
-  InstaPoolTogetherV4Resolver__factory,
+  InstaPoolTogetherV4PolygonResolver,
+  InstaPoolTogetherV4PolygonResolver__factory,
   InstaERC20Resolver,
   InstaERC20Resolver__factory,
 } from "../../typechain";
@@ -14,12 +14,12 @@ import { doesNotThrow } from "assert";
 
 const hre = require("hardhat");
 
-const ALCHEMY_ID = process.env.ALCHEMY_API_KEY;
+const ALCHEMY_ID = process.env.ALCHEMY_POLYGON_API_KEY;
 
-const USDC_PRIZE_POOL_ADDR = "0xd89a09084555a7D0ABe7B111b1f78DFEdDd638Be"; // USDC Prize Pool
-const DRAW_BEACON_ADDR = "0x0D33612870cd9A475bBBbB7CC38fC66680dEcAC5";
-const PRIZE_DISTRIBUTOR_ADDR = "0xb9a179DcA5a7bf5f8B9E088437B3A85ebB495eFe";
-const DRAW_CALCULATOR_TIME_LOCK_ADDR = "0x6Ab2C44A548b8ac1D166Afbf490B200Ad4261c15";
+const USDC_PRIZE_POOL_ADDR = "0x19DE635fb3678D8B8154E37d8C9Cdf182Fe84E60"; // USDC Prize Pool
+const DRAW_BUFFER_ADDR = "0x44B1d66E7B9d4467139924f31754F34cbC392f44";
+const PRIZE_DISTRIBUTOR_ADDR = "0x8141BcFBcEE654c5dE17C4e2B2AF26B67f9B9056";
+const DRAW_CALCULATOR_TIME_LOCK_ADDR = "0x676a541cF8CBa8C324ACE66E8dFd19CAcF9c7484";
 
 describe("PoolTogether Resolvers", () => {
   let signer: SignerWithAddress;
@@ -30,8 +30,8 @@ describe("PoolTogether Resolvers", () => {
       params: [
         {
           forking: {
-            jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
-            blockNumber: 13545682,
+            jsonRpcUrl: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
+            blockNumber: 20668404,
           },
         },
       ],
@@ -41,11 +41,11 @@ describe("PoolTogether Resolvers", () => {
   });
 
   describe("PoolTogother Resolver", () => {
-    let resolver: InstaPoolTogetherV4Resolver;
+    let resolver: InstaPoolTogetherV4PolygonResolver;
     let resolverERC20: InstaERC20Resolver;
 
     before(async () => {
-      const deployer = new InstaPoolTogetherV4Resolver__factory(signer);
+      const deployer = new InstaPoolTogetherV4PolygonResolver__factory(signer);
       resolver = await deployer.deploy();
       await resolver.deployed();
 
@@ -55,12 +55,11 @@ describe("PoolTogether Resolvers", () => {
     });
 
     it("Returns the positions correctly for a USDC Prize Pool", async () => {
-      const owner = "0xf7b34b89b2261e31fc0ad6ab6210adc51b6fc9b6";
+      const owner = "0x05db7a553b1acd10e0774ab809314cacafb4943b";
       const prizePools = [USDC_PRIZE_POOL_ADDR];
       const prizePoolData = await resolver.callStatic.getPosition(
         owner,
         prizePools,
-        DRAW_BEACON_ADDR,
         PRIZE_DISTRIBUTOR_ADDR,
         DRAW_CALCULATOR_TIME_LOCK_ADDR,
       );
@@ -84,8 +83,11 @@ describe("PoolTogether Resolvers", () => {
         console.log("\t\tAddress: ", ticketData.addr);
         console.log("\t\tSymbol: ", ticketData.symbol);
         console.log("\t\tDecimals: ", ticketData.decimals.toString());
+        // User balances at current block
         console.log("\t\tUser BalanceOf: ", formatUnits(ticketData.balanceOf, ticketData.decimals));
         console.log("\t\tUser BalanceAt eligible for prize: ", formatUnits(ticketData.balanceAt, ticketData.decimals));
+        // Total supply is total amount deposited in prize pool by everyone
+        console.log("\t\tTotal Supply/Amount deposited: ", formatUnits(ticketData.totalSupply, ticketData.decimals));
         console.log("\t\tDelegateOf: ", ticketData.delegateOf);
 
         // Draw data
@@ -192,28 +194,6 @@ describe("PoolTogether Resolvers", () => {
           }
           console.log("\t\t\tTotal Value: ", results.totalValue.toNumber() / 1e6);
         }
-
-        // Current Draw Beacon Data
-        const drawBeaconData = prizePoolData[i].drawBeaconData;
-        console.log("Current DrawBeaconData:");
-        console.log("\tisRngCompleted: ", drawBeaconData.isRngCompleted);
-        console.log("\tisRngRequested: ", drawBeaconData.isRngRequested);
-        console.log("\tisRngTimedOut: ", drawBeaconData.isRngTimedOut);
-        console.log("\tcanStartDraw: ", drawBeaconData.canStartDraw);
-        console.log("\tcanCompleteDraw: ", drawBeaconData.canCompleteDraw);
-        console.log(
-          "\tcalculateNextBeaconPeriodStartTimeFromCurrentTime: ",
-          drawBeaconData.nextBeaconPeriodStartTimeFromCurrentTime.toString(),
-        );
-        console.log("\tbeaconPeriodRemainingSeconds: ", drawBeaconData.beaconPeriodRemainingSeconds.toString());
-        console.log("\tbeaconPeriodEndAt: ", drawBeaconData.beaconPeriodEndAt.toString());
-        console.log("\tbeaconPeriodSeconds: ", drawBeaconData.beaconPeriodSeconds);
-        console.log("\tbeaconPeriodStartedAt: ", drawBeaconData.beaconPeriodStartedAt.toString());
-        console.log("\tdrawBuffer: ", drawBeaconData.drawBuffer);
-        console.log("\tnextDrawId: ", drawBeaconData.nextDrawId);
-        console.log("\tlastRngLockBlock: ", drawBeaconData.lastRngLockBlock);
-        console.log("\trngTimeOut: ", drawBeaconData.rngTimeout);
-        console.log("\tisBeaconPeriodOver: ", drawBeaconData.isBeaconPeriodOver);
 
         console.log("Draw Calculator Timelock:");
         console.log("\tTimeLock drawId: ", prizePoolData[i].timelock.drawId);

@@ -18,7 +18,6 @@ contract Helpers is DSMath {
         uint256 accountedBalance; // The total of all controlled tokens
         uint256 awardBalance;
         uint256 liquidityCap; // The total amount of funds that the prize pool can hold.
-        DrawBeaconData drawBeaconData;
         DrawData drawsData;
         Timelock timelock;
         bool hasElapsed;
@@ -35,28 +34,11 @@ contract Helpers is DSMath {
         address addr;
         uint256 balanceOf; // User Balance
         uint256 balanceAt;
+        uint256 totalSupply; // Total supply of tickets = amount deposited
         string name;
         string symbol;
         uint256 decimals;
         address delegateOf;
-    }
-
-    struct DrawBeaconData {
-        bool isRngCompleted;
-        bool isRngRequested;
-        bool isRngTimedOut;
-        bool canStartDraw;
-        bool canCompleteDraw;
-        uint64 nextBeaconPeriodStartTimeFromCurrentTime;
-        uint64 beaconPeriodRemainingSeconds;
-        uint64 beaconPeriodEndAt;
-        uint32 beaconPeriodSeconds;
-        uint64 beaconPeriodStartedAt;
-        DrawBufferInterface drawBuffer;
-        uint32 nextDrawId;
-        uint32 lastRngLockBlock;
-        uint32 rngTimeout;
-        bool isBeaconPeriodOver;
     }
 
     struct DrawData {

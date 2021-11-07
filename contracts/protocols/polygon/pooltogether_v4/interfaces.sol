@@ -73,38 +73,6 @@ interface PrizeStrategyInterface {
     function tokenListener() external view returns (address);
 }
 
-interface DrawBeaconInterface {
-    function isRngCompleted() external view returns (bool);
-
-    function isRngRequested() external view returns (bool);
-
-    function isRngTimedOut() external view returns (bool);
-
-    function canStartDraw() external view returns (bool);
-
-    function canCompleteDraw() external view returns (bool);
-
-    function calculateNextBeaconPeriodStartTimeFromCurrentTime() external view returns (uint64);
-
-    function beaconPeriodRemainingSeconds() external view returns (uint64);
-
-    function beaconPeriodEndAt() external view returns (uint64);
-
-    function getBeaconPeriodSeconds() external view returns (uint32);
-
-    function getBeaconPeriodStartedAt() external view returns (uint64);
-
-    function getDrawBuffer() external view returns (DrawBufferInterface);
-
-    function getNextDrawId() external view returns (uint32);
-
-    function getLastRngLockBlock() external view returns (uint32);
-
-    function getRngTimeout() external view returns (uint32);
-
-    function isBeaconPeriodOver() external view returns (bool);
-}
-
 interface DrawBufferInterface {
     function getDraw(uint32 drawId) external view returns (Helpers.Draw memory);
 

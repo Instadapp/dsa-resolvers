@@ -4,30 +4,6 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
-    function getDrawBeaconData(address drawBeaconAddress) public view returns (DrawBeaconData memory) {
-        DrawBeaconInterface drawBeacon = DrawBeaconInterface(drawBeaconAddress);
-
-        DrawBeaconData memory drawBeaconData = DrawBeaconData(
-            drawBeacon.isRngCompleted(),
-            drawBeacon.isRngRequested(),
-            drawBeacon.isRngTimedOut(),
-            drawBeacon.canStartDraw(),
-            drawBeacon.canCompleteDraw(),
-            drawBeacon.calculateNextBeaconPeriodStartTimeFromCurrentTime(),
-            drawBeacon.beaconPeriodRemainingSeconds(),
-            drawBeacon.beaconPeriodEndAt(),
-            drawBeacon.getBeaconPeriodSeconds(),
-            drawBeacon.getBeaconPeriodStartedAt(),
-            drawBeacon.getDrawBuffer(),
-            drawBeacon.getNextDrawId(),
-            drawBeacon.getLastRngLockBlock(),
-            drawBeacon.getRngTimeout(),
-            drawBeacon.isBeaconPeriodOver()
-        );
-
-        return drawBeaconData;
-    }
-
     function getUserPicks(uint104 numberOfPicks, uint256 normalizedBalance) public pure returns (uint64) {
         return uint64((normalizedBalance * numberOfPicks) / 1 ether);
     }
@@ -68,7 +44,7 @@ contract Resolver is Helpers {
 
     function getDrawsData(
         address owner,
-        DrawBeaconData memory drawBeaconData,
+        TicketInterface ticket,
         address prizeDistributorAddress,
         address drawCalculatorTimeLockAddress
     ) public view returns (DrawData memory) {
@@ -82,7 +58,7 @@ contract Resolver is Helpers {
             .getPrizeDistributionBuffer();
 
         // Get drawIds
-        DrawBufferInterface drawBuffer = drawBeaconData.drawBuffer;
+        DrawBufferInterface drawBuffer = drawCalculatorTimelock.getDrawCalculator().getDrawBuffer();
 
         // Get one less than draw counts because prizeDistribution might not be available yet
         uint32[] memory drawIds = new uint32[](drawBuffer.getDrawCount() - 1);
@@ -116,7 +92,6 @@ contract Resolver is Helpers {
     function getPosition(
         address owner,
         address[] memory prizePoolAddress,
-        address drawBeaconAddress,
         address prizeDistributorAddress,
         address drawCalculatorTimeLockAddress
     ) public returns (PrizePoolData[] memory) {
@@ -129,18 +104,16 @@ contract Resolver is Helpers {
                 address(ticket),
                 ticket.balanceOf(owner),
                 ticket.getBalanceAt(owner, uint64(block.timestamp)),
+                ticket.getTotalSupplyAt(uint64(block.timestamp)),
                 ticket.name(),
                 ticket.symbol(),
                 ticket.decimals(),
                 ticket.delegateOf(owner)
             );
 
-            // Current Draw Beacon Data
-            DrawBeaconData memory drawBeaconData = getDrawBeaconData(drawBeaconAddress);
-
             DrawData memory drawsData = getDrawsData(
                 owner,
-                drawBeaconData,
+                ticket,
                 prizeDistributorAddress,
                 drawCalculatorTimeLockAddress
             );
@@ -156,7 +129,6 @@ contract Resolver is Helpers {
                 prizePool.getAccountedBalance(),
                 prizePool.awardBalance(),
                 prizePool.getLiquidityCap(),
-                drawBeaconData,
                 drawsData,
                 drawCalculatorTimelock.getTimelock(),
                 drawCalculatorTimelock.hasElapsed()
@@ -166,6 +138,6 @@ contract Resolver is Helpers {
     }
 }
 
-contract InstaPoolTogetherV4Resolver is Resolver {
+contract InstaPoolTogetherV4PolygonResolver is Resolver {
     string public constant name = "PoolTogetherV4-Resolver-v1";
 }
