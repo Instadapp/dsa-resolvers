@@ -65,11 +65,11 @@ describe("Uniswap", () => {
       console.log("Token0 Address: ", token0);
       console.log("Token1 Address: ", token1);
       console.log("Pool Address: ", pool);
-      console.log("Liquidity: ", liquidity);
-      console.log("Amount0: ", amount0);
-      console.log("Amount1: ", amount1);
-      console.log("Collect Amount0: ", collectAmount0);
-      console.log("Collect Amount1: ", collectAmount1);
+      console.log("Liquidity: ", liquidity.toString());
+      console.log("Amount0: ", amount0.toString());
+      console.log("Amount1: ", amount1.toString());
+      console.log("Collect Amount0: ", collectAmount0.toString());
+      console.log("Collect Amount1: ", collectAmount1.toString());
     });
 
     it("Returns sortted token address", async () => {
@@ -85,9 +85,9 @@ describe("Uniswap", () => {
         ethers.utils.parseEther("1"),
         "50000000000000000",
       );
-      console.log("Liquidity", liquidity);
-      console.log("Amount0", amount0);
-      console.log("Amount1", amount1);
+      console.log("Liquidity", liquidity.toString());
+      console.log("Amount0", amount0.toString());
+      console.log("Amount1", amount1.toString());
     });
 
     it("Returns single deposit Amount", async () => {
@@ -97,11 +97,11 @@ describe("Uniswap", () => {
         ethers.utils.parseEther("1"),
         "50000000000000000",
       );
-      console.log("liquidity", liquidity);
+      console.log("liquidity", liquidity.toString());
       console.log("token1", token1);
-      console.log("amount1", amount1);
-      console.log("amount0Min", amount0Min);
-      console.log("amount1Min", amount1Min);
+      console.log("amount1", amount1.toString());
+      console.log("amount0Min", amount0Min.toString());
+      console.log("amount1Min", amount1Min.toString());
     });
 
     it("Returns single mint Amount", async () => {
@@ -115,8 +115,8 @@ describe("Uniswap", () => {
         getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       );
-      console.log("liquidity", liquidity);
-      console.log("amount1", amount1);
+      console.log("liquidity", liquidity.toString());
+      console.log("amount1", amount1.toString());
     });
 
     it("Returns withdraw Amount", async () => {
@@ -125,14 +125,14 @@ describe("Uniswap", () => {
         ethers.utils.parseEther("0.001"),
         "50000000000000000",
       );
-      console.log("amount0", amount0);
-      console.log("amount1", amount1);
+      console.log("amount0", amount0.toString());
+      console.log("amount1", amount1.toString());
     });
 
     it("Returns collect Amount", async () => {
       const [amount0, amount1] = await uniswap.getCollectAmount(BigNumber.from("20933"));
-      console.log("amount0", amount0);
-      console.log("amount1", amount1);
+      console.log("amount0", amount0.toString());
+      console.log("amount1", amount1.toString());
     });
   });
 });
