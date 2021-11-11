@@ -104,9 +104,10 @@ describe("Uniswap", () => {
     });
 
     it("Returns single mint Amount", async () => {
+      const usdcAddr = "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8";
       const [liquidity, amount1, amount0Min, amount1Min] = await uniswap.getSingleMintAmount(
         ethAddr,
-        Tokens.USDC.addr,
+        usdcAddr,
         ethers.utils.parseEther("1"),
         "50000000000000000",
         FeeAmount.MEDIUM,
