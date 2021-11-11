@@ -32,15 +32,16 @@ describe("Uniswap", () => {
 
   describe("Uniswap Resolver", () => {
     let uniswap: InstaUniswapV3ResolverArbitrum;
+
     before(async () => {
       const liquityFactory = <InstaUniswapV3ResolverArbitrum__factory>(
-        await ethers.getContractFactory("InstaUniswapV3Resolver")
+        await ethers.getContractFactory("InstaUniswapV3ResolverArbitrum")
       );
       uniswap = await liquityFactory.deploy();
       await uniswap.deployed();
     });
 
-    it("deploys the resolver", () => {
+    it("deploys the resolver", async () => {
       expect(uniswap.address).to.exist;
     });
 
