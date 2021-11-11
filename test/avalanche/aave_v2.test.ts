@@ -21,8 +21,8 @@ describe("Aave V2 Resolvers", () => {
       await resolver.deployed();
     });
 
-    it("Should successfully deploy", async () => {
-      console.log("deployed");
+    it("Deploys the resolver", async () => {
+      expect(resolver.address).to.exist;
     });
 
     it("Returns the positions on AaveV2", async () => {

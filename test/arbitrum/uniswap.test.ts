@@ -2,13 +2,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, network, config } from "hardhat";
 import { expect } from "chai";
 import { formatEther, formatUnits } from "ethers/lib/utils";
-import { InstaUniswapV3Resolver, InstaUniswapV3Resolver__factory } from "../../typechain";
+import { InstaUniswapV3ResolverArbitrum, InstaUniswapV3ResolverArbitrum__factory } from "../../typechain";
 import { Tokens } from "../consts";
 
 const { BigNumber } = ethers;
 
 const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-const wethAddr = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+const wethAddr = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1";
 
 const FeeAmount = {
   LOW: 500,
@@ -31,14 +31,17 @@ describe("Uniswap", () => {
   });
 
   describe("Uniswap Resolver", () => {
-    let uniswap: InstaUniswapV3Resolver;
+    let uniswap: InstaUniswapV3ResolverArbitrum;
+
     before(async () => {
-      const liquityFactory = <InstaUniswapV3Resolver__factory>await ethers.getContractFactory("InstaUniswapV3Resolver");
+      const liquityFactory = <InstaUniswapV3ResolverArbitrum__factory>(
+        await ethers.getContractFactory("InstaUniswapV3ResolverArbitrum")
+      );
       uniswap = await liquityFactory.deploy();
       await uniswap.deployed();
     });
 
-    it("deploys the resolver", () => {
+    it("deploys the resolver", async () => {
       expect(uniswap.address).to.exist;
     });
 
@@ -58,7 +61,7 @@ describe("Uniswap", () => {
         amount1,
         collectAmount0,
         collectAmount1,
-      ] = await uniswap.getPositionInfoByTokenId(BigNumber.from("86707"));
+      ] = await uniswap.getPositionInfoByTokenId(BigNumber.from("20933"));
       console.log("Token0 Address: ", token0);
       console.log("Token1 Address: ", token1);
       console.log("Pool Address: ", pool);
@@ -77,7 +80,7 @@ describe("Uniswap", () => {
 
     it("Returns deposit amount", async () => {
       const [liquidity, amount0, amount1] = await uniswap.getDepositAmount(
-        BigNumber.from("86707"),
+        BigNumber.from("20933"),
         ethers.utils.parseEther("1"),
         ethers.utils.parseEther("1"),
         "50000000000000000",
@@ -89,7 +92,7 @@ describe("Uniswap", () => {
 
     it("Returns single deposit Amount", async () => {
       const [liquidity, token1, amount1, amount0Min, amount1Min] = await uniswap.getSingleDepositAmount(
-        BigNumber.from("86707"),
+        BigNumber.from("20933"),
         ethAddr,
         ethers.utils.parseEther("1"),
         "50000000000000000",
@@ -102,9 +105,10 @@ describe("Uniswap", () => {
     });
 
     it("Returns single mint Amount", async () => {
+      const usdcAddr = "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8";
       const [liquidity, amount1, amount0Min, amount1Min] = await uniswap.getSingleMintAmount(
         ethAddr,
-        Tokens.USDC.addr,
+        usdcAddr,
         ethers.utils.parseEther("1"),
         "50000000000000000",
         FeeAmount.MEDIUM,
@@ -117,7 +121,7 @@ describe("Uniswap", () => {
 
     it("Returns withdraw Amount", async () => {
       const [amount0, amount1] = await uniswap.getWithdrawAmount(
-        BigNumber.from("86707"),
+        BigNumber.from("20933"),
         ethers.utils.parseEther("0.001"),
         "50000000000000000",
       );
@@ -126,7 +130,7 @@ describe("Uniswap", () => {
     });
 
     it("Returns collect Amount", async () => {
-      const [amount0, amount1] = await uniswap.getCollectAmount(BigNumber.from("86707"));
+      const [amount0, amount1] = await uniswap.getCollectAmount(BigNumber.from("20933"));
       console.log("amount0", amount0.toString());
       console.log("amount1", amount1.toString());
     });
