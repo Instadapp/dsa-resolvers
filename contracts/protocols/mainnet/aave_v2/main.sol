@@ -33,13 +33,26 @@ contract Resolver is AaveHelpers {
         return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, ethPrice, _tokens));
     }
 
-    function getConfiguration(address user) public view returns (string memory output) {
+    function getConfiguration(address user)
+        public
+        view
+        returns (uint256[] memory collateral, uint256[] memory borrowed)
+    {
         AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
-        AaveLendingPool.UserConfigurationMap memory data = getConfig(
-            user,
-            AaveLendingPool(addrProvider.getLendingPool())
-        );
-        output = toBinaryString(data.data);
+        uint256 data = getConfig(user, AaveLendingPool(addrProvider.getLendingPool())).data;
+        collateral = new uint256[](128);
+        borrowed = new uint256[](128);
+        address[] memory reserveIndex = getList(AaveLendingPool(addrProvider.getLendingPool()));
+
+        for (uint256 i = 0; i < reserveIndex.length; i++) {
+            if (isUsingAsCollateralOrBorrowing(data, i)) {
+                if (isUsingAsCollateral(data, i)) {
+                    collateral[i] = 1;
+                } else {
+                    borrowed[i] = 1;
+                }
+            }
+        }
     }
 
     function getReservesList() public view returns (address[] memory data) {

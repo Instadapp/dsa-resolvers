@@ -230,14 +230,18 @@ contract AaveHelpers is DSMath {
         data = aave.getReservesList();
     }
 
-    function toBinaryString(uint256 n) public pure returns (string memory) {
-        bytes memory output = new bytes(256);
+    function isUsingAsCollateralOrBorrowing(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2)) & 3 != 0;
+    }
 
-        for (uint256 i = 0; i < 256; i++) {
-            output[255 - i] = (n % 2 == 1) ? bytes1("1") : bytes1("0");
-            n /= 2;
-        }
+    function isUsingAsCollateral(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2 + 1)) & 1 != 0;
+    }
 
-        return string(output);
+    function isBorrowing(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2)) & 1 != 0;
     }
 }

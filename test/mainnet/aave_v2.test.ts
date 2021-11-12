@@ -21,9 +21,11 @@ describe("Aave V2 Resolvers", () => {
       await resolver.deployed();
     });
 
-    it("should run get user configurations and reserves list", async () => {
+    it("should get user configurations and reserves list", async () => {
       console.log(await resolver.getReservesList());
-      console.log(await resolver.getConfiguration(account));
+      const reserves = await resolver.getConfiguration(account);
+      console.log("Collateral", reserves[0]);
+      console.log("Borrowed", reserves[1]);
     });
 
     it("Returns the positions on AaveV2", async () => {
