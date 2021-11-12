@@ -40,10 +40,9 @@ contract Resolver is AaveHelpers {
     {
         AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
         uint256 data = getConfig(user, AaveLendingPool(addrProvider.getLendingPool())).data;
-        collateral = new uint256[](128);
-        borrowed = new uint256[](128);
         address[] memory reserveIndex = getList(AaveLendingPool(addrProvider.getLendingPool()));
-
+        collateral = new uint256[](reserveIndex.length);
+        borrowed = new uint256[](reserveIndex.length);
         for (uint256 i = 0; i < reserveIndex.length; i++) {
             if (isUsingAsCollateralOrBorrowing(data, i)) {
                 if (isUsingAsCollateral(data, i)) {
