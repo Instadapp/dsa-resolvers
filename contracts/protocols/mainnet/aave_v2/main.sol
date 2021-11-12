@@ -32,6 +32,20 @@ contract Resolver is AaveHelpers {
 
         return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, ethPrice, _tokens));
     }
+
+    function getConfiguration(address user) public view returns (string memory output) {
+        AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
+        AaveLendingPool.UserConfigurationMap memory data = getConfig(
+            user,
+            AaveLendingPool(addrProvider.getLendingPool())
+        );
+        output = toBinaryString(data.data);
+    }
+
+    function getReservesList() public view returns (address[] memory data) {
+        AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
+        data = getList(AaveLendingPool(addrProvider.getLendingPool()));
+    }
 }
 
 contract InstaAaveV2Resolver is Resolver {

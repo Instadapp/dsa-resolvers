@@ -217,4 +217,27 @@ contract AaveHelpers is DSMath {
             pendingRewards
         );
     }
+
+    function getConfig(address user, AaveLendingPool aave)
+        public
+        view
+        returns (AaveLendingPool.UserConfigurationMap memory data)
+    {
+        data = aave.getUserConfiguration(user);
+    }
+
+    function getList(AaveLendingPool aave) public view returns (address[] memory data) {
+        data = aave.getReservesList();
+    }
+
+    function toBinaryString(uint256 n) public pure returns (string memory) {
+        bytes memory output = new bytes(256);
+
+        for (uint256 i = 0; i < 256; i++) {
+            output[255 - i] = (n % 2 == 1) ? bytes1("1") : bytes1("0");
+            n /= 2;
+        }
+
+        return string(output);
+    }
 }

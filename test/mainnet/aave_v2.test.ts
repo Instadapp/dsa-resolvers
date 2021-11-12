@@ -7,7 +7,7 @@ import { Tokens } from "../consts";
 
 describe("Aave V2 Resolvers", () => {
   let signer: SignerWithAddress;
-  const account = "0xa8ABe411d1A3F524a2aB9C54f8427066a1F9f266";
+  const account = "0x2082A3604DAD1CD4109EAee06bc21C2f85c6FA29";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -21,6 +21,12 @@ describe("Aave V2 Resolvers", () => {
       await resolver.deployed();
     });
 
+    it("should run X", async () => {
+      console.log(await resolver.getReservesList());
+      const x = await resolver.getConfiguration(account);
+      console.log(x);
+    });
+
     it("Returns the positions on AaveV2", async () => {
       const results = await resolver.getPosition(account, [Tokens.DAI.addr]);
       const userTokenData = results[0];
@@ -28,13 +34,15 @@ describe("Aave V2 Resolvers", () => {
 
       // check for token balances
       console.log("Supply Balance DAI: ", formatUnits(userTokenData[0].supplyBalance, Tokens.DAI.decimals));
+      const x = await resolver.getConfiguration(account);
+      console.log(x);
       expect(userTokenData[0].supplyBalance).to.gte(0);
       console.log(
         "Variable Borrow Balance DAI: ",
         formatUnits(userTokenData[0].variableBorrowBalance, Tokens.DAI.decimals),
       );
       expect(userTokenData[0].variableBorrowBalance).to.gte(0);
-
+      console.log(await resolver.getConfiguration(account));
       // check for user data
       expect(userData.totalBorrowsETH).to.gte(0);
       expect(userData.totalCollateralETH).to.gte(0);
