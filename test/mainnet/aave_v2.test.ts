@@ -21,10 +21,9 @@ describe("Aave V2 Resolvers", () => {
       await resolver.deployed();
     });
 
-    it("should run X", async () => {
+    it("should run get user configurations and reserves list", async () => {
       console.log(await resolver.getReservesList());
-      const x = await resolver.getConfiguration(account);
-      console.log(x);
+      console.log(await resolver.getConfiguration(account));
     });
 
     it("Returns the positions on AaveV2", async () => {
@@ -34,15 +33,12 @@ describe("Aave V2 Resolvers", () => {
 
       // check for token balances
       console.log("Supply Balance DAI: ", formatUnits(userTokenData[0].supplyBalance, Tokens.DAI.decimals));
-      const x = await resolver.getConfiguration(account);
-      console.log(x);
       expect(userTokenData[0].supplyBalance).to.gte(0);
       console.log(
         "Variable Borrow Balance DAI: ",
         formatUnits(userTokenData[0].variableBorrowBalance, Tokens.DAI.decimals),
       );
       expect(userTokenData[0].variableBorrowBalance).to.gte(0);
-      console.log(await resolver.getConfiguration(account));
       // check for user data
       expect(userData.totalBorrowsETH).to.gte(0);
       expect(userData.totalCollateralETH).to.gte(0);
