@@ -22,10 +22,20 @@ describe("Aave V2 Resolvers", () => {
     });
 
     it("should get user configurations and reserves list", async () => {
-      console.log(await resolver.getReservesList());
+      const reservesList = await resolver.getReservesList();
       const reserves = await resolver.getConfiguration(account);
-      console.log("Collateral", reserves[0]);
-      console.log("Borrowed", reserves[1]);
+      console.log("Collateral Reserves Address");
+      for (let i = 0; i < reserves[0].length; i++) {
+        if (reserves[0][i].toNumber() === 1) {
+          console.log(reservesList[i]);
+        }
+      }
+      console.log("Borrowed Reserves Address");
+      for (let i = 0; i < reserves[1].length; i++) {
+        if (reserves[1][i].toNumber() === 1) {
+          console.log(reservesList[i]);
+        }
+      }
     });
 
     it("Returns the positions on AaveV2", async () => {

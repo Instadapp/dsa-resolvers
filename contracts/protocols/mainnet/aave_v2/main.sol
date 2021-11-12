@@ -47,7 +47,8 @@ contract Resolver is AaveHelpers {
             if (isUsingAsCollateralOrBorrowing(data, i)) {
                 if (isUsingAsCollateral(data, i)) {
                     collateral[i] = 1;
-                } else {
+                }
+                if (isBorrowing(data, i)) {
                     borrowed[i] = 1;
                 }
             }
