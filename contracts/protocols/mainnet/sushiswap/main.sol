@@ -140,20 +140,6 @@ abstract contract SushipswapResolver is Helpers {
         address tokenB;
     }
 
-    struct PoolData {
-        address tokenA;
-        address tokenB;
-        address lpAddress;
-        uint256 reserveA;
-        uint256 reserveB;
-        uint256 tokenAShareAmt;
-        uint256 tokenBShareAmt;
-        uint256 tokenABalance;
-        uint256 tokenBBalance;
-        uint256 lpAmount;
-        uint256 totalSupply;
-    }
-
     function getPositionByPair(address owner, TokenPair[] memory tokenPairs) public view returns (PoolData[] memory) {
         ISushiSwapRouter router = ISushiSwapRouter(getSushiSwapAddr());
         uint256 _len = tokenPairs.length;

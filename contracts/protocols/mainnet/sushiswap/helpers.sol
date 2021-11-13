@@ -288,6 +288,20 @@ abstract contract Helpers is DSMath {
     //     _sell = sell == getEthAddr() ? TokenInterface(getAddressWETH()) : TokenInterface(sell);
     // }
 
+    struct PoolData {
+        address tokenA;
+        address tokenB;
+        address lpAddress;
+        uint256 reserveA;
+        uint256 reserveB;
+        uint256 tokenAShareAmt;
+        uint256 tokenBShareAmt;
+        uint256 tokenABalance;
+        uint256 tokenBBalance;
+        uint256 lpAmount;
+        uint256 totalSupply;
+    }
+
     function getExpectedBuyAmt(
         address buyAddr,
         address sellAddr,
@@ -310,7 +324,7 @@ abstract contract Helpers is DSMath {
         address[] memory paths = new address[](2);
         paths[0] = address(sellAddr);
         paths[1] = address(buyAddr);
-        uint256[] memory amts = router.getAmountsIn(buyAmt, paths);
+        uint256[] memory amts = router1.getAmountsIn(buyAmt, paths);
         sellAmt = amts[0];
     }
 
