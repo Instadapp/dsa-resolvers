@@ -2,13 +2,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, network, config } from "hardhat";
 import { expect } from "chai";
 import { formatEther, formatUnits } from "ethers/lib/utils";
-import { InstaSushiSwapResolver, InstaSushiSwapResolver__factory } from "../../typechain";
+import { InstaSushiSwapResolverArbitrum, InstaSushiSwapResolverArbitrum__factory } from "../../typechain";
 
 const { BigNumber } = ethers;
 
 const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-const wethAddr = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-const daiAddr = "0x6b175474e89094c44da98b954eedeac495271d0f";
+const wethAddr = "0x82af49447d8a07e3bd95bd0d56f35241523fbab1";
+const daiAddr = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1";
 
 const FeeAmount = {
   LOW: 500,
@@ -31,9 +31,11 @@ describe("Sushiswap", () => {
   });
 
   describe("Sushiswap Resolver", () => {
-    let sushiswap: InstaSushiSwapResolver;
+    let sushiswap: InstaSushiSwapResolverArbitrum;
     before(async () => {
-      const sushiFactory = <InstaSushiSwapResolver__factory>await ethers.getContractFactory("InstaSushiSwapResolver");
+      const sushiFactory = <InstaSushiSwapResolverArbitrum__factory>(
+        await ethers.getContractFactory("InstaSushiSwapResolverArbitrum")
+      );
       sushiswap = await sushiFactory.deploy();
       await sushiswap.deployed();
     });
@@ -57,7 +59,7 @@ describe("Sushiswap", () => {
       const [sellAmt, unitAmt] = await sushiswap.getSellAmount(
         daiAddr,
         wethAddr,
-        ethers.utils.parseEther("1"),
+        ethers.utils.parseEther("10"),
         "50000000000000000",
       );
       console.log("sell amount", sellAmt.toString());
