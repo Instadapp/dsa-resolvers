@@ -27,7 +27,7 @@ abstract contract SushipswapResolver is Helpers {
         uint256 slippage
     ) public view returns (uint256 sellAmt, uint256 unitAmt) {
         (TokenInterface _buyAddr, TokenInterface _sellAddr) = changeEthAddress(buyAddr, sellAddr);
-        sellAmt = getExpectedSellAmt([address(_buyAddr), address(_sellAddr)], buyAmt);
+        sellAmt = getExpectedSellAmt(address(_buyAddr), address(_sellAddr), buyAmt);
         unitAmt = getSellUnitAmt(_sellAddr, sellAmt, _buyAddr, buyAmt, slippage);
     }
 

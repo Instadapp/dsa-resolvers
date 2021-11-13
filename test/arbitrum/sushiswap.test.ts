@@ -59,7 +59,7 @@ describe("Sushiswap", () => {
       const [sellAmt, unitAmt] = await sushiswap.getSellAmount(
         daiAddr,
         wethAddr,
-        ethers.utils.parseEther("10"),
+        ethers.utils.parseEther("0.1"),
         "50000000000000000",
       );
       console.log("sell amount", sellAmt.toString());
