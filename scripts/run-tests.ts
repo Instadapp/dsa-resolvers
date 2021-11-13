@@ -1,22 +1,10 @@
 import inquirer from "inquirer";
 import { promises as fs } from "fs";
-import { join } from "path/posix";
-import { spawn } from "child_process";
 
-export async function execScript(cmd: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const parts = cmd.split(" ");
-    const proc = spawn(parts[0], parts.slice(1), { shell: true, stdio: "inherit" });
-    proc.on("exit", code => {
-      if (code !== 0) {
-        reject(code);
-        return;
-      }
+import { join } from "path";
+import { execScript } from "./command";
 
-      resolve(code);
-    });
-  });
-}
+let start: number, end: number;
 
 async function testRunner() {
   const { chain } = await inquirer.prompt([
@@ -24,10 +12,9 @@ async function testRunner() {
       name: "chain",
       message: "What chain do you want to run tests on?",
       type: "list",
-      choices: ["mainnet", "polygon"],
+      choices: ["mainnet", "polygon", "avalanche", "arbitrum"],
     },
   ]);
-
   const testsPath = join(__dirname, "../test", chain);
   await fs.access(testsPath);
   const availableTests = await fs.readdir(testsPath);
@@ -43,7 +30,7 @@ async function testRunner() {
       choices: ["all", ...availableTests],
     },
   ]);
-
+  start = Date.now();
   let path: string;
   if (testName === "all") {
     path = availableTests.map(file => join(testsPath, file)).join(" ");
@@ -51,9 +38,16 @@ async function testRunner() {
     path = join(testsPath, testName);
   }
 
-  await execScript("npx hardhat test " + path);
+  await execScript({
+    cmd: "npx",
+    args: ["hardhat", "test", path],
+    env: {
+      networkType: chain,
+    },
+  });
+  end = Date.now();
 }
 
 testRunner()
-  .then(() => console.log("🙌 finished the test runner"))
+  .then(() => console.log(`🙌 finished the test runner, time taken ${(end - start) / 1000} sec`))
   .catch(err => console.error("❌ failed due to error: ", err));
