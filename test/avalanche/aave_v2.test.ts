@@ -30,14 +30,14 @@ describe("Aave V2 Resolvers", () => {
       const reserves = await resolver.getConfiguration(account);
       console.log("Collateral Reserves Address");
       for (let i = 0; i < reserves[0].length; i++) {
-        if (reserves[0][i].toNumber() === 1) {
-          console.log(reservesList[i]);
+        if (reserves[0][i]) {
+          console.log(`- ${reservesList[i]}`);
         }
       }
       console.log("Borrowed Reserves Address");
       for (let i = 0; i < reserves[1].length; i++) {
-        if (reserves[1][i].toNumber() === 1) {
-          console.log(reservesList[i]);
+        if (reserves[1][i]) {
+          console.log(`- ${reservesList[i]}`);
         }
       }
     });
