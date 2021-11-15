@@ -3,7 +3,6 @@ import { ethers, network, config } from "hardhat";
 import { expect } from "chai";
 import { formatEther, formatUnits } from "ethers/lib/utils";
 import { InstaSushiSwapResolver, InstaSushiSwapResolver__factory } from "../../typechain";
-import { Tokens } from "../consts";
 
 const { BigNumber } = ethers;
 
@@ -50,8 +49,8 @@ describe("Sushiswap", () => {
         ethers.utils.parseEther("1"),
         "50000000000000000",
       );
-      console.log("buy amount", buyAmt);
-      console.log("unit amount", unitAmt);
+      console.log("buy amount", buyAmt.toString());
+      console.log("unit amount", unitAmt.toString());
     });
 
     it("Returns sell amount from buy amount", async () => {
@@ -61,8 +60,8 @@ describe("Sushiswap", () => {
         ethers.utils.parseEther("1"),
         "50000000000000000",
       );
-      console.log("sell amount", sellAmt);
-      console.log("unit amount", unitAmt);
+      console.log("sell amount", sellAmt.toString());
+      console.log("unit amount", unitAmt.toString());
     });
 
     it("Returns deposit amount", async () => {
@@ -73,10 +72,10 @@ describe("Sushiswap", () => {
         "50000000000000000",
         "50000000000000000",
       );
-      console.log("AmountB", amtB);
-      console.log("Unit Amount", unitAmt);
-      console.log("Min Amount A", minA);
-      console.log("Min Amount B", minB);
+      console.log("AmountB", amtB.toString());
+      console.log("Unit Amount", unitAmt.toString());
+      console.log("Min Amount A", minA.toString());
+      console.log("Min Amount B", minB.toString());
     });
 
     it("Returns single deposit amount", async () => {
@@ -86,10 +85,10 @@ describe("Sushiswap", () => {
         ethers.utils.parseEther("1"),
         "50000000000000000",
       );
-      console.log("Amount A", amtA);
-      console.log("Amount B", amtB);
-      console.log("Unit Amount", unitAmount);
-      console.log("Min Unit Amount", minUnitAmount);
+      console.log("Amount A", amtA.toString());
+      console.log("Amount B", amtB.toString());
+      console.log("Unit Amount", unitAmount.toString());
+      console.log("Min Unit Amount", minUnitAmount.toString());
     });
 
     it("Returns withdraw amount", async () => {
@@ -99,10 +98,10 @@ describe("Sushiswap", () => {
         "1000000000000000",
         "50000000000000000",
       );
-      console.log("Amount A", amtA);
-      console.log("Amount B", amtB);
-      console.log("Unit Amount B", unitAmountA);
-      console.log("Unit Amount B", unitAmountB);
+      console.log("Amount A", amtA.toString());
+      console.log("Amount B", amtB.toString());
+      console.log("Unit Amount B", unitAmountA.toString());
+      console.log("Unit Amount B", unitAmountB.toString());
     });
   });
 });
