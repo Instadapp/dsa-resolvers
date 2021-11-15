@@ -2,13 +2,13 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 /**
- * @title SushiSwap.
+ * @title QuickSwap.
  * @dev Decentralized Exchange.
  */
 
-import { Helpers, ISushiSwapRouter, ISushiSwapFactory, ISushiSwapPair, TokenInterface, PoolData } from "./helpers.sol";
+import { Helpers, IQuickSwapRouter, IQuickSwapFactory, IQuickSwapPair, TokenInterface, PoolData } from "./helpers.sol";
 
-abstract contract SushipswapResolver is Helpers {
+abstract contract QuickswapResolver is Helpers {
     function getBuyAmount(
         address buyAddr,
         address sellAddr,
@@ -48,9 +48,9 @@ abstract contract SushipswapResolver is Helpers {
         )
     {
         (TokenInterface _tokenA, TokenInterface _tokenB) = changeEthAddress(tokenA, tokenB);
-        ISushiSwapRouter router = ISushiSwapRouter(getSushiSwapAddr());
-        ISushiSwapFactory factory = ISushiSwapFactory(router.factory());
-        ISushiSwapPair lpToken = ISushiSwapPair(factory.getPair(address(_tokenA), address(_tokenB)));
+        IQuickSwapRouter router = IQuickSwapRouter(getQuickSwapAddr());
+        IQuickSwapFactory factory = IQuickSwapFactory(router.factory());
+        IQuickSwapPair lpToken = IQuickSwapPair(factory.getPair(address(_tokenA), address(_tokenB)));
         require(address(lpToken) != address(0), "No-exchange-address");
 
         (uint256 reserveA, uint256 reserveB, ) = lpToken.getReserves();
@@ -81,9 +81,9 @@ abstract contract SushipswapResolver is Helpers {
         )
     {
         (TokenInterface _tokenA, TokenInterface _tokenB) = changeEthAddress(tokenA, tokenB);
-        ISushiSwapRouter router = ISushiSwapRouter(getSushiSwapAddr());
-        ISushiSwapFactory factory = ISushiSwapFactory(router.factory());
-        ISushiSwapPair lpToken = ISushiSwapPair(factory.getPair(address(_tokenA), address(_tokenB)));
+        IQuickSwapRouter router = IQuickSwapRouter(getQuickSwapAddr());
+        IQuickSwapFactory factory = IQuickSwapFactory(router.factory());
+        IQuickSwapPair lpToken = IQuickSwapPair(factory.getPair(address(_tokenA), address(_tokenB)));
         require(address(lpToken) != address(0), "No-exchange-address");
 
         (uint256 reserveA, uint256 reserveB, ) = lpToken.getReserves();
@@ -107,8 +107,8 @@ abstract contract SushipswapResolver is Helpers {
         uint256 amtB
     ) public view returns (uint256 unitAmt) {
         (TokenInterface _tokenA, TokenInterface _tokenB) = changeEthAddress(tokenA, tokenB);
-        ISushiSwapRouter router = ISushiSwapRouter(getSushiSwapAddr());
-        address exchangeAddr = ISushiSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
+        IQuickSwapRouter router = IQuickSwapRouter(getQuickSwapAddr());
+        address exchangeAddr = IQuickSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
         require(exchangeAddr == address(0), "pair-found.");
         uint256 _amtA18 = convertTo18(_tokenA.decimals(), amtA);
         uint256 _amtB18 = convertTo18(_tokenB.decimals(), amtB);
@@ -141,7 +141,7 @@ abstract contract SushipswapResolver is Helpers {
     }
 
     function getPositionByPair(address owner, TokenPair[] memory tokenPairs) public view returns (PoolData[] memory) {
-        ISushiSwapRouter router = ISushiSwapRouter(getSushiSwapAddr());
+        IQuickSwapRouter router = IQuickSwapRouter(getQuickSwapAddr());
         uint256 _len = tokenPairs.length;
         PoolData[] memory poolData = new PoolData[](_len);
         for (uint256 i = 0; i < _len; i++) {
@@ -149,9 +149,9 @@ abstract contract SushipswapResolver is Helpers {
                 tokenPairs[i].tokenA,
                 tokenPairs[i].tokenB
             );
-            address exchangeAddr = ISushiSwapFactory(router.factory()).getPair(address(tokenA), address(tokenB));
+            address exchangeAddr = IQuickSwapFactory(router.factory()).getPair(address(tokenA), address(tokenB));
             if (exchangeAddr != address(0)) {
-                ISushiSwapPair lpToken = ISushiSwapPair(exchangeAddr);
+                IQuickSwapPair lpToken = IQuickSwapPair(exchangeAddr);
                 (uint256 reserveA, uint256 reserveB, ) = lpToken.getReserves();
                 (reserveA, reserveB) = lpToken.token0() == address(tokenA)
                     ? (reserveA, reserveB)
@@ -195,6 +195,6 @@ abstract contract SushipswapResolver is Helpers {
     }
 }
 
-contract InstaSushiSwapResolver is SushipswapResolver {
-    string public constant name = "Sushipswap-Resolver-v1.1";
+contract InstaQuickSwapResolver is QuickswapResolver {
+    string public constant name = "Quickswap-Resolver-v1.1";
 }

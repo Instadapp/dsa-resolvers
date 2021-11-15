@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 import { DSMath } from "../../../utils/dsmath.sol";
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-import { ISushiSwapRouter, ISushiSwapFactory, ISushiSwapPair, TokenInterface } from "./interfaces.sol";
+import { IQuickSwapRouter, IQuickSwapFactory, IQuickSwapPair, TokenInterface } from "./interfaces.sol";
 
 library Babylonian {
     // credit for this implementation goes to
@@ -69,9 +69,9 @@ struct PoolData {
 abstract contract Helpers is DSMath {
     using SafeMath for uint256;
     /**
-     * @dev ISushiSwapRouter
+     * @dev IQuickSwapRouter
      */
-    ISushiSwapRouter internal constant router = ISushiSwapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+    IQuickSwapRouter internal constant router = IQuickSwapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
 
     /**
      * @dev Return ethereum address
@@ -145,7 +145,7 @@ abstract contract Helpers is DSMath {
     }
 
     function checkPair(address[] memory paths) internal view {
-        address pair = ISushiSwapFactory(router.factory()).getPair(paths[0], paths[1]);
+        address pair = IQuickSwapFactory(router.factory()).getPair(paths[0], paths[1]);
         require(pair != address(0), "No-exchange-address");
     }
 
@@ -258,7 +258,7 @@ abstract contract Helpers is DSMath {
         )
     {
         (_tokenA, _tokenB) = changeEthAddress(tokenA, tokenB);
-        address exchangeAddr = ISushiSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
+        address exchangeAddr = IQuickSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
         require(exchangeAddr != address(0), "pair-not-found.");
 
         TokenInterface uniToken = TokenInterface(exchangeAddr);
@@ -283,9 +283,9 @@ abstract contract Helpers is DSMath {
     }
 
     /**
-     * @dev Return sushiswap router Address
+     * @dev Return quickswap router Address
      */
-    function getSushiSwapAddr() internal pure returns (address) {
+    function getQuickSwapAddr() internal pure returns (address) {
         return 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
     }
 
@@ -307,7 +307,7 @@ abstract contract Helpers is DSMath {
         address sellAddr,
         uint256 sellAmt
     ) internal view returns (uint256 buyAmt) {
-        ISushiSwapRouter router1 = ISushiSwapRouter(getSushiSwapAddr());
+        IQuickSwapRouter router1 = IQuickSwapRouter(getQuickSwapAddr());
         address[] memory paths = new address[](2);
         paths[0] = address(sellAddr);
         paths[1] = address(buyAddr);
@@ -320,7 +320,7 @@ abstract contract Helpers is DSMath {
         address sellAddr,
         uint256 buyAmt
     ) internal view returns (uint256 sellAmt) {
-        ISushiSwapRouter router1 = ISushiSwapRouter(getSushiSwapAddr());
+        IQuickSwapRouter router1 = IQuickSwapRouter(getQuickSwapAddr());
         address[] memory paths = new address[](2);
         paths[0] = address(sellAddr);
         paths[1] = address(buyAddr);
@@ -375,8 +375,8 @@ abstract contract Helpers is DSMath {
         TokenInterface _tokenB,
         uint256 uniAmt
     ) internal view returns (uint256 amtA, uint256 amtB) {
-        ISushiSwapRouter router1 = ISushiSwapRouter(getSushiSwapAddr());
-        address exchangeAddr = ISushiSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
+        IQuickSwapRouter router1 = IQuickSwapRouter(getQuickSwapAddr());
+        address exchangeAddr = IQuickSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
         require(exchangeAddr != address(0), "pair-not-found.");
         TokenInterface uniToken = TokenInterface(exchangeAddr);
         uint256 share = wdiv(uniAmt, uniToken.totalSupply());
@@ -396,7 +396,7 @@ abstract contract Helpers is DSMath {
     }
 
     function _getPoolData(address lpTokenAddr, address owner) internal view returns (PoolData memory pool) {
-        ISushiSwapPair lpToken = ISushiSwapPair(lpTokenAddr);
+        IQuickSwapPair lpToken = IQuickSwapPair(lpTokenAddr);
         (uint256 reserveA, uint256 reserveB, ) = lpToken.getReserves();
         (address tokenA, address tokenB) = (lpToken.token0(), lpToken.token1());
         uint256 lpAmount = lpToken.balanceOf(owner);
