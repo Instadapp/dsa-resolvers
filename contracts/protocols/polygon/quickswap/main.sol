@@ -195,6 +195,6 @@ abstract contract QuickswapResolver is Helpers {
     }
 }
 
-contract InstaQuickSwapResolver is QuickswapResolver {
+contract InstaQuickSwapResolverPolygon is QuickswapResolver {
     string public constant name = "Quickswap-Resolver-v1.1";
 }

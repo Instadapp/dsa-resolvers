@@ -71,7 +71,7 @@ abstract contract Helpers is DSMath {
     /**
      * @dev IQuickSwapRouter
      */
-    IQuickSwapRouter internal constant router = IQuickSwapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+    IQuickSwapRouter internal constant router = IQuickSwapRouter(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff);
 
     /**
      * @dev Return ethereum address
@@ -81,7 +81,7 @@ abstract contract Helpers is DSMath {
     /**
      * @dev Return Wrapped ETH address
      */
-    address internal constant wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address internal constant wethAddr = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
 
     function getExpectedBuyAmt(address[] memory paths, uint256 sellAmt) internal view returns (uint256 buyAmt) {
         uint256[] memory amts = router.getAmountsOut(sellAmt, paths);
@@ -278,7 +278,7 @@ abstract contract Helpers is DSMath {
      * @dev Return WETH address
      */
     function getAddressWETH() internal pure returns (address) {
-        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet
+        return 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; // mainnet
         // return 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // kovan
     }
 
@@ -286,7 +286,7 @@ abstract contract Helpers is DSMath {
      * @dev Return quickswap router Address
      */
     function getQuickSwapAddr() internal pure returns (address) {
-        return 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+        return 0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff;
     }
 
     // function convert18ToDec(uint _dec, uint256 _amt) internal pure returns (uint256 amt) {
