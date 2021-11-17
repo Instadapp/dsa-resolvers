@@ -118,8 +118,9 @@ describe("PoolTogether Resolvers", () => {
           console.log("\t\t\tEnd Timestamp Offset: ", prizeDistributionsData[j].endTimestampOffset);
           console.log("\t\t\tMax Picks Per User: ", prizeDistributionsData[j].maxPicksPerUser);
           console.log("\t\t\tExpiry Duration: ", prizeDistributionsData[j].expiryDuration);
+          // Number of Picks allocated to this chain based on total deposits vs all chains
           console.log("\t\t\tNumber Of Picks: ", prizeDistributionsData[j].numberOfPicks.toString());
-          // Number of combinations = (2^bit range)^cardinality
+          // Number of combinations/picks = (2^bit range)^cardinality
           const totalNumberOfPicks =
             (2 ** prizeDistributionsData[j].bitRangeSize) ** prizeDistributionsData[j].matchCardinality;
           console.log("\t\t\tTotal Number of Picks: ", totalNumberOfPicks);
@@ -129,6 +130,14 @@ describe("PoolTogether Resolvers", () => {
             ((prizeDistributionsData[j].numberOfPicks.toNumber() / totalNumberOfPicks) * 100).toFixed(2),
             "%",
           );
+          // Total Ticket TWAB Supply
+          console.log("\t\t\tAverage Total Supply TWAB: ", formatUnits(drawsData.totalSupply[j], ticketData.decimals));
+          // Price per pick = number of picks / Average Total Supply TWAB
+          console.log(
+            "\t\t\tPrice per pick: ",
+            drawsData.totalSupply[j].toNumber() / 1e6 / prizeDistributionsData[j].numberOfPicks.toNumber(),
+          );
+          console.log("\t\t\tTotal Prize Amount: ", prizeDistributionsData[j].prize.toString());
           console.log("\t\t\tTiers: ", prizeDistributionsData[j].tiers.toString());
           const tiers = prizeDistributionsData[j].tiers;
           let numberOfPrizesForIndex = 1;
@@ -152,17 +161,13 @@ describe("PoolTogether Resolvers", () => {
               console.log("\t\t\t\t\tTier Prize: $", tierPrize);
             }
           }
-          console.log("\t\t\tTotal Prize Amount: ", prizeDistributionsData[j].prize.toString());
-          // Normalized Balances
+
+          // User Normalized Balances
           console.log("\t\tUser Normalizaed Balance: ", drawsData.normalizedBalancesForDrawIds[j].toString());
           // User Draw Picks
           console.log("\t\tUser Draw Picks: ", drawsData.userDrawData[j].drawPicks.toString());
           // User TWAB for this draw
-          console.log("\t\tUser BalanceAt: ", drawsData.userDrawData[j].balanceAt.toString());
-          console.log(
-            "\t\tPrice per pick: ",
-            drawsData.userDrawData[j].balanceAt.toNumber() / 1e6 / drawsData.userDrawData[j].drawPicks.toNumber(),
-          );
+          console.log("\t\tUser BalanceAt: ", formatUnits(drawsData.userDrawData[j].balanceAt, ticketData.decimals));
           // > 0 if user has claimed for this draw
           console.log("\t\tUser Payout Balance: ", drawsData.userDrawData[j].payoutBalance.toString());
           var abiEncodedValue = ethers.utils.solidityPack(

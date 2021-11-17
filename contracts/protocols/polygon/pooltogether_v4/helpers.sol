@@ -45,6 +45,7 @@ contract Helpers is DSMath {
         Draw[] draws;
         PrizeDistribution[] prizeDistributions;
         uint256[] normalizedBalancesForDrawIds;
+        uint256[] totalSupply;
         UserDrawData[] userDrawData;
     }
 

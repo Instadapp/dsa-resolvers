@@ -42,6 +42,27 @@ contract Resolver is Helpers {
         return userDrawData;
     }
 
+    function getAverageTotalSuppliesForDraws(
+        Draw[] memory draws,
+        PrizeDistribution[] memory prizeDistributions,
+        TicketInterface ticket
+    ) public view returns (uint256[] memory) {
+        uint256[] memory drawTotalSupply = new uint256[](draws.length);
+
+        uint256 drawsLength = draws.length;
+        uint64[] memory timestampsWithStartCutoffTimes = new uint64[](drawsLength);
+        uint64[] memory timestampsWithEndCutoffTimes = new uint64[](drawsLength);
+
+        for (uint32 i = 0; i < drawsLength; i++) {
+            unchecked {
+                timestampsWithStartCutoffTimes[i] = draws[i].timestamp - prizeDistributions[i].startTimestampOffset;
+                timestampsWithEndCutoffTimes[i] = draws[i].timestamp - prizeDistributions[i].endTimestampOffset;
+            }
+        }
+
+        return ticket.getAverageTotalSuppliesBetween(timestampsWithStartCutoffTimes, timestampsWithEndCutoffTimes);
+    }
+
     function getDrawsData(
         address owner,
         TicketInterface ticket,
@@ -78,6 +99,7 @@ contract Resolver is Helpers {
                 draws,
                 prizeDistribution.getPrizeDistributions(drawIds),
                 normalizedBalancesForDrawIds,
+                getAverageTotalSuppliesForDraws(draws, prizeDistribution.getPrizeDistributions(drawIds), ticket),
                 getUserDrawData(
                     owner,
                     draws,
