@@ -33,7 +33,7 @@ contract Resolver is Helpers {
                 qiToken.balanceOf(owner),
                 qiToken.borrowBalanceStored(owner),
                 _totalBorrowed,
-                add(_totalBorrowed, qiToken.getCash()),
+                sub(add(_totalBorrowed, qiToken.getCash()), qiToken.totalReserves()),
                 troller.borrowCaps(qiAddress[i]),
                 qiToken.supplyRatePerTimestamp(),
                 qiToken.borrowRatePerTimestamp(),
@@ -55,8 +55,8 @@ contract Resolver is Helpers {
     ) public view returns (MetadataExt memory) {
         return
             MetadataExt(
-                comptroller.rewardAccrued(0, owner),
-                comptroller.rewardAccrued(1, owner),
+                comptroller.rewardAccrued(rewardQi, owner),
+                comptroller.rewardAccrued(rewardAvax, owner),
                 qiToken.delegates(owner),
                 qiToken.getCurrentVotes(owner)
             );

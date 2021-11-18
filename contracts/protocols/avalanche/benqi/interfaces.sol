@@ -12,6 +12,8 @@ interface QiTokenInterface {
 
     function totalBorrows() external view returns (uint256);
 
+    function totalReserves() external view returns (uint256);
+
     function underlying() external view returns (address);
 
     function balanceOf(address) external view returns (uint256);
