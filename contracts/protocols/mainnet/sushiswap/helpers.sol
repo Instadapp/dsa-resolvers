@@ -307,7 +307,6 @@ abstract contract Helpers is DSMath {
         address sellAddr,
         uint256 sellAmt
     ) internal view returns (uint256 buyAmt) {
-        ISushiSwapRouter router1 = ISushiSwapRouter(getSushiSwapAddr());
         address[] memory paths = new address[](2);
         paths[0] = address(sellAddr);
         paths[1] = address(buyAddr);
@@ -320,11 +319,10 @@ abstract contract Helpers is DSMath {
         address sellAddr,
         uint256 buyAmt
     ) internal view returns (uint256 sellAmt) {
-        ISushiSwapRouter router1 = ISushiSwapRouter(getSushiSwapAddr());
         address[] memory paths = new address[](2);
         paths[0] = address(sellAddr);
         paths[1] = address(buyAddr);
-        uint256[] memory amts = router1.getAmountsIn(buyAmt, paths);
+        uint256[] memory amts = router.getAmountsIn(buyAmt, paths);
         sellAmt = amts[0];
     }
 
@@ -375,7 +373,6 @@ abstract contract Helpers is DSMath {
         TokenInterface _tokenB,
         uint256 uniAmt
     ) internal view returns (uint256 amtA, uint256 amtB) {
-        ISushiSwapRouter router1 = ISushiSwapRouter(getSushiSwapAddr());
         address exchangeAddr = ISushiSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
         require(exchangeAddr != address(0), "pair-not-found.");
         TokenInterface uniToken = TokenInterface(exchangeAddr);
