@@ -60,6 +60,10 @@ interface AaveProtocolDataProvider {
 }
 
 interface AaveLendingPool {
+    struct UserConfigurationMap {
+        uint256 data;
+    }
+
     function getUserAccountData(address user)
         external
         view
@@ -71,6 +75,10 @@ interface AaveLendingPool {
             uint256 ltv,
             uint256 healthFactor
         );
+
+    function getUserConfiguration(address user) external view returns (UserConfigurationMap memory);
+
+    function getReservesList() external view returns (address[] memory);
 }
 
 interface TokenInterface {

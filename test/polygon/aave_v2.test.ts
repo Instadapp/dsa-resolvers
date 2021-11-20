@@ -25,6 +25,23 @@ describe("Aave V2 Resolvers", () => {
       expect(resolver.address).to.exist;
     });
 
+    it("should get user configurations and reserves list", async () => {
+      const reservesList = await resolver.getReservesList();
+      const reserves = await resolver.getConfiguration(account);
+      console.log("Collateral Reserves Address");
+      for (let i = 0; i < reserves[0].length; i++) {
+        if (reserves[0][i]) {
+          console.log(`- ${reservesList[i]}`);
+        }
+      }
+      console.log("Borrowed Reserves Address");
+      for (let i = 0; i < reserves[1].length; i++) {
+        if (reserves[1][i]) {
+          console.log(`- ${reservesList[i]}`);
+        }
+      }
+    });
+
     it("Returns the positions on AaveV2", async () => {
       const daiAddr = "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063";
       const results = await resolver.getPosition(account, [daiAddr]);

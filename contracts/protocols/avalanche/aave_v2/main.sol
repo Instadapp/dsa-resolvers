@@ -32,6 +32,27 @@ contract Resolver is AaveHelpers {
 
         return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, avaxPrice, _tokens));
     }
+
+    function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {
+        AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
+        uint256 data = getConfig(user, AaveLendingPool(addrProvider.getLendingPool())).data;
+        address[] memory reserveIndex = getList(AaveLendingPool(addrProvider.getLendingPool()));
+
+        collateral = new bool[](reserveIndex.length);
+        borrowed = new bool[](reserveIndex.length);
+
+        for (uint256 i = 0; i < reserveIndex.length; i++) {
+            if (isUsingAsCollateralOrBorrowing(data, i)) {
+                collateral[i] = (isUsingAsCollateral(data, i)) ? true : false;
+                borrowed[i] = (isBorrowing(data, i)) ? true : false;
+            }
+        }
+    }
+
+    function getReservesList() public view returns (address[] memory data) {
+        AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
+        data = getList(AaveLendingPool(addrProvider.getLendingPool()));
+    }
 }
 
 contract InstaAaveV2ResolverAvalanche is Resolver {

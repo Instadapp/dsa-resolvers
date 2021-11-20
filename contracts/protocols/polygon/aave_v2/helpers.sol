@@ -213,4 +213,31 @@ contract AaveHelpers is DSMath {
             pendingRewards
         );
     }
+
+    function getConfig(address user, AaveLendingPool aave)
+        public
+        view
+        returns (AaveLendingPool.UserConfigurationMap memory data)
+    {
+        data = aave.getUserConfiguration(user);
+    }
+
+    function getList(AaveLendingPool aave) public view returns (address[] memory data) {
+        data = aave.getReservesList();
+    }
+
+    function isUsingAsCollateralOrBorrowing(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2)) & 3 != 0;
+    }
+
+    function isUsingAsCollateral(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2 + 1)) & 1 != 0;
+    }
+
+    function isBorrowing(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2)) & 1 != 0;
+    }
 }
