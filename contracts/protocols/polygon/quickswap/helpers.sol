@@ -201,7 +201,7 @@ abstract contract Helpers is DSMath {
             _amtA,
             _amtB,
             minAmtA,
-            minAmtA,
+            minAmtB,
             address(this),
             block.timestamp + 1
         );
@@ -307,7 +307,6 @@ abstract contract Helpers is DSMath {
         address sellAddr,
         uint256 sellAmt
     ) internal view returns (uint256 buyAmt) {
-        IQuickSwapRouter router1 = IQuickSwapRouter(getQuickSwapAddr());
         address[] memory paths = new address[](2);
         paths[0] = address(sellAddr);
         paths[1] = address(buyAddr);
@@ -320,7 +319,6 @@ abstract contract Helpers is DSMath {
         address sellAddr,
         uint256 buyAmt
     ) internal view returns (uint256 sellAmt) {
-        IQuickSwapRouter router1 = IQuickSwapRouter(getQuickSwapAddr());
         address[] memory paths = new address[](2);
         paths[0] = address(sellAddr);
         paths[1] = address(buyAddr);
@@ -375,7 +373,6 @@ abstract contract Helpers is DSMath {
         TokenInterface _tokenB,
         uint256 uniAmt
     ) internal view returns (uint256 amtA, uint256 amtB) {
-        IQuickSwapRouter router1 = IQuickSwapRouter(getQuickSwapAddr());
         address exchangeAddr = IQuickSwapFactory(router.factory()).getPair(address(_tokenA), address(_tokenB));
         require(exchangeAddr != address(0), "pair-not-found.");
         TokenInterface uniToken = TokenInterface(exchangeAddr);
