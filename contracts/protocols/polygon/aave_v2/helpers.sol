@@ -86,6 +86,9 @@ contract AaveHelpers is DSMath {
         uint256 totalVariableDebt;
         uint256 collateralEmission;
         uint256 debtEmission;
+        address aTokenAddress;
+        address stableDebtTokenAddress;
+        address variableDebtTokenAddress;
     }
 
     struct TokenPrice {
@@ -124,16 +127,20 @@ contract AaveHelpers is DSMath {
             aaveTokenData.isFrozen
         ) = aaveData.getReserveConfigurationData(token);
 
-        (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
+        (
+            aaveTokenData.aTokenAddress,
+            aaveTokenData.stableDebtTokenAddress,
+            aaveTokenData.variableDebtTokenAddress
+        ) = aaveData.getReserveTokensAddresses(token);
 
         AaveIncentivesInterface.AssetData memory _data;
         AaveIncentivesInterface incentives = AaveIncentivesInterface(getAaveIncentivesAddress());
 
-        _data = incentives.assets(aToken);
+        _data = incentives.assets(aaveTokenData.aTokenAddress);
         aaveTokenData.collateralEmission = _data.emissionPerSecond;
-        _data = incentives.assets(debtToken);
+        _data = incentives.assets(aaveTokenData.variableDebtTokenAddress);
         aaveTokenData.debtEmission = _data.emissionPerSecond;
-        aaveTokenData.totalSupply = TokenInterface(aToken).totalSupply();
+        aaveTokenData.totalSupply = TokenInterface(aaveTokenData.aTokenAddress).totalSupply();
     }
 
     function getTokenData(
