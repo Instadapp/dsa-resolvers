@@ -48,6 +48,14 @@ contract Resolver is Helpers {
         return tokensData;
     }
 
+    function QiRewardDiff(address owner) internal view returns (uint256) {}
+
+    function getQiRewardDiff(address owner) internal view returns (uint256) {}
+
+    function AvaxRewardDiff(address owner) internal view returns (uint256) {}
+
+    function getAvaxRewardDiff(address owner) internal view returns (uint256) {}
+
     function getRewardsData(
         address owner,
         ComptrollerLensInterface comptroller,
@@ -55,8 +63,8 @@ contract Resolver is Helpers {
     ) public view returns (MetadataExt memory) {
         return
             MetadataExt(
-                comptroller.rewardAccrued(rewardQi, owner),
-                comptroller.rewardAccrued(rewardAvax, owner),
+                comptroller.rewardAccrued(rewardQi, owner) + qiRewardDiff(owner),
+                comptroller.rewardAccrued(rewardAvax, owner) + avaxRewardDiff(onwner),
                 qiToken.delegates(owner),
                 qiToken.getCurrentVotes(owner)
             );
