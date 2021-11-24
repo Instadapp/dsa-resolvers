@@ -48,23 +48,42 @@ contract Resolver is Helpers {
         return tokensData;
     }
 
-    function QiRewardDiff(address owner) internal view returns (uint256) {}
+    function claimQiReward(address owner) internal returns (uint256) {
+        TokenInterface qiToken = getQiToken();
+        ComptrollerLensInterface troller = getComptroller();
+        uint256 initialBalance = qiToken.balanceOf(owner);
+        troller.claimReward(rewardQi, owner);
+        uint256 finalBalance = qiToken.balanceOf(owner);
 
-    function getQiRewardDiff(address owner) internal view returns (uint256) {}
+        return finalBalance - initialBalance;
+    }
 
-    function AvaxRewardDiff(address owner) internal view returns (uint256) {}
+    function getQiRewardAccrued(address owner) internal view returns (uint256) {
+        (, bytes memory data) = address(this).staticcall(abi.encodeWithSignature("qiRewardDiff(address)", owner));
+        uint256 qiAccrued = abi.decode(data, (uint256));
+        return qiAccrued;
+    }
 
-    function getAvaxRewardDiff(address owner) internal view returns (uint256) {}
+    function claimAvaxReward(address owner) internal returns (uint256) {
+        ComptrollerLensInterface troller = getComptroller();
+        uint256 initialBalance = owner.balance;
+        troller.claimReward(rewardAvax, owner);
+        uint256 finalBalance = owner.balance;
 
-    function getRewardsData(
-        address owner,
-        ComptrollerLensInterface comptroller,
-        TokenInterface qiToken
-    ) public view returns (MetadataExt memory) {
+        return finalBalance - initialBalance;
+    }
+
+    function getAvaxRewardAccrued(address owner) internal view returns (uint256) {
+        (, bytes memory data) = address(this).staticcall(abi.encodeWithSignature("avaxRewardDiff(address)", owner));
+        uint256 avaxAccrued = abi.decode(data, (uint256));
+        return avaxAccrued;
+    }
+
+    function getRewardsData(address owner, TokenInterface qiToken) public view returns (MetadataExt memory) {
         return
             MetadataExt(
-                comptroller.rewardAccrued(rewardQi, owner) + qiRewardDiff(owner),
-                comptroller.rewardAccrued(rewardAvax, owner) + avaxRewardDiff(onwner),
+                getAvaxRewardAccrued(owner),
+                getQiRewardAccrued(owner),
                 qiToken.delegates(owner),
                 qiToken.getCurrentVotes(owner)
             );
@@ -75,7 +94,7 @@ contract Resolver is Helpers {
         view
         returns (BenqiData[] memory, MetadataExt memory)
     {
-        return (getBenqiData(owner, qiAddress), getRewardsData(owner, getComptroller(), getQiToken()));
+        return (getBenqiData(owner, qiAddress), getRewardsData(owner, getQiToken()));
     }
 }
 
