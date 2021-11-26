@@ -55,4 +55,5 @@ interface IVaultV3 {
         uint256 utilizationRate1
     );
 
+    function getPNL() external view override returns (uint256 rate, uint256 param);
 }
