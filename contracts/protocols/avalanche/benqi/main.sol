@@ -48,7 +48,7 @@ contract Resolver is Helpers {
         return tokensData;
     }
 
-    function claimQiReward(address owner) internal returns (uint256) {
+    function claimQiReward(address owner) external returns (uint256) {
         TokenInterface qiToken = getQiToken();
         ComptrollerLensInterface troller = getComptroller();
         uint256 initialBalance = qiToken.balanceOf(owner);
@@ -59,12 +59,12 @@ contract Resolver is Helpers {
     }
 
     function getQiRewardAccrued(address owner) internal view returns (uint256) {
-        (, bytes memory data) = address(this).staticcall(abi.encodeWithSignature("qiRewardDiff(address)", owner));
+        (, bytes memory data) = address(this).staticcall(abi.encodeWithSignature("claimQiReward(address)", owner));
         uint256 qiAccrued = abi.decode(data, (uint256));
         return qiAccrued;
     }
 
-    function claimAvaxReward(address owner) internal returns (uint256) {
+    function claimAvaxReward(address owner) external returns (uint256) {
         ComptrollerLensInterface troller = getComptroller();
         uint256 initialBalance = owner.balance;
         troller.claimReward(rewardAvax, owner);
@@ -74,7 +74,7 @@ contract Resolver is Helpers {
     }
 
     function getAvaxRewardAccrued(address owner) internal view returns (uint256) {
-        (, bytes memory data) = address(this).staticcall(abi.encodeWithSignature("avaxRewardDiff(address)", owner));
+        (, bytes memory data) = address(this).staticcall(abi.encodeWithSignature("claimAvaxReward(address)", owner));
         uint256 avaxAccrued = abi.decode(data, (uint256));
         return avaxAccrued;
     }
