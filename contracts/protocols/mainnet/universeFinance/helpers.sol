@@ -1,7 +1,7 @@
 pragma solidity ^0.7.6;
 pragma abicoder v2;
 
-import {DSMath} from "../../common/math.sol";
+import { DSMath } from "../../../utils/dsmath.sol";
 
 import  "./interface.sol";
 
