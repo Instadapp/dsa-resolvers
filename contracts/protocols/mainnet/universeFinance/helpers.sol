@@ -5,9 +5,9 @@ import {DSMath} from "../../common/math.sol";
 
 import  "./interface.sol";
 
-abstract contract Helpers is DSMath {
+contract Helpers is DSMath {
 
-    address constant public universeReslover = 0x7466420dC366DF67b55daeDf19f8d37a346Fa7C8;
+    address constant internal universeReslover = 0x7466420dC366DF67b55daeDf19f8d37a346Fa7C8;
 
     function _depositAmount(
         address universeVault,
