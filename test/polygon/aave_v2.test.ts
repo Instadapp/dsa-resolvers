@@ -61,5 +61,25 @@ describe("Aave V2 Resolvers", () => {
       expect(userData.totalBorrowsETH).to.gte(0);
       expect(userData.totalCollateralETH).to.gte(0);
     });
+
+    it("Should get prices", async () => {
+      const weth = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619";
+      const matic = "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270";
+
+      const maticPrice = await resolver.getPrice([matic]);
+      const ethPrice = await resolver.getPrice([weth]);
+      const decimal = 1e18;
+
+      console.log(
+        `Price maticPrice : In eth (${Number(maticPrice[0][0].priceInEth) / decimal}), In USD (${
+          Number(maticPrice[0][0].priceInUsd) / decimal
+        }) `,
+      );
+      console.log(
+        `Price ethPrice : In eth (${Number(ethPrice[0][0].priceInEth) / decimal}), In USD (${
+          Number(ethPrice[0][0].priceInUsd) / decimal
+        }) `,
+      );
+    });
   });
 });

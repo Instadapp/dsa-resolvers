@@ -8,42 +8,42 @@ contract AaveHelpers is DSMath {
      * @dev Return Avax address
      */
     function getAvaxAddr() internal pure returns (address) {
-        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // Avalanche mainnet avax address
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // avax Address
     }
 
     /**
      * @dev Return Wavax address
      */
     function getWavaxAddr() internal pure returns (address) {
-        return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // Avalanche mainnet Wavax address
+        return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // WAVAX Address
     }
 
     /**
      * @dev get Aave Provider Address
      */
     function getAaveAddressProvider() internal pure returns (address) {
-        return 0xb6A86025F0FE1862B372cb0ca18CE3EDe02A318f; // Avalanche mainnet
+        return 0xb6A86025F0FE1862B372cb0ca18CE3EDe02A318f; // Mainnet
     }
 
     /**
      * @dev get Aave Protocol Data Provider
      */
     function getAaveProtocolDataProvider() internal pure returns (address) {
-        return 0x65285E9dfab318f57051ab2b139ccCf232945451; // Avalanche mainnet
+        return 0x65285E9dfab318f57051ab2b139ccCf232945451; // Mainnet
     }
 
     /**
      * @dev get Chainlink ETH price feed Address
      */
     function getChainlinkEthFeed() internal pure returns (address) {
-        return 0x976B3D034E162d8bD72D6b9C989d545b839003b0; // Avalanche mainnet
+        return 0x976B3D034E162d8bD72D6b9C989d545b839003b0; //mainnet
     }
 
     /**
      * @dev Aave Incentives address
      */
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0x01D83Fe6A10D2f2B7AF17034343746188272cAc9; // Avalanche mainnet
+        return 0x01D83Fe6A10D2f2B7AF17034343746188272cAc9; // polygon mainnet
     }
 
     struct AaveUserTokenData {
@@ -86,6 +86,9 @@ contract AaveHelpers is DSMath {
         uint256 totalVariableDebt;
         uint256 collateralEmission;
         uint256 debtEmission;
+        address aTokenAddress;
+        address stableDebtTokenAddress;
+        address variableDebtTokenAddress;
     }
 
     struct TokenPrice {
@@ -102,7 +105,7 @@ contract AaveHelpers is DSMath {
         ethPrice = uint256(ChainLinkInterface(getChainlinkEthFeed()).latestAnswer());
         tokenPrices = new TokenPrice[](_tokenPrices.length);
         for (uint256 i = 0; i < _tokenPrices.length; i++) {
-            tokenPrices[i] = TokenPrice(_tokenPrices[i], wmul(_tokenPrices[i], uint256(ethPrice) * 10**10));
+            tokenPrices[i] = TokenPrice(wdiv(_tokenPrices[i], uint256(ethPrice)), _tokenPrices[i] * 1e10);
         }
     }
 
@@ -124,16 +127,20 @@ contract AaveHelpers is DSMath {
             aaveTokenData.isFrozen
         ) = aaveData.getReserveConfigurationData(token);
 
-        (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
+        (
+            aaveTokenData.aTokenAddress,
+            aaveTokenData.stableDebtTokenAddress,
+            aaveTokenData.variableDebtTokenAddress
+        ) = aaveData.getReserveTokensAddresses(token);
 
         AaveIncentivesInterface.AssetData memory _data;
         AaveIncentivesInterface incentives = AaveIncentivesInterface(getAaveIncentivesAddress());
 
-        _data = incentives.assets(aToken);
+        _data = incentives.assets(aaveTokenData.aTokenAddress);
         aaveTokenData.collateralEmission = _data.emissionPerSecond;
-        _data = incentives.assets(debtToken);
+        _data = incentives.assets(aaveTokenData.variableDebtTokenAddress);
         aaveTokenData.debtEmission = _data.emissionPerSecond;
-        aaveTokenData.totalSupply = TokenInterface(aToken).totalSupply();
+        aaveTokenData.totalSupply = TokenInterface(aaveTokenData.aTokenAddress).totalSupply();
     }
 
     function getTokenData(

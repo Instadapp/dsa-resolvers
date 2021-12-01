@@ -53,6 +53,11 @@ contract Resolver is AaveHelpers {
         AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
         data = getList(AaveLendingPool(addrProvider.getLendingPool()));
     }
+
+    function getPrice(address[] memory tokens) public view returns (TokenPrice[] memory tokenPrices, uint256 ethPrice) {
+        AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
+        (tokenPrices, ethPrice) = getTokensPrices(addrProvider, tokens);
+    }
 }
 
 contract InstaAaveV2ResolverPolygon is Resolver {

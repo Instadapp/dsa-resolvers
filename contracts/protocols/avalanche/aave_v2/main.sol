@@ -18,7 +18,7 @@ contract Resolver is AaveHelpers {
         }
 
         AaveUserTokenData[] memory tokensData = new AaveUserTokenData[](length);
-        (TokenPrice[] memory tokenPrices, uint256 avaxPrice) = getTokensPrices(addrProvider, _tokens);
+        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, _tokens);
 
         for (uint256 i = 0; i < length; i++) {
             tokensData[i] = getTokenData(
@@ -30,7 +30,7 @@ contract Resolver is AaveHelpers {
             );
         }
 
-        return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, avaxPrice, _tokens));
+        return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, ethPrice, _tokens));
     }
 
     function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {
@@ -52,6 +52,11 @@ contract Resolver is AaveHelpers {
     function getReservesList() public view returns (address[] memory data) {
         AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
         data = getList(AaveLendingPool(addrProvider.getLendingPool()));
+    }
+
+    function getPrice(address[] memory tokens) public view returns (TokenPrice[] memory tokenPrices, uint256 ethPrice) {
+        AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
+        (tokenPrices, ethPrice) = getTokensPrices(addrProvider, tokens);
     }
 }
 

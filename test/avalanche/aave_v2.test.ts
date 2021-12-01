@@ -2,7 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
-import { InstaAaveV2Resolver, InstaAaveV2ResolverAvalanche__factory } from "../../typechain";
+import { InstaAaveV2ResolverAvalanche, InstaAaveV2ResolverAvalanche__factory } from "../../typechain";
 import { Tokens } from "../consts";
 
 describe("Aave V2 Resolvers", () => {
@@ -14,7 +14,7 @@ describe("Aave V2 Resolvers", () => {
   });
 
   describe("Aave V2 Resolver", () => {
-    let resolver: InstaAaveV2Resolver;
+    let resolver: InstaAaveV2ResolverAvalanche;
     before(async () => {
       const deployer = new InstaAaveV2ResolverAvalanche__factory(signer);
       resolver = await deployer.deploy();
@@ -60,6 +60,26 @@ describe("Aave V2 Resolvers", () => {
       // check for user data
       expect(userData.totalBorrowsETH).to.gte(0);
       expect(userData.totalCollateralETH).to.gte(0);
+    });
+
+    it("Should get prices", async () => {
+      const weth = "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB";
+      const avax = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
+
+      const avaxPrice = await resolver.getPrice([avax]);
+      const ethPrice = await resolver.getPrice([weth]);
+      const decimal = 1e18;
+
+      console.log(
+        `Price avaxPrice : In eth (${Number(avaxPrice[0][0].priceInEth) / decimal}), In USD (${
+          Number(avaxPrice[0][0].priceInUsd) / decimal
+        }) `,
+      );
+      console.log(
+        `Price ethPrice : In eth (${Number(ethPrice[0][0].priceInEth) / decimal}), In USD (${
+          Number(ethPrice[0][0].priceInUsd) / decimal
+        }) `,
+      );
     });
   });
 });
