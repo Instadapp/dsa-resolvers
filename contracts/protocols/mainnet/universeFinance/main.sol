@@ -1,15 +1,14 @@
 pragma solidity ^0.7.6;
 pragma abicoder v2;
 
-import {Helpers} from "./helpers.sol";
+import { Helpers } from "./helpers.sol";
 
 abstract contract UniverseFinanceResolver is Helpers {
-
     /**
      * @notice get all Universe Working Vaults
      * @return address list
      */
-    function getAllVault() external view returns(address[] memory) {
+    function getAllVault() public view returns (address[] memory) {
         return _officialVaults();
     }
 
@@ -19,8 +18,19 @@ abstract contract UniverseFinanceResolver is Helpers {
      * @return [token0Address, token1Address, vaultMaxToken0Amount, vaultMaxToken1Amount, maxSingleDepositFofToken0,
      maxSingleDepositFofToken1, totalToken0Amount, totalTotal1Amount, utilizationOfToken0, utilizationOfToken1]
      */
-    function getVaultDetail(address universeVault) external view returns(VaultData memory) {
+    function getVaultDetail(address universeVault) public view returns (VaultData memory) {
         return _vaultDetail(universeVault);
+    }
+
+    /**
+     * @notice get universe vaults data
+     * @param universeVaults the Universe Vault Address array
+     * @return array of [token0Address, token1Address, vaultMaxToken0Amount, vaultMaxToken1Amount, 
+        maxSingleDepositFofToken0,maxSingleDepositFofToken1, totalToken0Amount, totalTotal1Amount, 
+        utilizationOfToken0, utilizationOfToken1]
+     */
+    function getVaultData(address[] memory universeVaults) external view returns (VaultData[] memory) {
+        return _vaultData(universeVaults);
     }
 
     /**
@@ -29,20 +39,24 @@ abstract contract UniverseFinanceResolver is Helpers {
      * @param user the user address
      * @return shareToken0Amount and shareToken1Amount
      */
-    function getUserShareAmount(address universeVault, address user) external view returns(uint256, uint256) {
+    function getUserShareAmount(address universeVault, address user) external view returns (uint256, uint256) {
         return _userShareAmount(universeVault, user);
     }
 
     /**
-    * @notice get user share info list
-    * @param universeVaults the Universe Vault Address arrays
-    * @param user the user address
-    */
-    function getUserShareAmountList(address[] memory universeVaults, address user) external view returns(uint256[2][] memory data) {
-        uint len = universeVaults.length;
-        if(len > 0){
+     * @notice get user share info list
+     * @param universeVaults the Universe Vault Address arrays
+     * @param user the user address
+     */
+    function getUserShareAmountList(address[] memory universeVaults, address user)
+        external
+        view
+        returns (uint256[2][] memory data)
+    {
+        uint256 len = universeVaults.length;
+        if (len > 0) {
             data = new uint256[2][](len);
-            for(uint i; i < len; i++){
+            for (uint256 i; i < len; i++) {
                 (uint256 share0, uint256 share1) = _userShareAmount(universeVaults[i], user);
                 data[i] = [share0, share1];
             }
@@ -50,12 +64,12 @@ abstract contract UniverseFinanceResolver is Helpers {
     }
 
     /**
-     * @notice get user can withdraw amount
+     * @notice get user withdraw amount
      * @param universeVault the Universe Vault Address
      * @param user the user address
      * @return token0Amount  token1Amount
      */
-    function getUserWithdrawAmount(address universeVault, address user) external view returns(uint256, uint256) {
+    function getUserWithdrawAmount(address universeVault, address user) external view returns (uint256, uint256) {
         (uint256 share0, uint256 share1) = _userShareAmount(universeVault, user);
         return _withdrawAmount(universeVault, share0, share1);
     }
@@ -71,10 +85,37 @@ abstract contract UniverseFinanceResolver is Helpers {
         address universeVault,
         uint256 amount0,
         uint256 amount1
-    ) external view returns(uint256, uint256) {
+    ) external view returns (uint256, uint256) {
         return _depositAmount(universeVault, amount0, amount1);
     }
 
+    /**
+     * @notice get token decimals of a vault
+     * @param vault the vault address
+     * @return token decimals
+     */
+    function decimals(address vault) external view returns (uint8, uint8) {
+        return _decimals(vault);
+    }
+
+    /**
+     * @notice get token decimals of a vault
+     * @param universeVault the vault's address
+     * @param user the user's address
+     */
+    function position(address universeVault, address user)
+        external
+        view
+        returns (
+            uint256 share0,
+            uint256 share1,
+            uint256 amount0,
+            uint256 amount1
+        )
+    {
+        (share0, share1) = _userShareAmount(universeVault, user);
+        (amount0, amount1) = _withdrawAmount(universeVault, share0, share1);
+    }
 }
 
 contract ResolverV2UniverseFinance is UniverseFinanceResolver {
