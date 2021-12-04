@@ -61,7 +61,7 @@ describe("Uniswap", () => {
       console.log(`token1Amount: ${Number(token1Amount) / 10 ** decimals[1]}`);
     });
 
-    it("should get position", async () => {
+    it("should get user position by vaults and user addresses", async () => {
       const rawData = await universe.position([vault], user);
       const decimals = await universe.decimals(vault);
       const [share0, share1, amount0, amount1] = rawData[0];
@@ -70,6 +70,32 @@ describe("Uniswap", () => {
       console.log(`share1: ${Number(share1) / 10 ** decimals[1]}`);
       console.log(`amount0: ${Number(amount0) / 10 ** decimals[0]}`);
       console.log(`amount1: ${Number(amount1) / 10 ** decimals[1]}`);
+    });
+
+    it("should get position and vault data by user address", async () => {
+      const rawData = await universe.positionByVault([vault], user);
+      const decimals = await universe.decimals(vault);
+      const [share0, share1, amount0, amount1] = rawData[0][0];
+      const vaultData = rawData[1];
+
+      console.log(`share0: ${Number(share0) / 10 ** decimals[0]}`);
+      console.log(`share1: ${Number(share1) / 10 ** decimals[1]}`);
+      console.log(`amount0: ${Number(amount0) / 10 ** decimals[0]}`);
+      console.log(`amount1: ${Number(amount1) / 10 ** decimals[1]}`);
+      console.log(`vault data: ${vaultData}`);
+    });
+
+    it("should get position and vault data by user address", async () => {
+      const rawData = await universe.positionByAddress(user);
+      const decimals = await universe.decimals(vault);
+      const [share0, share1, amount0, amount1] = rawData[0][0];
+      const vaultData = rawData[1];
+
+      console.log(`share0: ${Number(share0) / 10 ** decimals[0]}`);
+      console.log(`share1: ${Number(share1) / 10 ** decimals[1]}`);
+      console.log(`amount0: ${Number(amount0) / 10 ** decimals[0]}`);
+      console.log(`amount1: ${Number(amount1) / 10 ** decimals[1]}`);
+      console.log(`vault datas: ${vaultData}`);
     });
   });
 });

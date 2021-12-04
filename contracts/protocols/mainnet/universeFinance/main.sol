@@ -92,13 +92,40 @@ abstract contract UniverseFinanceResolver is Helpers {
      * @param universeVault the vault's address
      * @param user the user's address
      */
-    function position(address[] memory universeVault, address user) external view returns (Position[] memory) {
+    function position(address[] memory universeVault, address user) public view returns (Position[] memory) {
         Position[] memory userPosition = new Position[](universeVault.length);
         for (uint256 i = 0; i < universeVault.length; i++) {
             userPosition[i] = _position(universeVault[i], user);
         }
 
         return userPosition;
+    }
+
+    /**
+     * @notice returns vaults data & users position
+     * @param universeVault the vault's address array
+     * @param user the user's address
+     */
+    function positionByVault(address[] memory universeVault, address user)
+        external
+        view
+        returns (Position[] memory userPosition, VaultData[] memory data)
+    {
+        userPosition = position(universeVault, user);
+        data = getVaultDetail(universeVault);
+    }
+
+    /**
+     * @notice returns vaults data & users position
+     * @param user the user's address
+     */
+    function positionByAddress(address user)
+        external
+        view
+        returns (Position[] memory userPosition, VaultData[] memory data)
+    {
+        userPosition = position(getAllVault(), user);
+        data = getVaultDetail(getAllVault());
     }
 }
 
