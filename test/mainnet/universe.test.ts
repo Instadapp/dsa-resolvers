@@ -30,7 +30,7 @@ describe("Uniswap", () => {
 
     it("should get vault data", async () => {
       const allvaults = await universe.getAllVault();
-      const vaultsData = await universe.getVaultData(allvaults);
+      const vaultsData = await universe.getVaultDetail(allvaults);
 
       for (let i = 0; i < vaultsData.length; i++) {
         console.log(vaultsData[i]);
@@ -62,8 +62,9 @@ describe("Uniswap", () => {
     });
 
     it("should get position", async () => {
-      const [share0, share1, amount0, amount1] = await universe.position(vault, user);
+      const rawData = await universe.position([vault], user);
       const decimals = await universe.decimals(vault);
+      const [share0, share1, amount0, amount1] = rawData[0];
 
       console.log(`share0: ${Number(share0) / 10 ** decimals[0]}`);
       console.log(`share1: ${Number(share1) / 10 ** decimals[1]}`);

@@ -2,7 +2,6 @@ pragma solidity ^0.7.6;
 pragma abicoder v2;
 
 import { DSMath } from "../../../utils/dsmath.sol";
-
 import "./interface.sol";
 
 contract Helpers is DSMath {
@@ -41,6 +40,13 @@ contract Helpers is DSMath {
         uint256 utilizationRate1;
     }
 
+    struct Position {
+        uint256 share0;
+        uint256 share1;
+        uint256 amount0;
+        uint256 amount1;
+    }
+
     function _vaultDetail(address universeVault) internal view returns (VaultData memory vaultData) {
         IVaultV3 vault = IVaultV3(universeVault);
         vaultData.token0 = vault.token0();
@@ -75,5 +81,10 @@ contract Helpers is DSMath {
         address token1 = IVaultV3(vault).token1();
         decimal0 = IERC20(token0).decimals();
         decimal1 = IERC20(token1).decimals();
+    }
+
+    function _position(address vault, address user) internal view returns (Position memory userPosition) {
+        (userPosition.share0, userPosition.share1) = _userShareAmount(vault, user);
+        (userPosition.amount0, userPosition.amount1) = _withdrawAmount(vault, userPosition.share0, userPosition.share1);
     }
 }

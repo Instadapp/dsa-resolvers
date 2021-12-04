@@ -14,22 +14,11 @@ abstract contract UniverseFinanceResolver is Helpers {
 
     /**
      * @notice get universe vault detail info
-     * @param universeVault the Universe Vault Address
+     * @param universeVaults the Universe Vault Address
      * @return [token0Address, token1Address, vaultMaxToken0Amount, vaultMaxToken1Amount, maxSingleDepositFofToken0,
      maxSingleDepositFofToken1, totalToken0Amount, totalTotal1Amount, utilizationOfToken0, utilizationOfToken1]
      */
-    function getVaultDetail(address universeVault) public view returns (VaultData memory) {
-        return _vaultDetail(universeVault);
-    }
-
-    /**
-     * @notice get universe vaults data
-     * @param universeVaults the Universe Vault Address array
-     * @return array of [token0Address, token1Address, vaultMaxToken0Amount, vaultMaxToken1Amount, 
-        maxSingleDepositFofToken0,maxSingleDepositFofToken1, totalToken0Amount, totalTotal1Amount, 
-        utilizationOfToken0, utilizationOfToken1]
-     */
-    function getVaultData(address[] memory universeVaults) external view returns (VaultData[] memory) {
+    function getVaultDetail(address[] memory universeVaults) public view returns (VaultData[] memory) {
         return _vaultData(universeVaults);
     }
 
@@ -103,18 +92,13 @@ abstract contract UniverseFinanceResolver is Helpers {
      * @param universeVault the vault's address
      * @param user the user's address
      */
-    function position(address universeVault, address user)
-        external
-        view
-        returns (
-            uint256 share0,
-            uint256 share1,
-            uint256 amount0,
-            uint256 amount1
-        )
-    {
-        (share0, share1) = _userShareAmount(universeVault, user);
-        (amount0, amount1) = _withdrawAmount(universeVault, share0, share1);
+    function position(address[] memory universeVault, address user) external view returns (Position[] memory) {
+        Position[] memory userPosition = new Position[](universeVault.length);
+        for (uint256 i = 0; i < universeVault.length; i++) {
+            userPosition[i] = _position(universeVault[i], user);
+        }
+
+        return userPosition;
     }
 }
 
