@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
  * @dev Decentralized Exchange.
  */
 
-import { Helpers, ISushiSwapRouter, ISushiSwapFactory, ISushiSwapPair, TokenInterface, PoolData } from "./helpers.sol";
+import { Helpers, ISushiSwapRouter, ISushiSwapFactory, ISushiSwapPair, TokenInterface } from "./helpers.sol";
 
 abstract contract SushipswapResolver is Helpers {
     function getBuyAmount(
@@ -195,6 +195,6 @@ abstract contract SushipswapResolver is Helpers {
     }
 }
 
-contract InstaSushiSwapResolver is SushipswapResolver {
+contract InstaSushiSwapResolverPolygon is SushipswapResolver {
     string public constant name = "Sushiswap-Resolver-v1.1";
 }

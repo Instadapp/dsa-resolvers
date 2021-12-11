@@ -52,26 +52,12 @@ library Babylonian {
     }
 }
 
-struct PoolData {
-    address tokenA;
-    address tokenB;
-    address lpAddress;
-    uint256 reserveA;
-    uint256 reserveB;
-    uint256 tokenAShareAmt;
-    uint256 tokenBShareAmt;
-    uint256 tokenABalance;
-    uint256 tokenBBalance;
-    uint256 lpAmount;
-    uint256 totalSupply;
-}
-
 abstract contract Helpers is DSMath {
     using SafeMath for uint256;
     /**
      * @dev ISushiSwapRouter
      */
-    ISushiSwapRouter internal constant router = ISushiSwapRouter(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+    ISushiSwapRouter internal constant router = ISushiSwapRouter(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506);
 
     /**
      * @dev Return ethereum address
@@ -81,7 +67,7 @@ abstract contract Helpers is DSMath {
     /**
      * @dev Return Wrapped ETH address
      */
-    address internal constant wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address internal constant wethAddr = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
     function getExpectedBuyAmt(address[] memory paths, uint256 sellAmt) internal view returns (uint256 buyAmt) {
         uint256[] memory amts = router.getAmountsOut(sellAmt, paths);
@@ -278,15 +264,14 @@ abstract contract Helpers is DSMath {
      * @dev Return WETH address
      */
     function getAddressWETH() internal pure returns (address) {
-        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet
-        // return 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // kovan
+        return 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
     }
 
     /**
      * @dev Return sushiswap router Address
      */
     function getSushiSwapAddr() internal pure returns (address) {
-        return 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
+        return 0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506;
     }
 
     // function convert18ToDec(uint _dec, uint256 _amt) internal pure returns (uint256 amt) {
