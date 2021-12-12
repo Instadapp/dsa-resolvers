@@ -7,7 +7,7 @@ import { Tokens } from "../consts";
 
 describe("Aave V2 Resolvers", () => {
   let signer: SignerWithAddress;
-  const account = "0xa8ABe411d1A3F524a2aB9C54f8427066a1F9f266";
+  const account = "0x2082A3604DAD1CD4109EAee06bc21C2f85c6FA29";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -21,6 +21,23 @@ describe("Aave V2 Resolvers", () => {
       await resolver.deployed();
     });
 
+    it("should get user configurations and reserves list", async () => {
+      const reservesList = await resolver.getReservesList();
+      const reserves = await resolver.getConfiguration(account);
+      console.log("Collateral Reserves Address");
+      for (let i = 0; i < reserves[0].length; i++) {
+        if (reserves[0][i]) {
+          console.log(`- ${reservesList[i]}`);
+        }
+      }
+      console.log("Borrowed Reserves Address");
+      for (let i = 0; i < reserves[1].length; i++) {
+        if (reserves[1][i]) {
+          console.log(`- ${reservesList[i]}`);
+        }
+      }
+    });
+
     it("Returns the positions on AaveV2", async () => {
       const results = await resolver.getPosition(account, [Tokens.DAI.addr]);
       const userTokenData = results[0];
@@ -28,16 +45,15 @@ describe("Aave V2 Resolvers", () => {
 
       // check for token balances
       console.log("Supply Balance DAI: ", formatUnits(userTokenData[0].supplyBalance, Tokens.DAI.decimals));
-      expect(userTokenData[0].supplyBalance).to.gt(0);
+      expect(userTokenData[0].supplyBalance).to.gte(0);
       console.log(
         "Variable Borrow Balance DAI: ",
         formatUnits(userTokenData[0].variableBorrowBalance, Tokens.DAI.decimals),
       );
-      expect(userTokenData[0].variableBorrowBalance).to.gt(0);
-
+      expect(userTokenData[0].variableBorrowBalance).to.gte(0);
       // check for user data
-      expect(userData.totalBorrowsETH).to.gt(0);
-      expect(userData.totalCollateralETH).to.gt(0);
+      expect(userData.totalBorrowsETH).to.gte(0);
+      expect(userData.totalCollateralETH).to.gte(0);
     });
   });
 });

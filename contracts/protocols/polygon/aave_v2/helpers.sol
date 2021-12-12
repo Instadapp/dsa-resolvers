@@ -86,6 +86,9 @@ contract AaveHelpers is DSMath {
         uint256 totalVariableDebt;
         uint256 collateralEmission;
         uint256 debtEmission;
+        address aTokenAddress;
+        address stableDebtTokenAddress;
+        address variableDebtTokenAddress;
     }
 
     struct TokenPrice {
@@ -124,16 +127,20 @@ contract AaveHelpers is DSMath {
             aaveTokenData.isFrozen
         ) = aaveData.getReserveConfigurationData(token);
 
-        (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
+        (
+            aaveTokenData.aTokenAddress,
+            aaveTokenData.stableDebtTokenAddress,
+            aaveTokenData.variableDebtTokenAddress
+        ) = aaveData.getReserveTokensAddresses(token);
 
         AaveIncentivesInterface.AssetData memory _data;
         AaveIncentivesInterface incentives = AaveIncentivesInterface(getAaveIncentivesAddress());
 
-        _data = incentives.assets(aToken);
+        _data = incentives.assets(aaveTokenData.aTokenAddress);
         aaveTokenData.collateralEmission = _data.emissionPerSecond;
-        _data = incentives.assets(debtToken);
+        _data = incentives.assets(aaveTokenData.variableDebtTokenAddress);
         aaveTokenData.debtEmission = _data.emissionPerSecond;
-        aaveTokenData.totalSupply = TokenInterface(aToken).totalSupply();
+        aaveTokenData.totalSupply = TokenInterface(aaveTokenData.aTokenAddress).totalSupply();
     }
 
     function getTokenData(
@@ -212,5 +219,32 @@ contract AaveHelpers is DSMath {
             ethPriceInUsd,
             pendingRewards
         );
+    }
+
+    function getConfig(address user, AaveLendingPool aave)
+        public
+        view
+        returns (AaveLendingPool.UserConfigurationMap memory data)
+    {
+        data = aave.getUserConfiguration(user);
+    }
+
+    function getList(AaveLendingPool aave) public view returns (address[] memory data) {
+        data = aave.getReservesList();
+    }
+
+    function isUsingAsCollateralOrBorrowing(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2)) & 3 != 0;
+    }
+
+    function isUsingAsCollateral(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2 + 1)) & 1 != 0;
+    }
+
+    function isBorrowing(uint256 self, uint256 reserveIndex) public pure returns (bool) {
+        require(reserveIndex < 128, "can't be more than 128");
+        return (self >> (reserveIndex * 2)) & 1 != 0;
     }
 }

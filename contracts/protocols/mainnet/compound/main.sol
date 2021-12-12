@@ -33,6 +33,8 @@ contract Resolver is Helpers {
                 cToken.borrowRatePerBlock(),
                 collateralFactor,
                 troller.compSpeeds(cAddress[i]),
+                troller.compSupplySpeeds(cAddress[i]),
+                troller.compBorrowSpeeds(cAddress[i]),
                 isComped,
                 troller.borrowGuardianPaused(cAddress[i])
             );
