@@ -59,6 +59,10 @@ interface ComptrollerLensInterface {
     function oracle() external view returns (address);
 
     function compSpeeds(address) external view returns (uint256);
+    
+    function compSupplySpeeds(address) external view returns (uint);
+    
+    function compBorrowSpeeds(address) external view returns (uint);
 }
 
 interface CompReadInterface {

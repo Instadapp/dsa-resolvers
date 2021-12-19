@@ -11,6 +11,7 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
+import Web3 from "web3";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -22,6 +23,8 @@ const chainIds = {
   mainnet: 1,
   rinkeby: 4,
   ropsten: 3,
+  avalanche: 43114,
+  polygon: 137,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -32,7 +35,7 @@ if (!mnemonic) {
 
 const alchemyApiKey = process.env.ALCHEMY_API_KEY;
 if (!alchemyApiKey) {
-  throw new Error("Please set your ALCHEMY_API_KEY in a .env file");
+  throw new Error("Please set your ALCHEMY_ETH_API_KEY in a .env file");
 }
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
@@ -47,6 +50,24 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
     chainId: chainIds[network],
     url,
   };
+}
+
+function getNetworkUrl(networkType: string) {
+  //console.log(process.env);
+  if (networkType === "avalanche") return "https://api.avax.network/ext/bc/C/rpc";
+  else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
+}
+
+function getBlockNumber(networkType: string) {
+  let web3 = new Web3(new Web3.providers.HttpProvider(getNetworkUrl(networkType)));
+  let blockNumber;
+  web3.eth.getBlockNumber().then((x: any) => {
+    blockNumber = x;
+  });
+
+  return blockNumber;
 }
 
 const config: HardhatUserConfig = {
@@ -64,8 +85,8 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
-        blockNumber: 12621695,
+        url: String(getNetworkUrl(String(process.env.networkType))),
+        blockNumber: getBlockNumber(String(process.env.networkType)),
       },
     },
     goerli: createTestnetConfig("goerli"),
@@ -80,27 +101,36 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
-    version: "0.8.4",
-    settings: {
-      metadata: {
-        // Not including the metadata hash
-        // https://github.com/paulrberg/solidity-template/issues/31
-        bytecodeHash: "none",
+    compilers: [
+      {
+        version: "0.8.4",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 800,
+          },
+        },
       },
-      // You should disable the optimizer when debugging
-      // https://hardhat.org/hardhat-network/#solidity-optimizer-support
-      optimizer: {
-        enabled: true,
-        runs: 800,
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 800,
+          },
+        },
       },
-    },
+    ],
   },
   typechain: {
     outDir: "typechain",
     target: "ethers-v5",
   },
   mocha: {
-    timeout: 100 * 1000,
+    timeout: 10000 * 1000,
   },
 };
 

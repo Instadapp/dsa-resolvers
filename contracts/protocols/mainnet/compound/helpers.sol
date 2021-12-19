@@ -52,6 +52,8 @@ contract Helpers is DSMath {
         uint256 borrowRatePerBlock;
         uint256 collateralFactor;
         uint256 compSpeed;
+        uint256 compSupplySpeed;
+        uint256 compBorrowSpeed;
         bool isComped;
         bool isBorrowPaused;
     }

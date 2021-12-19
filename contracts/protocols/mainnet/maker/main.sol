@@ -8,8 +8,10 @@ contract VaultResolver is Helpers {
         address manager = InstaMcdAddress(getMcdAddresses()).manager();
         address cdpManger = InstaMcdAddress(getMcdAddresses()).getCdps();
 
-        (uint256[] memory ids, address[] memory urns, bytes32[] memory ilks) =
-            CdpsLike(cdpManger).getCdpsAsc(manager, owner);
+        (uint256[] memory ids, address[] memory urns, bytes32[] memory ilks) = CdpsLike(cdpManger).getCdpsAsc(
+            manager,
+            owner
+        );
         VaultData[] memory vaults = new VaultData[](ids.length);
 
         for (uint256 i = 0; i < ids.length; i++) {
@@ -45,20 +47,19 @@ contract VaultResolver is Helpers {
         uint256 mat = getColRatio(ilk);
 
         uint256 feeRate = getFee(ilk);
-        VaultData memory vault =
-            VaultData(
-                id,
-                ManagerLike(manager).owns(id),
-                bytes32ToString(ilk),
-                ink,
-                art,
-                rmul(art, rate),
-                VatLike(ManagerLike(manager).vat()).gem(ilk, urn),
-                feeRate,
-                rmul(priceMargin, mat),
-                mat,
-                urn
-            );
+        VaultData memory vault = VaultData(
+            id,
+            ManagerLike(manager).owns(id),
+            bytes32ToString(ilk),
+            ink,
+            art,
+            rmul(art, rate),
+            VatLike(ManagerLike(manager).vat()).gem(ilk, urn),
+            feeRate,
+            rmul(priceMargin, mat),
+            mat,
+            urn
+        );
         return vault;
     }
 
