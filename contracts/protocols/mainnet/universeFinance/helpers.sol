@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: MIT
 pragma solidity ^0.7.6;
 pragma abicoder v2;
 
@@ -6,6 +7,7 @@ import "./interface.sol";
 
 contract Helpers is DSMath {
     address internal constant universeReslover = 0x7466420dC366DF67b55daeDf19f8d37a346Fa7C8;
+    uint8 internal constant vaultVersion = 1;
 
     function _depositAmount(
         address universeVault,
@@ -38,6 +40,7 @@ contract Helpers is DSMath {
         uint256 total1;
         uint256 utilizationRate0;
         uint256 utilizationRate1;
+        uint256 version;
     }
 
     struct Position {
@@ -45,6 +48,7 @@ contract Helpers is DSMath {
         uint256 share1;
         uint256 amount0;
         uint256 amount1;
+        uint256 version;
     }
 
     function _vaultDetail(address universeVault) internal view returns (VaultData memory vaultData) {
@@ -62,6 +66,7 @@ contract Helpers is DSMath {
         vaultData.total1 = total1;
         vaultData.utilizationRate0 = utilizationRate0;
         vaultData.utilizationRate1 = utilizationRate1;
+        vaultData.version = vaultVersion;
     }
 
     function _officialVaults() internal view returns (address[] memory vaults) {
@@ -86,5 +91,6 @@ contract Helpers is DSMath {
     function _position(address vault, address user) internal view returns (Position memory userPosition) {
         (userPosition.share0, userPosition.share1) = _userShareAmount(vault, user);
         (userPosition.amount0, userPosition.amount1) = _withdrawAmount(vault, userPosition.share0, userPosition.share1);
+        userPosition.version = vaultVersion;
     }
 }
