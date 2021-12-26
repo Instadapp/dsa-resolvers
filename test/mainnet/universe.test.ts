@@ -5,7 +5,7 @@ import { ResolverV2UniverseFinance, ResolverV2UniverseFinance__factory } from ".
 
 const { BigNumber } = ethers;
 
-describe("Uniswap", () => {
+describe("Universe-finance", () => {
   let signer: SignerWithAddress;
   const vault = "0x5EC191A7Fd4CcC4f1369C2A6281E95aAf0AE9d8d";
   const user = "0x6C0E34EBAED7ce5a0Ca97cF98EF41dfA3a8ecc7F";
