@@ -4,6 +4,7 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
+    //
     /***************************************
                     CORE
     ****************************************/
@@ -74,7 +75,7 @@ contract Resolver is Helpers {
      * @dev Estimates withdrawals via Feeder Pool
      * @notice Estimates the output via Feeder Pool
      * @param _output The output token to estimate
-     * @param _amount Amount of bAssets (or mUSD) to be withdrawn
+     * @param _amount Amount to be withdrawn
      * @param _path address of the Feeder Pool
      * @return estimation of output
      */
@@ -86,31 +87,81 @@ contract Resolver is Helpers {
         return IFeederPool(_path).getSwapOutput(mUsdToken, _output, _amount);
     }
 
+    // struct VaultBalance {
+    //     uint256 credits;
+    //     uint256 balance;
+    //     uint256 exchangeRage;
+    //     uint256 rewardsClaimable;
+    //     uint256 rewardsVested;
+    //     uint256 rewardsLocked;
+    //     uint64 start;
+    //     uint64 finish;
+    // }
+
     /**
      * @dev Retrieves the Vault Balance
      * @param _account The account to retrieve the balance for
-     * @return struct vaultBalance (balance, credits, rewardsClaimable)
      */
-    function getVaultBalance(address _account) external view returns (VaultBalance memory) {
+    function getVaultBalance(address _account) external view returns (VaultBalance memory data) {
         //
-        VaultBalance memory data;
-
-        data.credits = IERC20(imUsdVault).balanceOf(_account);
+        data.credits = IBoostedSavingsVault(imUsdVault).rawBalanceOf(_account);
         data.balance = ISavingsContractV2(imUsdToken).creditsToUnderlying(data.credits);
         data.exchangeRage = ISavingsContractV2(imUsdToken).exchangeRate();
         data.rewardsClaimable = IBoostedSavingsVault(imUsdVault).earned(_account);
-
-        return data;
+        (data.rewardsVested, , ) = IBoostedSavingsVault(imUsdVault).unclaimedRewards(_account);
     }
 
-    // Calc underlying to Credits
-    // Calc Credits to underlying
+    function getUserData(address _account) external view returns (UserData[] memory) {
+        return IBoostedSavingsVault(imUsdVault).userData(_account);
+    }
 
-    // swap estimate
+    /**
+     * @dev Estimates a swap, given the input and output tokens
+     * @notice Estimates the output, mUSD to bAsset, or bAsset to mUSD, or bAsset to bAsset
+     * @param _input The input token to estimate
+     * @param _output The output token to estimate
+     * @param _amount Amount of bAssets (or mUSD) to be swapped
+     * @return estimation of output
+     */
+    function estimateSwap(
+        address _input,
+        address _output,
+        uint256 _amount
+    ) public view returns (uint256) {
+        //
+        require(_input != _output, "Invalid swap");
 
-    /***************************************
-                    Internal
-    ****************************************/
+        if (_input == mUsdToken) {
+            // Input is mUSD => redeem to bAsset
+            return IMasset(mUsdToken).getRedeemOutput(_output, _amount);
+        } else if (_output == mUsdToken) {
+            // Input is bAsset and output is mUSD => mint
+            return IMasset(mUsdToken).getMintOutput(_input, _amount);
+        } else {
+            // Input is bAsset and output is bAsset => swap
+            return IMasset(mUsdToken).getSwapOutput(_input, _output, _amount);
+        }
+    }
+
+    /**
+     * @dev Estimates a swap, given the input and output tokens
+     * @notice Estimates the output using the given Feeder Pool
+     * @param _input The input token to estimate
+     * @param _output The output token to estimate
+     * @param _amount Amount of bAssets (or mUSD) to be swapped
+     * @param _path address of the Feeder Pool
+     * @return estimation of output
+     */
+
+    function estimateSwap(
+        address _input,
+        address _output,
+        uint256 _amount,
+        address _path
+    ) public view returns (uint256) {
+        //
+        return IFeederPool(_path).getSwapOutput(_input, _output, _amount);
+    }
 }
 
 contract InstaMstableResolver is Resolver {

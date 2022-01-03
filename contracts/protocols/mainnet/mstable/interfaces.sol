@@ -25,6 +25,13 @@ interface ISavingsContractV2 {
     function creditsToUnderlying(uint256 _underlying) external view returns (uint256 credits); // V2
 }
 
+struct UserData {
+    uint128 rewardPerTokenPaid;
+    uint128 rewards;
+    uint64 lastAction;
+    uint64 rewardCount;
+}
+
 interface IBoostedSavingsVault {
     /**
      * @dev Returned the units of IMMEDIATELY claimable rewards a user has to receive. Note - this
@@ -50,6 +57,10 @@ interface IBoostedSavingsVault {
             uint256 first,
             uint256 last
         );
+
+    function userData(address _account) external view returns (UserData[] memory data);
+
+    function rawBalanceOf(address _account) external view returns (uint256);
 }
 
 interface IFeederPool {
