@@ -8,7 +8,7 @@ contract Helpers is DSMath {
     struct VaultData {
         uint256 credits;
         uint256 balance;
-        uint256 exchangeRage;
+        uint256 exchangeRate;
         uint256 rewardsEarned;
         uint256 rewardsUnclaimed;
         uint256 rewardsLocked;
