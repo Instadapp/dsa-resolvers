@@ -96,19 +96,19 @@ describe("mStable Resolvers", () => {
       expect(unlockedAmount).to.gte(simpleToExactAmount(0));
     });
     it.only("Should getVaultData() accountOldVault", async () => {
-      const userDataOutput = await resolver.getVaultData(accountNewVault);
+      const userDataOutput = await resolver.getVaultData(accountThirdVault);
 
       expect(userDataOutput).to.be.an("array");
       expect(userDataOutput.credits).to.be.gte(0);
       expect(userDataOutput.balance).to.be.gte(0);
-      expect(userDataOutput.exchangeRage).to.be.gte(0);
+      expect(userDataOutput.exchangeRate).to.be.gte(0);
       expect(userDataOutput.rewardsEarned).to.be.gte(0);
       expect(userDataOutput.rewardsUnclaimed).to.be.gte(0);
       expect(userDataOutput.rewardsLocked).to.be.gte(0);
 
       console.log("Credits: ", toEther(userDataOutput.credits));
       console.log("Balance: ", toEther(userDataOutput.balance));
-      console.log("Exchange Rage: ", toEther(userDataOutput.exchangeRage));
+      console.log("Exchange Rate: ", toEther(userDataOutput.exchangeRate));
       console.log("Rewards Earned: ", toEther(userDataOutput.rewardsEarned));
       console.log("Rewards Unlocked: ", toEther(userDataOutput.rewardsUnclaimed));
       console.log("Rewards Locked: ", toEther(userDataOutput.rewardsLocked));
