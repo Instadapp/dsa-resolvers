@@ -5,15 +5,13 @@ import "./interfaces.sol";
 
 contract Helpers is DSMath {
     //
-    struct VaultBalance {
+    struct VaultData {
         uint256 credits;
         uint256 balance;
         uint256 exchangeRage;
-        uint256 rewardsClaimable;
-        uint256 rewardsVested;
+        uint256 rewardsEarned;
+        uint256 rewardsUnclaimed;
         uint256 rewardsLocked;
-        uint64 start;
-        uint64 finish;
     }
 
     address internal constant mUsdToken = 0xe2f2a5C287993345a840Db3B0845fbC70f5935a5;

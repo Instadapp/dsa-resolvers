@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+struct UserData {
+    uint128 rewardPerTokenPaid;
+    uint128 rewards;
+    uint64 lastAction;
+    uint64 rewardCount;
+}
+
+struct Reward {
+    uint64 start;
+    uint64 finish;
+    uint128 rate;
+}
+
 interface IMasset {
     function getMintOutput(address _input, uint256 _inputQuantity) external view returns (uint256 mintOutput);
 
@@ -23,13 +36,6 @@ interface ISavingsContractV2 {
     function underlyingToCredits(uint256 _credits) external view returns (uint256 underlying); // V2
 
     function creditsToUnderlying(uint256 _underlying) external view returns (uint256 credits); // V2
-}
-
-struct UserData {
-    uint128 rewardPerTokenPaid;
-    uint128 rewards;
-    uint64 lastAction;
-    uint64 rewardCount;
 }
 
 interface IBoostedSavingsVault {
@@ -58,9 +64,27 @@ interface IBoostedSavingsVault {
             uint256 last
         );
 
-    function userData(address _account) external view returns (UserData[] memory data);
+    function userData(address _account) external view returns (UserData memory);
+
+    function userRewards(address _account, uint256 _i) external view returns (Reward memory);
 
     function rawBalanceOf(address _account) external view returns (uint256);
+
+    function LOCKUP() external view returns (uint256);
+
+    function UNLOCK() external view returns (uint64);
+
+    function userClaim(address _account) external view returns (uint64);
+
+    function periodFinish() external view returns (uint256);
+
+    function lastUpdateTime() external view returns (uint256);
+
+    function rewardPerTokenStored() external view returns (uint256);
+
+    function rewardRate() external view returns (uint256);
+
+    function totalSupply() external view returns (uint256);
 }
 
 interface IFeederPool {

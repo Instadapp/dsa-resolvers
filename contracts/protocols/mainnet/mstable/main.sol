@@ -3,6 +3,8 @@ pragma solidity ^0.8.4;
 import "./interfaces.sol";
 import "./helpers.sol";
 
+import "hardhat/console.sol";
+
 contract Resolver is Helpers {
     //
     /***************************************
@@ -87,32 +89,69 @@ contract Resolver is Helpers {
         return IFeederPool(_path).getSwapOutput(mUsdToken, _output, _amount);
     }
 
-    // struct VaultBalance {
-    //     uint256 credits;
-    //     uint256 balance;
-    //     uint256 exchangeRage;
-    //     uint256 rewardsClaimable;
-    //     uint256 rewardsVested;
-    //     uint256 rewardsLocked;
-    //     uint64 start;
-    //     uint64 finish;
-    // }
+    // function getUserData(address _account) external view returns (UserData[] memory data) {
+    function getVestingData(address _account) public view returns (Reward[] memory) {
+        //
+        uint64 rewardCount = IBoostedSavingsVault(imUsdVault).userData(_account).rewardCount;
+
+        Reward[] memory rewards = new Reward[](rewardCount);
+
+        for (uint256 i = 0; i < rewardCount; i++) {
+            rewards[i] = IBoostedSavingsVault(imUsdVault).userRewards(_account, i);
+        }
+
+        return rewards;
+    }
+
+    function getVestingAmounts(address _account)
+        public
+        view
+        returns (
+            uint256 earned,
+            uint256 unclaimed,
+            uint256 locked
+        )
+    {
+        //
+        // Get rewards data first
+        Reward[] memory rewards = getVestingData(_account);
+
+        earned = IBoostedSavingsVault(imUsdVault).earned(_account);
+
+        uint256 first;
+        uint256 last;
+        (unclaimed, first, last) = IBoostedSavingsVault(imUsdVault).unclaimedRewards(_account);
+        locked = 0;
+        uint256 time = block.timestamp;
+
+        for (uint256 i = 0; i < rewards.length; i++) {
+            if (rewards[i].start > time) {
+                locked += rewards[i].rate * (rewards[i].finish - rewards[i].start);
+            } else if (rewards[i].finish > time) {
+                locked += rewards[i].rate * (rewards[i].finish - time);
+                unclaimed += rewards[i].rate * (time - rewards[i].start);
+            } else {
+                unclaimed += rewards[i].rate * (rewards[i].finish - rewards[i].start);
+            }
+        }
+
+        // for (uint256 i = first; i < last + 1; i++) {}
+    }
 
     /**
-     * @dev Retrieves the Vault Balance
+     * @dev Retrieves the Vault Data
      * @param _account The account to retrieve the balance for
      */
-    function getVaultBalance(address _account) external view returns (VaultBalance memory data) {
+    function getVaultData(address _account) external view returns (VaultData memory data) {
         //
+        // uint256 rewards;
+        // uint256 earned;
         data.credits = IBoostedSavingsVault(imUsdVault).rawBalanceOf(_account);
         data.balance = ISavingsContractV2(imUsdToken).creditsToUnderlying(data.credits);
         data.exchangeRage = ISavingsContractV2(imUsdToken).exchangeRate();
-        data.rewardsClaimable = IBoostedSavingsVault(imUsdVault).earned(_account);
-        (data.rewardsVested, , ) = IBoostedSavingsVault(imUsdVault).unclaimedRewards(_account);
-    }
 
-    function getUserData(address _account) external view returns (UserData[] memory) {
-        return IBoostedSavingsVault(imUsdVault).userData(_account);
+        // Get total locked amount
+        (data.rewardsEarned, data.rewardsUnclaimed, data.rewardsLocked) = getVestingAmounts(_account);
     }
 
     /**
