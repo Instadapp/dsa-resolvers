@@ -118,9 +118,7 @@ contract Resolver is Helpers {
 
         earned = IBoostedSavingsVault(imUsdVault).earned(_account);
 
-        uint256 first;
-        uint256 last;
-        (unclaimed, first, last) = IBoostedSavingsVault(imUsdVault).unclaimedRewards(_account);
+        (unclaimed, , ) = IBoostedSavingsVault(imUsdVault).unclaimedRewards(_account);
         locked = 0;
         uint256 time = block.timestamp;
 
@@ -129,13 +127,11 @@ contract Resolver is Helpers {
                 locked += rewards[i].rate * (rewards[i].finish - rewards[i].start);
             } else if (rewards[i].finish > time) {
                 locked += rewards[i].rate * (rewards[i].finish - time);
-                unclaimed += rewards[i].rate * (time - rewards[i].start);
+                // unclaimed += rewards[i].rate * (time - rewards[i].start);
             } else {
-                unclaimed += rewards[i].rate * (rewards[i].finish - rewards[i].start);
+                // unclaimed += rewards[i].rate * (rewards[i].finish - rewards[i].start);
             }
         }
-
-        // for (uint256 i = first; i < last + 1; i++) {}
     }
 
     /**
@@ -148,7 +144,7 @@ contract Resolver is Helpers {
         // uint256 earned;
         data.credits = IBoostedSavingsVault(imUsdVault).rawBalanceOf(_account);
         data.balance = ISavingsContractV2(imUsdToken).creditsToUnderlying(data.credits);
-        data.exchangeRage = ISavingsContractV2(imUsdToken).exchangeRate();
+        data.exchangeRate = ISavingsContractV2(imUsdToken).exchangeRate();
 
         // Get total locked amount
         (data.rewardsEarned, data.rewardsUnclaimed, data.rewardsLocked) = getVestingAmounts(_account);
