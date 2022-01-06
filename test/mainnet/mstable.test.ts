@@ -16,7 +16,7 @@ const toEther = (amount: BigNumber) => ethers.utils.formatEther(amount);
 describe("mStable Resolvers", () => {
   let signer: SignerWithAddress;
 
-  // account with imUSD Vault balance
+  // accounts with imUSD Vault balance currently or before
   const accountNewVault = "0xab3655b0d22f461900569f2280dccb0c1ccdd628";
   const accountOldVault = "0x42bf6235cfe0aae2ed8782e606d33c992c963010";
   const accountThirdVault = "0x9a4471fd3cbb0deebf5efdedc29313828d55cdf4";
