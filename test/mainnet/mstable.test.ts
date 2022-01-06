@@ -20,7 +20,6 @@ describe("mStable Resolvers", () => {
   const accountNewVault = "0xab3655b0d22f461900569f2280dccb0c1ccdd628";
   const accountOldVault = "0x42bf6235cfe0aae2ed8782e606d33c992c963010";
   const accountThirdVault = "0x9a4471fd3cbb0deebf5efdedc29313828d55cdf4";
-  const accountFourthVault = "0xE76Be9C1e10910d6Bc6b63D8031729747910c2f6";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -81,21 +80,25 @@ describe("mStable Resolvers", () => {
       expect(data[0].finish).to.gt(1600000000);
       expect(data[0].rate).to.gt(0);
     });
-    it("Should getLockedAmount() accountNewVault", async () => {
-      const [lockedAmount, unlockedAmount] = await resolver.getVestingAmounts(accountNewVault);
-      console.log("Locked Amount: ", toEther(lockedAmount));
-      console.log("Unlocked Amount: ", toEther(unlockedAmount));
-      expect(lockedAmount).to.gte(simpleToExactAmount(0));
-      expect(unlockedAmount).to.gte(simpleToExactAmount(0));
+    it("Should getRewards() accountNewVault", async () => {
+      const [earned, unclaimed, locked] = await resolver.getRewards(accountNewVault);
+      console.log("Earned:", toEther(earned));
+      console.log("Unclaimed:", toEther(unclaimed));
+      console.log("Locked:", toEther(locked));
+      expect(earned).to.gte(0);
+      expect(unclaimed).to.gte(0);
+      expect(locked).to.gte(0);
     });
-    it("Should getLockedAmount() accountOldVault", async () => {
-      const [lockedAmount, unlockedAmount] = await resolver.getVestingAmounts(accountOldVault);
-      console.log("Locked Amount: ", toEther(lockedAmount));
-      console.log("Unlocked Amount: ", toEther(unlockedAmount));
-      expect(lockedAmount).to.gte(simpleToExactAmount(0));
-      expect(unlockedAmount).to.gte(simpleToExactAmount(0));
+    it("Should getRewards() accountOldVault", async () => {
+      const [earned, unclaimed, locked] = await resolver.getRewards(accountOldVault);
+      console.log("Earned:", toEther(earned));
+      console.log("Unclaimed:", toEther(unclaimed));
+      console.log("Locked:", toEther(locked));
+      expect(earned).to.gte(0);
+      expect(unclaimed).to.gte(0);
+      expect(locked).to.gte(0);
     });
-    it.only("Should getVaultData() accountOldVault", async () => {
+    it("Should getVaultData() accountOldVault", async () => {
       const userDataOutput = await resolver.getVaultData(accountThirdVault);
 
       expect(userDataOutput).to.be.an("array");
@@ -110,7 +113,7 @@ describe("mStable Resolvers", () => {
       console.log("Balance: ", toEther(userDataOutput.balance));
       console.log("Exchange Rate: ", toEther(userDataOutput.exchangeRate));
       console.log("Rewards Earned: ", toEther(userDataOutput.rewardsEarned));
-      console.log("Rewards Unlocked: ", toEther(userDataOutput.rewardsUnclaimed));
+      console.log("Rewards Unclaimed: ", toEther(userDataOutput.rewardsUnclaimed));
       console.log("Rewards Locked: ", toEther(userDataOutput.rewardsLocked));
     });
     it("Should estimateSwap() mUSD to bAsset", async () => {

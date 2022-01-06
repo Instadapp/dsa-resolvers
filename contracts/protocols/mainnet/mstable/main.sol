@@ -3,8 +3,6 @@ pragma solidity ^0.8.4;
 import "./interfaces.sol";
 import "./helpers.sol";
 
-import "hardhat/console.sol";
-
 contract Resolver is Helpers {
     //
     /***************************************
@@ -89,7 +87,12 @@ contract Resolver is Helpers {
         return IFeederPool(_path).getSwapOutput(mUsdToken, _output, _amount);
     }
 
-    // function getUserData(address _account) external view returns (UserData[] memory data) {
+    /**
+     * @dev Retrieves Reward data from Vault
+     * @notice This Data can be used to calculate rewards that are vested
+     * @param _account address of the account to retrieve Reward data from
+     * @return Reward[] array of Reward data
+     */
     function getVestingData(address _account) public view returns (Reward[] memory) {
         //
         uint64 rewardCount = IBoostedSavingsVault(imUsdVault).userData(_account).rewardCount;
@@ -103,7 +106,15 @@ contract Resolver is Helpers {
         return rewards;
     }
 
-    function getVestingAmounts(address _account)
+    /**
+     * @dev Retrieves Reward amounts
+     * @notice Rewards are split up in 3 amounts
+     * @param _account address of the account to retrieve Reward data from
+     * @return earned       => immidiatly available
+     * @return unclaimed    => earned + amounts that came out of vesting
+     * @return locked       => locked in vesting
+     */
+    function getRewards(address _account)
         public
         view
         returns (
@@ -127,9 +138,6 @@ contract Resolver is Helpers {
                 locked += rewards[i].rate * (rewards[i].finish - rewards[i].start);
             } else if (rewards[i].finish > time) {
                 locked += rewards[i].rate * (rewards[i].finish - time);
-                // unclaimed += rewards[i].rate * (time - rewards[i].start);
-            } else {
-                // unclaimed += rewards[i].rate * (rewards[i].finish - rewards[i].start);
             }
         }
     }
@@ -137,6 +145,7 @@ contract Resolver is Helpers {
     /**
      * @dev Retrieves the Vault Data
      * @param _account The account to retrieve the balance for
+     * @return data as VaultData, aggregate information about the Vault for a given account
      */
     function getVaultData(address _account) external view returns (VaultData memory data) {
         //
@@ -147,7 +156,7 @@ contract Resolver is Helpers {
         data.exchangeRate = ISavingsContractV2(imUsdToken).exchangeRate();
 
         // Get total locked amount
-        (data.rewardsEarned, data.rewardsUnclaimed, data.rewardsLocked) = getVestingAmounts(_account);
+        (data.rewardsEarned, data.rewardsUnclaimed, data.rewardsLocked) = getRewards(_account);
     }
 
     /**
