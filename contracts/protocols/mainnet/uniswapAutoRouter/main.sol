@@ -38,10 +38,10 @@ contract Resolver is Helpers {
 
         if (pathIndex != MAX_INT) {
             address[3] memory result = [tokenIn, COMMON_ADDRESSES[pathIndex], tokenOut];
-            path = abi.encodePacked(result);
+            path = abi.encode(result);
         } else {
             address[2] memory result = [tokenIn, tokenOut];
-            path = abi.encodePacked(result);
+            path = abi.encode(result);
         }
     }
 }
