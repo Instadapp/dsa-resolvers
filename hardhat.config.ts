@@ -2,9 +2,11 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "@nomiclabs/hardhat-etherscan";
 
 import "./tasks/accounts";
 import "./tasks/clean";
+import "hardhat-gas-reporter";
 
 import { resolve } from "path";
 
@@ -25,6 +27,7 @@ const chainIds = {
   ropsten: 3,
   avalanche: 43114,
   polygon: 137,
+  optimism: 10,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -57,17 +60,8 @@ function getNetworkUrl(networkType: string) {
   if (networkType === "avalanche") return "https://api.avax.network/ext/bc/C/rpc";
   else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else if (networkType === "optimism") return `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
-}
-
-function getBlockNumber(networkType: string) {
-  let web3 = new Web3(new Web3.providers.HttpProvider(getNetworkUrl(networkType)));
-  let blockNumber;
-  web3.eth.getBlockNumber().then((x: any) => {
-    blockNumber = x;
-  });
-
-  return blockNumber;
 }
 
 const config: HardhatUserConfig = {
@@ -86,13 +80,18 @@ const config: HardhatUserConfig = {
       chainId: chainIds.hardhat,
       forking: {
         url: String(getNetworkUrl(String(process.env.networkType))),
-        blockNumber: getBlockNumber(String(process.env.networkType)),
       },
     },
     goerli: createTestnetConfig("goerli"),
     kovan: createTestnetConfig("kovan"),
     rinkeby: createTestnetConfig("rinkeby"),
     ropsten: createTestnetConfig("ropsten"),
+    optimism: {
+      url: `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+      chainId: 10,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 1000000, // 0.0001 GWEI
+    },
   },
   paths: {
     artifacts: "./artifacts",
@@ -131,6 +130,9 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 10000 * 1000,
+  },
+  etherscan: {
+    apiKey: String(process.env.SCANAPI),
   },
 };
 
