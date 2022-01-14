@@ -39,7 +39,7 @@
     "ethers": "^5.2.0",
     "fs-extra": "^10.0.0",
     "hardhat": "^2.3.3",
-    "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-gas-reporter": "^1.0.6",
     "husky": "^6.0.0",
     "inquirer": "^8.1.1",
     "lint-staged": "^11.0.0",
@@ -88,9 +88,11 @@
     "typechain": "hardhat typechain"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.1-solc-0.7-2",
     "@uniswap/v3-periphery": "^1.2.0",
+    "hardhat-etherscan": "^1.0.1",
     "web3": "^1.6.0"
   }
 }
