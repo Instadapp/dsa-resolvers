@@ -4,7 +4,6 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
-    //
     /***************************************
                     CORE
     ****************************************/
@@ -17,7 +16,6 @@ contract Resolver is Helpers {
      * @return estimation of output
      */
     function estimateDeposit(address _input, uint256 _amount) public view returns (uint256) {
-        //
         if (_input == mUsdToken) {
             // Check if mUSD
             // mUSD is 1:1, doesn't need to be minted
@@ -40,7 +38,7 @@ contract Resolver is Helpers {
      * @param _path address of the Feeder Pool
      * @return estimation of output
      */
-    function estimateDeposit(
+    function estimateDepositWithPath(
         address _input,
         uint256 _amount,
         address _path
@@ -56,7 +54,6 @@ contract Resolver is Helpers {
      * @return estimation of output
      */
     function estimateWithdrawal(address _output, uint256 _amount) public view returns (uint256) {
-        //
         if (_output == mUsdToken) {
             // Check if mUSD
             // mUSD is 1:1, doesn't need to be minted
@@ -79,40 +76,12 @@ contract Resolver is Helpers {
      * @param _path address of the Feeder Pool
      * @return estimation of output
      */
-    function estimateWithdrawal(
+    function estimateWithdrawalWithPath(
         address _output,
         uint256 _amount,
         address _path
     ) public view returns (uint256) {
         return IFeederPool(_path).getSwapOutput(mUsdToken, _output, _amount);
-    }
-
-    /**
-     * @dev Retrieves Reward amounts
-     * @notice Rewards are two tokens
-     * @param _account address of the account to retrieve Reward data from
-     * @return rewards => MTA
-     * @return platformRewards => wMATIC
-
-     */
-    function getRewards(address _account) public view returns (uint256, uint256) {
-        return IStakingRewardsWithPlatformToken(imUsdVault).earned(_account);
-    }
-
-    /**
-     * @dev Retrieves the Vault Data
-     * @param _account The account to retrieve the balance for
-     * @return data as VaultData, aggregate information about the Vault for a given account
-     */
-    function getVaultData(address _account) external view returns (VaultData memory data) {
-        //
-
-        data.credits = IStakingRewardsWithPlatformToken(imUsdVault).balanceOf(_account);
-        data.balance = ISavingsContractV2(imUsdToken).creditsToUnderlying(data.credits);
-        data.exchangeRate = ISavingsContractV2(imUsdToken).exchangeRate();
-
-        // Get total locked amount
-        (data.rewardsEarned, data.platformRewards) = getRewards(_account);
     }
 
     /**
@@ -128,7 +97,6 @@ contract Resolver is Helpers {
         address _output,
         uint256 _amount
     ) public view returns (uint256) {
-        //
         require(_input != _output, "Invalid swap");
 
         if (_input == mUsdToken) {
@@ -153,13 +121,12 @@ contract Resolver is Helpers {
      * @return estimation of output
      */
 
-    function estimateSwap(
+    function estimateSwapWithPath(
         address _input,
         address _output,
         uint256 _amount,
         address _path
     ) public view returns (uint256) {
-        //
         return IFeederPool(_path).getSwapOutput(_input, _output, _amount);
     }
 }

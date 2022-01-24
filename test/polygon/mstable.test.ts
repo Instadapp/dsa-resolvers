@@ -38,35 +38,35 @@ describe("mStable Resolvers", () => {
 
     it("Should estimateDeposit() mUSD", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateDeposit(address,uint256)"](mUsdToken, input);
+      const output = await resolver.estimateDeposit(mUsdToken, input);
       expect(output).to.eq(input);
     });
     it("Should estimateDeposit() bAsset", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateDeposit(address,uint256)"](daiToken, input);
+      const output = await resolver.estimateDeposit(daiToken, input);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });
-    it("Should estimateDeposit() fAsset", async () => {
+    it("Should estimateDepositWithPath() fAsset", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateDeposit(address,uint256,address)"](fraxToken, input, fraxFeeder);
+      const output = await resolver.estimateDepositWithPath(fraxToken, input, fraxFeeder);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });
     it("Should estimateWithdrawal() mUSD", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateWithdrawal(address,uint256)"](mUsdToken, input);
+      const output = await resolver.estimateWithdrawal(mUsdToken, input);
       expect(output).to.eq(input);
     });
     it("Should estimateWithdrawal() bAsset", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateWithdrawal(address,uint256)"](daiToken, input);
+      const output = await resolver.estimateWithdrawal(daiToken, input);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });
-    it("Should estimateWithdrawal() fAsset", async () => {
+    it("Should estimateWithdrawalWithPath() fAsset", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateWithdrawal(address,uint256,address)"](fraxToken, input, fraxFeeder);
+      const output = await resolver.estimateWithdrawalWithPath(fraxToken, input, fraxFeeder);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });
@@ -95,33 +95,26 @@ describe("mStable Resolvers", () => {
     });
     it("Should estimateSwap() mUSD to bAsset", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateSwap(address,address,uint256)"](mUsdToken, daiToken, input);
+      const output = await resolver.estimateSwap(mUsdToken, daiToken, input);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });
     it("Should estimateSwap() bAsset to mUSD", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateSwap(address,address,uint256)"](daiToken, mUsdToken, input);
+      const output = await resolver.estimateSwap(daiToken, mUsdToken, input);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });
     it("Should estimateSwap() bAsset to bAsset", async () => {
       const input = simpleToExactAmount(100);
       const usdcScale = ethers.BigNumber.from(10).pow(DEFAULT_DECIMALS - 6);
-      const output = (await resolver["estimateSwap(address,address,uint256)"](daiToken, usdcToken, input)).mul(
-        usdcScale,
-      );
+      const output = (await resolver.estimateSwap(daiToken, usdcToken, input)).mul(usdcScale);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });
-    it("Should estimateSwap() via Feeder", async () => {
+    it("Should estimateSwapWithPath() via Feeder", async () => {
       const input = simpleToExactAmount(100);
-      const output = await resolver["estimateSwap(address,address,uint256,address)"](
-        mUsdToken,
-        fraxToken,
-        input,
-        fraxFeeder,
-      );
+      const output = await resolver.estimateSwapWithPath(mUsdToken, fraxToken, input, fraxFeeder);
       expect(output).to.not.eq(input);
       assertBNClosePercent(input, output, 1);
     });

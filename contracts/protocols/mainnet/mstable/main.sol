@@ -4,7 +4,6 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
-    //
     /***************************************
                     CORE
     ****************************************/
@@ -17,7 +16,6 @@ contract Resolver is Helpers {
      * @return estimation of output
      */
     function estimateDeposit(address _input, uint256 _amount) public view returns (uint256) {
-        //
         if (_input == mUsdToken) {
             // Check if mUSD
             // mUSD is 1:1, doesn't need to be minted
@@ -40,7 +38,7 @@ contract Resolver is Helpers {
      * @param _path address of the Feeder Pool
      * @return estimation of output
      */
-    function estimateDeposit(
+    function estimateDepositWithPath(
         address _input,
         uint256 _amount,
         address _path
@@ -56,7 +54,6 @@ contract Resolver is Helpers {
      * @return estimation of output
      */
     function estimateWithdrawal(address _output, uint256 _amount) public view returns (uint256) {
-        //
         if (_output == mUsdToken) {
             // Check if mUSD
             // mUSD is 1:1, doesn't need to be minted
@@ -79,84 +76,12 @@ contract Resolver is Helpers {
      * @param _path address of the Feeder Pool
      * @return estimation of output
      */
-    function estimateWithdrawal(
+    function estimateWithdrawalWithPath(
         address _output,
         uint256 _amount,
         address _path
     ) public view returns (uint256) {
         return IFeederPool(_path).getSwapOutput(mUsdToken, _output, _amount);
-    }
-
-    /**
-     * @dev Retrieves Reward data from Vault
-     * @notice This Data can be used to calculate rewards that are vested
-     * @param _account address of the account to retrieve Reward data from
-     * @return Reward[] array of Reward data
-     */
-    function getVestingData(address _account) public view returns (Reward[] memory) {
-        //
-        uint64 rewardCount = IBoostedSavingsVault(imUsdVault).userData(_account).rewardCount;
-
-        Reward[] memory rewards = new Reward[](rewardCount);
-
-        for (uint256 i = 0; i < rewardCount; i++) {
-            rewards[i] = IBoostedSavingsVault(imUsdVault).userRewards(_account, i);
-        }
-
-        return rewards;
-    }
-
-    /**
-     * @dev Retrieves Reward amounts
-     * @notice Rewards are split up in 3 amounts
-     * @param _account address of the account to retrieve Reward data from
-     * @return earned       => immidiatly available
-     * @return unclaimed    => earned + amounts that came out of vesting
-     * @return locked       => locked in vesting
-     */
-    function getRewards(address _account)
-        public
-        view
-        returns (
-            uint256 earned,
-            uint256 unclaimed,
-            uint256 locked
-        )
-    {
-        //
-        // Get rewards data first
-        Reward[] memory rewards = getVestingData(_account);
-
-        earned = IBoostedSavingsVault(imUsdVault).earned(_account);
-
-        (unclaimed, , ) = IBoostedSavingsVault(imUsdVault).unclaimedRewards(_account);
-        locked = 0;
-        uint256 time = block.timestamp;
-
-        for (uint256 i = 0; i < rewards.length; i++) {
-            if (rewards[i].start > time) {
-                locked += rewards[i].rate * (rewards[i].finish - rewards[i].start);
-            } else if (rewards[i].finish > time) {
-                locked += rewards[i].rate * (rewards[i].finish - time);
-            }
-        }
-    }
-
-    /**
-     * @dev Retrieves the Vault Data
-     * @param _account The account to retrieve the balance for
-     * @return data as VaultData, aggregate information about the Vault for a given account
-     */
-    function getVaultData(address _account) external view returns (VaultData memory data) {
-        //
-        // uint256 rewards;
-        // uint256 earned;
-        data.credits = IBoostedSavingsVault(imUsdVault).rawBalanceOf(_account);
-        data.balance = ISavingsContractV2(imUsdToken).creditsToUnderlying(data.credits);
-        data.exchangeRate = ISavingsContractV2(imUsdToken).exchangeRate();
-
-        // Get total locked amount
-        (data.rewardsEarned, data.rewardsUnclaimed, data.rewardsLocked) = getRewards(_account);
     }
 
     /**
@@ -172,7 +97,6 @@ contract Resolver is Helpers {
         address _output,
         uint256 _amount
     ) public view returns (uint256) {
-        //
         require(_input != _output, "Invalid swap");
 
         if (_input == mUsdToken) {
@@ -197,13 +121,12 @@ contract Resolver is Helpers {
      * @return estimation of output
      */
 
-    function estimateSwap(
+    function estimateSwapWithPath(
         address _input,
         address _output,
         uint256 _amount,
         address _path
     ) public view returns (uint256) {
-        //
         return IFeederPool(_path).getSwapOutput(_input, _output, _amount);
     }
 }
