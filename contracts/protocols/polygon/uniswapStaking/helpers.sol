@@ -20,11 +20,11 @@ abstract contract Helpers is DSMath {
     /**
      * @dev Return Wrapped matic address
      */
-    address internal constant maticAddr = 0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270;
+    address internal constant wmaticAddr = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
 
     INonfungiblePositionManager internal nftManager = INonfungiblePositionManager(getUniswapNftManagerAddr());
 
-    IUniswapV3Staker public staker = IUniswapV3Staker(0x1f98407aaB862CdDeF78Ed252D6f557aA5b0f00d);
+    IUniswapV3Staker public staker = IUniswapV3Staker(0xe34139463bA50bD61336E0c446Bd8C0867c6fE65);
 
     /**
      * @dev Return uniswap v3 NFT Manager Address

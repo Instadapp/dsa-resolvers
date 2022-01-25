@@ -72,6 +72,8 @@ contract Resolver is Helpers {
     struct RewardDetailsMinAndMax {
         uint256 rate;
         uint128 liquidity;
+        address token0;
+        address token1;
         uint256 minAmount0;
         uint256 minAmount1;
         uint256 maxAmount0;
@@ -120,52 +122,67 @@ contract Resolver is Helpers {
         }
     }
 
-    struct Params {
-        IUniswapV3Staker.IncentiveKey memory key;
+    struct TickInfo {
+        IUniswapV3Staker.IncentiveKey key;
         int24 minUpperTick;
         int24 minLowerTick;
         int24 maxUpperTick;
         int24 maxLowerTick;
     }
 
-    function getRewardsDetailsMinAndMax(
-        IUniswapV3Staker.IncentiveKey memory key,
-        int24 minUpperTick,
-        int24 minLowerTick,
-        int24 maxUpperTick,
-        int24 maxLowerTick
-    ) public view returns (RewardDetailsMinAndMax memory rewardDetails) {
-        IUniswapV3Pool pool = IUniswapV3Pool(key.pool);
-        uint160 sqrtRatioX96;
-        (sqrtRatioX96, rewardDetails.tick, , , , , ) = pool.slot0();
-        rewardDetails.liquidity = pool.liquidity();
-        (rewardDetails.minAmount0, rewardDetails.minAmount1) = LiquidityAmounts.getAmountsForLiquidity(
-            sqrtRatioX96,
-            TickMath.getSqrtRatioAtTick((int24(minLowerTick))),
-            TickMath.getSqrtRatioAtTick((int24(minUpperTick))),
-            uint128(rewardDetails.liquidity)
-        );
+    function getRewardsDetailsMinAndMax(TickInfo[] memory tickInfo)
+        public
+        view
+        returns (RewardDetailsMinAndMax[] memory rewardDetails)
+    {
+        rewardDetails = new RewardDetailsMinAndMax[](tickInfo.length);
+        for (uint256 i = 0; i < tickInfo.length; i++) {
+            IUniswapV3Pool pool = IUniswapV3Pool(tickInfo[i].key.pool);
+            rewardDetails[i].token0 = pool.token0();
+            rewardDetails[i].token1 = pool.token1();
 
-        (rewardDetails.maxAmount0, rewardDetails.maxAmount1) = LiquidityAmounts.getAmountsForLiquidity(
-            sqrtRatioX96,
-            TickMath.getSqrtRatioAtTick((int24(maxLowerTick))),
-            TickMath.getSqrtRatioAtTick((int24(maxUpperTick))),
-            uint128(rewardDetails.liquidity)
-        );
-
-        if (key.startTime < block.timestamp) {
-            bytes32 incentiveId = keccak256(abi.encode(key));
-
-            Incentive memory incentive;
-            (incentive.totalRewardUnclaimed, incentive.totalSecondsClaimedX128, incentive.numberOfStakes) = staker
-                .incentives(incentiveId);
-
-            uint256 totalSecondsUnclaimedX128 = ((Math.max(key.endTime, block.timestamp) - key.startTime) << 128) -
-                incentive.totalSecondsClaimedX128;
-            rewardDetails.rate = uint256(
-                (incentive.totalRewardUnclaimed * 0x100000000000000000000000000000000) /
-                    uint256(totalSecondsUnclaimedX128)
+            uint160 sqrtRatioX96;
+            (sqrtRatioX96, rewardDetails[i].tick, , , , , ) = pool.slot0();
+            rewardDetails[i].liquidity = pool.liquidity();
+            (rewardDetails[i].minAmount0, rewardDetails[i].minAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtRatioX96,
+                TickMath.getSqrtRatioAtTick((int24(tickInfo[i].minLowerTick))),
+                TickMath.getSqrtRatioAtTick((int24(tickInfo[i].minUpperTick))),
+                uint128(rewardDetails[i].liquidity)
             );
+
+            (rewardDetails[i].maxAmount0, rewardDetails[i].maxAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+                sqrtRatioX96,
+                TickMath.getSqrtRatioAtTick((int24(tickInfo[i].maxLowerTick))),
+                TickMath.getSqrtRatioAtTick((int24(tickInfo[i].maxUpperTick))),
+                uint128(rewardDetails[i].liquidity)
+            );
+
+            if (tickInfo[i].key.startTime < block.timestamp) {
+                bytes32 incentiveId = keccak256(abi.encode(tickInfo[i].key));
+
+                Incentive memory incentive;
+                (incentive.totalRewardUnclaimed, incentive.totalSecondsClaimedX128, incentive.numberOfStakes) = staker
+                    .incentives(incentiveId);
+
+                uint256 totalSecondsUnclaimedX128 = ((Math.max(tickInfo[i].key.endTime, block.timestamp) -
+                    tickInfo[i].key.startTime) << 128) - incentive.totalSecondsClaimedX128;
+                rewardDetails[i].rate = uint256(
+                    (incentive.totalRewardUnclaimed * 0x100000000000000000000000000000000) /
+                        uint256(totalSecondsUnclaimedX128)
+                );
+            }
+        }
+    }
+
+    function getTicks(address[] memory pools) public view returns (int24[] memory ticks, int24[] memory tickspacings) {
+        ticks = new int24[](pools.length);
+        tickspacings = new int24[](pools.length);
+
+        for (uint256 i = 0; i < pools.length; i++) {
+            IUniswapV3Pool pool = IUniswapV3Pool(pools[i]);
+            (, ticks[i], , , , , ) = pool.slot0();
+            tickspacings[i] = pool.tickSpacing();
         }
     }
 
