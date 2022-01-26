@@ -175,14 +175,17 @@ contract Resolver is Helpers {
         }
     }
 
-    function getTicks(address[] memory pools) public view returns (int24[] memory ticks, int24[] memory tickspacings) {
-        ticks = new int24[](pools.length);
-        tickspacings = new int24[](pools.length);
+    struct Tick {
+        int24 tick;
+        int24 tickspacing;
+    }
 
+    function getTicks(address[] memory pools) public view returns (Tick[] memory ticks) {
+        ticks = new Tick[](pools.length);
         for (uint256 i = 0; i < pools.length; i++) {
             IUniswapV3Pool pool = IUniswapV3Pool(pools[i]);
-            (, ticks[i], , , , , ) = pool.slot0();
-            tickspacings[i] = pool.tickSpacing();
+            (, ticks[i].tick, , , , , ) = pool.slot0();
+            ticks[i].tickspacing = pool.tickSpacing();
         }
     }
 
