@@ -175,31 +175,31 @@ contract Resolver is Helpers {
         }
     }
 
-    struct Tick {
+    struct PoolInfo {
         int24 tick;
         int24 tickspacing;
-    }
-
-    struct Tokens {
         address token0;
         address token1;
+        uint128 liquidity;
+        uint128 maxLiquidityPerTick;
+        uint24 fee;
     }
 
-    function getTicks(address[] memory pools) public view returns (Tick[] memory ticks) {
-        ticks = new Tick[](pools.length);
+    function getPoolInfo(address[] memory pools) public view returns (PoolInfo[] memory poolInfo) {
+        poolInfo = new PoolInfo[](pools.length);
         for (uint256 i = 0; i < pools.length; i++) {
             IUniswapV3Pool pool = IUniswapV3Pool(pools[i]);
-            (, ticks[i].tick, , , , , ) = pool.slot0();
-            ticks[i].tickspacing = pool.tickSpacing();
-        }
-    }
 
-    function getTokensAddr(address[] memory pools) public view returns (Tokens[] memory tokens) {
-        tokens = new Tokens[](pools.length);
-        for (uint256 i = 0; i < pools.length; i++) {
-            IUniswapV3Pool pool = IUniswapV3Pool(pools[i]);
-            tokens[i].token0 = pool.token0();
-            tokens[i].token1 = pool.token1();
+            (, poolInfo[i].tick, , , , , ) = pool.slot0();
+            poolInfo[i].tickspacing = pool.tickSpacing();
+
+            poolInfo[i].token0 = pool.token0();
+            poolInfo[i].token1 = pool.token1();
+
+            poolInfo[i].liquidity = pool.liquidity();
+            poolInfo[i].maxLiquidityPerTick = pool.maxLiquidityPerTick();
+
+            poolInfo[i].fee = pool.fee();
         }
     }
 
