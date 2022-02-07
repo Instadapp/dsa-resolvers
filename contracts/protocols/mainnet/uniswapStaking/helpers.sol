@@ -24,7 +24,7 @@ abstract contract Helpers is DSMath {
 
     INonfungiblePositionManager internal nftManager = INonfungiblePositionManager(getUniswapNftManagerAddr());
 
-    IUniswapV3Staker public staker = IUniswapV3Staker(0x1f98407aaB862CdDeF78Ed252D6f557aA5b0f00d);
+    IUniswapV3Staker public staker = IUniswapV3Staker(0xe34139463bA50bD61336E0c446Bd8C0867c6fE65);
 
     /**
      * @dev Return uniswap v3 NFT Manager Address
