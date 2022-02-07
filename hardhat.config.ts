@@ -92,6 +92,10 @@ const config: HardhatUserConfig = {
       accounts: [`0x${process.env.PRIVATE_KEY}`],
       gasPrice: 1000000, // 0.0001 GWEI
     },
+    polygon: {
+      url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+    },
   },
   paths: {
     artifacts: "./artifacts",
