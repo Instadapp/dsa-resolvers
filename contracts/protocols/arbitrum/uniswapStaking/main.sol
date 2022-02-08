@@ -301,6 +301,6 @@ contract Resolver is Helpers {
     }
 }
 
-contract InstaUniswapStakerResolver is Resolver {
+contract InstaUniswapStakerResolverArbitrum is Resolver {
     string public constant name = "UniswapV3-Staker-Resolver-v1";
 }
