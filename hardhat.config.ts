@@ -96,6 +96,16 @@ const config: HardhatUserConfig = {
       url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
     },
+    arbitrum: {
+      url: `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 1000000000, // 1 gwei
+    },
+    mainnet: {
+      url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 80000000000, //5
+    },
   },
   paths: {
     artifacts: "./artifacts",
