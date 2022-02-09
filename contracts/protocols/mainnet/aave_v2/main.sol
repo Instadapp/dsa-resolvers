@@ -2,24 +2,19 @@
 pragma solidity >=0.8.0;
 import "./interfaces.sol";
 import "./helpers.sol";
+import "hardhat/console.sol";
 
 contract Resolver is AaveHelpers {
-    function getPosition(address user, address[] memory tokens)
-        public
-        view
-        returns (AaveUserTokenData[] memory, AaveUserData memory)
-    {
+    function getPosition(address user) public view returns (AaveUserTokenData[] memory, AaveUserData memory) {
         AaveAddressProvider addrProvider = AaveAddressProvider(getAaveAddressProvider());
+        address[] memory tokens = getReservesList();
         uint256 length = tokens.length;
         address[] memory _tokens = new address[](length);
-
         for (uint256 i = 0; i < length; i++) {
             _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
         }
-
         AaveUserTokenData[] memory tokensData = new AaveUserTokenData[](length);
         (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, _tokens);
-
         for (uint256 i = 0; i < length; i++) {
             tokensData[i] = getTokenData(
                 AaveProtocolDataProvider(getAaveProtocolDataProvider()),
@@ -29,7 +24,6 @@ contract Resolver is AaveHelpers {
                 tokenPrices[i].priceInUsd
             );
         }
-
         return (tokensData, getUserData(AaveLendingPool(addrProvider.getLendingPool()), user, ethPrice, _tokens));
     }
 
@@ -47,6 +41,7 @@ contract Resolver is AaveHelpers {
                 borrowed[i] = (isBorrowing(data, i)) ? true : false;
             }
         }
+        return (collateral, borrowed);
     }
 
     function getReservesList() public view returns (address[] memory data) {

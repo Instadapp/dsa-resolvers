@@ -39,15 +39,14 @@ describe("Aave V2 Resolvers", () => {
     });
 
     it("Returns the positions on AaveV2", async () => {
-      const results = await resolver.getPosition(account, [Tokens.DAI.addr]);
+      const results = await resolver.getPosition(account);
       const userTokenData = results[0];
       const userData = results[1];
-
       // check for token balances
-      console.log("Supply Balance DAI: ", formatUnits(userTokenData[0].supplyBalance, Tokens.DAI.decimals));
+      console.log("Supply Balance of Token: ", formatUnits(userTokenData[0].supplyBalance, Tokens.DAI.decimals));
       expect(userTokenData[0].supplyBalance).to.gte(0);
       console.log(
-        "Variable Borrow Balance DAI: ",
+        "Variable Borrow Balance of Token: ",
         formatUnits(userTokenData[0].variableBorrowBalance, Tokens.DAI.decimals),
       );
       expect(userTokenData[0].variableBorrowBalance).to.gte(0);
