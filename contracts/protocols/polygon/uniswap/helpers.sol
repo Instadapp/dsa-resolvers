@@ -478,7 +478,7 @@ abstract contract Helpers is DSMath {
                 sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
                 TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
-                uint128(positionInfo.liquidity >= liquidity ? positionInfo.liquidity : liquidity)
+                uint128(positionInfo.liquidity >= liquidity ? liquidity : positionInfo.liquidity)
             );
         }
 
