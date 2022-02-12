@@ -155,15 +155,11 @@ contract Resolver is Helpers {
         (amount0, amount1, amount0Min, amount1Min) = withdrawAmount(tokenId, liquidity, slippage);
     }
 
-    function getCollectAmount(uint256 tokenId) public view returns (uint256 amountA, uint256 amountB) {
-        (amountA, amountB) = collectInfo(tokenId);
-    }
-
     function getUserNFTs(address user) public view returns (uint256[] memory tokenIds) {
         tokenIds = userNfts(user);
     }
 }
 
-contract InstaUniswapV3ResolverArbitrum is Resolver {
-    string public constant name = "UniswapV3-Resolver-v2";
+contract InstaUniswapV3Resolver is Resolver {
+    string public constant name = "UniswapV3-Resolver-v1";
 }
