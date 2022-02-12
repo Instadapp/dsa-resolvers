@@ -211,7 +211,7 @@ contract ConnectorsResolver is AccountResolver {
     }
 }
 
-contract InstaDSAResolverOptimism is ConnectorsResolver {
+contract InstaDSAResolverFantom is ConnectorsResolver {
     string public constant name = "DSA-Resolver-v1";
     uint256 public constant version = 1;
 
