@@ -161,8 +161,6 @@ abstract contract Helpers is DSMath {
         {
             (pInfo.amount0, pInfo.amount1, , ) = withdrawAmount(tokenId, pInfo.liquidity, 0);
         }
-        (pInfo.collectAmount0, pInfo.collectAmount1) = collectInfo(tokenId);
-
         pInfo.token0 == wmaticAddr ? (maticAddr) : (pInfo.token0);
         pInfo.token1 == wmaticAddr ? (maticAddr) : (pInfo.token1);
     }
