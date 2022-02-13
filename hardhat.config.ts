@@ -28,6 +28,7 @@ const chainIds = {
   avalanche: 43114,
   polygon: 137,
   optimism: 10,
+  fantom: 250,
 };
 
 // Ensure that we have all the environment variables we need.
