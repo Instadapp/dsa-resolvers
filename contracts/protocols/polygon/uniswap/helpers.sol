@@ -161,8 +161,6 @@ abstract contract Helpers is DSMath {
         {
             (pInfo.amount0, pInfo.amount1, , ) = withdrawAmount(tokenId, pInfo.liquidity, 0);
         }
-        (pInfo.collectAmount0, pInfo.collectAmount1) = collectInfo(tokenId);
-
         pInfo.token0 == wmaticAddr ? (maticAddr) : (pInfo.token0);
         pInfo.token1 == wmaticAddr ? (maticAddr) : (pInfo.token1);
     }
@@ -296,6 +294,52 @@ abstract contract Helpers is DSMath {
         amount1Min = getMinAmount(TokenInterface(positionInfo.token1), amount1, slippage);
     }
 
+    struct SingleAmountParams {
+        uint256 amountA;
+        uint256 slippage;
+        bool reverseFlag;
+        uint160 sqrtPriceX96;
+        uint160 sqrtPriceX96Lower;
+        uint160 sqrtPriceX96Upper;
+    }
+
+    function calculateSingleAmount(SingleAmountParams memory singleAmountParams)
+        internal
+        view
+        returns (uint256 amountB)
+    {
+        uint128 liquidity;
+        if (!singleAmountParams.reverseFlag) {
+            liquidity = LiquidityAmounts.getLiquidityForAmounts(
+                singleAmountParams.sqrtPriceX96,
+                singleAmountParams.sqrtPriceX96Lower,
+                singleAmountParams.sqrtPriceX96Upper,
+                singleAmountParams.amountA,
+                0x1000000000000000000000000 // Q96
+            );
+            (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
+                singleAmountParams.sqrtPriceX96,
+                singleAmountParams.sqrtPriceX96Lower,
+                singleAmountParams.sqrtPriceX96Upper,
+                uint128(liquidity)
+            );
+        } else {
+            liquidity = LiquidityAmounts.getLiquidityForAmounts(
+                singleAmountParams.sqrtPriceX96,
+                singleAmountParams.sqrtPriceX96Lower,
+                singleAmountParams.sqrtPriceX96Upper,
+                0x1000000000000000000000000, // Q96
+                singleAmountParams.amountA
+            );
+            (amountB, ) = LiquidityAmounts.getAmountsForLiquidity(
+                singleAmountParams.sqrtPriceX96,
+                singleAmountParams.sqrtPriceX96Lower,
+                singleAmountParams.sqrtPriceX96Upper,
+                uint128(liquidity)
+            );
+        }
+    }
+
     function singleDepositAmount(
         uint256 tokenId,
         address tokenA,
@@ -342,39 +386,16 @@ abstract contract Helpers is DSMath {
         );
         (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
 
-        // liquidity = LiquidityAmounts.getLiquidityForAmounts(
-        //     sqrtPriceX96,
-        //     TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
-        //     TickMath.getSqrtRatioAtTick(mintParams.upperTick),
-        //     mintParams.amountA,
-        //     mintParams.amountB
-        // );
-
-        if (!reverseFlag) {
-            liquidity = LiquidityAmounts.getLiquidityForAmount0(
-                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
-                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
-                amountA
-            );
-            (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
+        amountB = calculateSingleAmount(
+            SingleAmountParams(
+                amountA,
+                slippage,
+                reverseFlag,
                 sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
-                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
-                uint128(liquidity)
-            );
-        } else {
-            liquidity = LiquidityAmounts.getLiquidityForAmount1(
-                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
-                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
-                amountA
-            );
-            (amountB, ) = LiquidityAmounts.getAmountsForLiquidity(
-                sqrtPriceX96,
-                TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
-                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
-                uint128(liquidity)
-            );
-        }
+                TickMath.getSqrtRatioAtTick(positionInfo.tickUpper)
+            )
+        );
 
         amountAMin = getMinAmount(TokenInterface(tokenA), amountA, slippage);
         amountBMin = getMinAmount(TokenInterface(tokenB), amountB, slippage);
@@ -409,31 +430,16 @@ abstract contract Helpers is DSMath {
         IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(tokenA, tokenB, fee));
         (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
 
-        if (!reverseFlag) {
-            liquidity = LiquidityAmounts.getLiquidityForAmount0(
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
-                amountA
-            );
-            (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
+        amountB = calculateSingleAmount(
+            SingleAmountParams(
+                amountA,
+                slippage,
+                reverseFlag,
                 sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
-                uint128(liquidity)
-            );
-        } else {
-            liquidity = LiquidityAmounts.getLiquidityForAmount1(
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
-                amountA
-            );
-            (amountB, ) = LiquidityAmounts.getAmountsForLiquidity(
-                sqrtPriceX96,
-                TickMath.getSqrtRatioAtTick(tickLower),
-                TickMath.getSqrtRatioAtTick(tickUpper),
-                uint128(liquidity)
-            );
-        }
+                TickMath.getSqrtRatioAtTick(tickUpper)
+            )
+        );
 
         amountAMin = getMinAmount(TokenInterface(tokenA), amountA, slippage);
         amountBMin = getMinAmount(TokenInterface(tokenB), amountB, slippage);
@@ -478,44 +484,11 @@ abstract contract Helpers is DSMath {
                 sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(positionInfo.tickLower),
                 TickMath.getSqrtRatioAtTick(positionInfo.tickUpper),
-                uint128(positionInfo.liquidity >= liquidity ? liquidity : positionInfo.liquidity)
+                uint128(positionInfo.liquidity <= liquidity ? positionInfo.liquidity : liquidity)
             );
         }
 
         amount0Min = getMinAmount(TokenInterface(positionInfo.token0), amount0, slippage);
         amount1Min = getMinAmount(TokenInterface(positionInfo.token1), amount1, slippage);
-    }
-
-    function collectInfo(uint256 tokenId) internal view returns (uint256 amount0, uint256 amount1) {
-        (
-            ,
-            ,
-            address _token0,
-            address _token1,
-            uint24 _fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
-            uint256 _feeGrowthInside0LastX128,
-            uint256 _feeGrowthInside1LastX128,
-            uint128 tokensOwed0,
-            uint128 tokensOwed1
-        ) = nftManager.positions(tokenId);
-
-        IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(_token0, _token1, _fee));
-
-        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(
-            PositionKey.compute(getUniswapNftManagerAddr(), tickLower, tickUpper)
-        );
-
-        tokensOwed0 += uint128(
-            FullMath.mulDiv(feeGrowthInside0LastX128 - _feeGrowthInside0LastX128, liquidity, FixedPoint128.Q128)
-        );
-        tokensOwed1 += uint128(
-            FullMath.mulDiv(feeGrowthInside1LastX128 - _feeGrowthInside1LastX128, liquidity, FixedPoint128.Q128)
-        );
-
-        amount0 = tokensOwed0;
-        amount1 = tokensOwed1;
     }
 }
