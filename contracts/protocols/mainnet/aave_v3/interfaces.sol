@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 interface IPool {
-
     struct UserConfigurationMap {
         uint256 data;
     }
@@ -41,7 +40,6 @@ interface IPool {
         uint256 data;
     }
 
-
     //user account data info
     function getUserAccountData(address user)
         external
@@ -55,19 +53,17 @@ interface IPool {
             uint256 healthFactor
         );
 
-
     function getEModeCategoryData(uint8 id) external view returns (EModeCategory memory);
 
     //@return emode id of the user
     function getUserEMode(address user) external view returns (uint256);
 
-    function getReservesList() external view virtual override returns (address[] memory);
+    function getReservesList() external view virtual returns (address[] memory);
 
     function getUserConfiguration(address user) external view returns (UserConfigurationMap memory);
 
     function getReserveData(address asset) external view returns (ReserveConfigurationMap memory);
 }
-
 
 interface IAaveIncentivesController {
     //@notice returns total(accrued+non-accrued) rewards of user for given assets
@@ -90,7 +86,6 @@ interface IAaveIncentivesController {
             uint256
         );
 }
-
 
 interface IAaveOracle is IPriceOracleGetter {
     // @notice Returns a list of prices from a list of assets addresses
@@ -174,11 +169,10 @@ interface IAaveProtocolDataProvider is IPoolDataProvider {
             bool isActive,
             bool isFrozen
         );
+
     function getPaused(address asset) external view returns (bool isPaused);
 
     function getLiquidationProtocolFee(address asset) external view returns (uint256);
-
-    
 
     function getReserveEModeCategory(address asset) external view returns (uint256);
 
@@ -190,7 +184,7 @@ interface IAaveProtocolDataProvider is IPoolDataProvider {
     // @notice Returns the debt ceiling decimals
     function getDebtCeilingDecimals() external pure returns (uint256);
 
-    function getATokenTotalSupply(address asset) external view override returns (uint256);
+    function getATokenTotalSupply(address asset) external view returns (uint256);
 
     function getReserveData(address asset)
         external
