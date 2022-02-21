@@ -79,7 +79,8 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-        url: String(getNetworkUrl(String(process.env.networkType))),
+        // url: String(getNetworkUrl(String(process.env.networkType))),
+        url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
       },
     },
     goerli: createTestnetConfig("goerli"),
