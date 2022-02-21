@@ -36,7 +36,7 @@ contract AaveV3Helper is DSMath {
      *@dev Returns Aave Data Provider Address
      */
     function getAaveDataProvider() internal pure returns (address) {
-        return; //Rinkeby address
+        return 0x256bBbeDbA70a1240a1EB64210abB1b063267408; //Rinkeby address
     }
 
     function getAaveIncentivesAddress() internal pure returns (address) {
@@ -71,6 +71,7 @@ contract AaveV3Helper is DSMath {
         uint16 ltv;
         uint16 liquidationThreshold;
         uint16 liquidationBonus;
+        uint256[] price;
         address priceSource;
         string label;
     }
@@ -85,6 +86,7 @@ contract AaveV3Helper is DSMath {
         uint256 userStableBorrowRate;
         uint256 variableBorrowRate;
         bool isCollateral;
+        uint256 price;
         AaveV3TokenData aaveTokenData;
     }
 
@@ -111,6 +113,19 @@ contract AaveV3Helper is DSMath {
         uint256 totalVariableDebt;
         uint256 collateralEmission;
         uint256 debtEmission;
+        AaveV3Token token;
+        flags flag;
+    }
+
+    struct flags {
+        bool usageAsCollateralEnabled;
+        bool borrowEnabled;
+        bool stableBorrowEnabled;
+        bool isActive;
+        bool isFrozen;
+    }
+
+    struct AaveV3Token {
         uint256 supplyCap;
         uint256 borrowCap;
         uint256 eModeCategory;
@@ -118,41 +133,30 @@ contract AaveV3Helper is DSMath {
         uint256 debtCeilingDecimals;
         uint256 liquidationFee;
         bool isolationBorrowEnabled;
-        bool usageAsCollateralEnabled;
-        bool borrowEnabled;
-        bool stableBorrowEnabled;
-        bool isActive;
-        bool isFrozen;
         bool isPaused;
     }
 
-    struct TokenPrice {
-        uint256 priceInEth;
-        uint256 priceInUsd;
-    }
+    // struct TokenPrice {
+    //     uint256 priceInEth;
+    //     uint256 priceInUsd;
+    // }
 
     function getTokensPrices(address[] memory tokens)
         internal
         view
-        returns (TokenPrice[] memory tokenPrices, uint256 ethPrice)
+        returns (uint256[] memory tokenPrices, uint256 ethPrice)
     {
-        uint256[] memory _tokenPrices = IAaveOracle(getAaveOracle()).getAssetsPrices(tokens);
+        uint256[] memory tokenPrices = IAaveOracle(getAaveOracle()).getAssetsPrices(tokens);
         (, int256 EthPrice, , , ) = (AggregatorV3Interface(getChainLinkFeed()).latestRoundData());
         ethPrice = uint256(EthPrice);
-        tokenPrices = new TokenPrice[](_tokenPrices.length);
-        for (uint256 i = 0; i < _tokenPrices.length; i++) {
-            tokenPrices[i] = TokenPrice(_tokenPrices[i], wmul(_tokenPrices[i], uint256(ethPrice) * 10**10));
-        }
     }
 
     function getEmodePrices(address[] memory tokens, address priceOracleAddr)
         internal
         view
-        returns (uint256[] memory tokenPrices, uint256 ethPrice)
+        returns (uint256[] memory tokenPrices)
     {
         tokenPrices = new uint256[](tokens.length);
-        (, int256 EthPrice, , , ) = (AggregatorV3Interface(getChainLinkFeed()).latestRoundData());
-        ethPrice = uint256(EthPrice);
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 priceBase = IPriceOracle(priceOracleAddr).getAssetPrice(tokens[i]);
             tokenPrices[i] = priceBase;
@@ -203,6 +207,49 @@ contract AaveV3Helper is DSMath {
         userData.pendingRewards = getPendingRewards(aaveData, tokens, user);
     }
 
+    function getFlags(IAaveProtocolDataProvider aaveData, address token) internal view returns (flags memory flag) {
+        (
+            ,
+            ,
+            ,
+            ,
+            ,
+            flag.usageAsCollateralEnabled,
+            flag.borrowEnabled,
+            flag.stableBorrowEnabled,
+            flag.isActive,
+            flag.isFrozen
+        ) = aaveData.getReserveConfigurationData(token);
+    }
+
+    function getV3Token(IAaveProtocolDataProvider aaveData, address token)
+        internal
+        view
+        returns (AaveV3Token memory tokenData)
+    {
+        (tokenData.borrowCap, tokenData.supplyCap) = aaveData.getReserveCaps(token);
+        (tokenData.eModeCategory) = aaveData.getReserveEModeCategory(token);
+        (tokenData.debtCeiling) = aaveData.getDebtCeiling(token);
+        (tokenData.debtCeilingDecimals) = aaveData.getDebtCeilingDecimals();
+        (tokenData.liquidationFee) = aaveData.getLiquidationProtocolFee(token);
+        (tokenData.isPaused) = aaveData.getPaused(token);
+        (tokenData.isolationBorrowEnabled) = (aaveData.getDebtCeiling(token) == 0) ? false : true;
+    }
+
+    function getEmodeCategoryData(uint8 id, address[] memory tokens)
+        external
+        view
+        returns (EModeCategoryData memory eModeData)
+    {
+        IPool pool = IPool(IPoolAddressesProvider(getPoolAddressProvider()).getPool());
+        eModeData.ltv = pool.getEModeCategoryData(id).ltv;
+        eModeData.liquidationThreshold = pool.getEModeCategoryData(id).liquidationThreshold;
+        eModeData.liquidationBonus = pool.getEModeCategoryData(id).liquidationBonus;
+        eModeData.priceSource = pool.getEModeCategoryData(id).priceSource;
+        eModeData.label = pool.getEModeCategoryData(id).label;
+        eModeData.price = getEmodePrices(tokens, eModeData.priceSource);
+    }
+
     function collateralData(IAaveProtocolDataProvider aaveData, address token)
         internal
         view
@@ -214,11 +261,11 @@ contract AaveV3Helper is DSMath {
             aaveTokenData.threshold,
             ,
             aaveTokenData.reserveFactor,
-            aaveTokenData.usageAsCollateralEnabled,
-            aaveTokenData.borrowEnabled,
-            aaveTokenData.stableBorrowEnabled,
-            aaveTokenData.isActive,
-            aaveTokenData.isFrozen
+            ,
+            ,
+            ,
+            ,
+
         ) = aaveData.getReserveConfigurationData(token);
 
         (
@@ -235,16 +282,9 @@ contract AaveV3Helper is DSMath {
             ,
 
         ) = aaveData.getReserveData(token);
+        aaveTokenData.token = getV3Token(aaveData, token);
+        aaveTokenData.flag = getFlags(aaveData, token);
 
-        (aaveTokenData.borrowCap, aaveTokenData.supplyCap) = aaveData.getReserveCaps(token);
-        (aaveTokenData.eModeCategory) = aaveData.getReserveEModeCategory(token);
-        (aaveTokenData.debtCeiling) = aaveData.getDebtCeiling(token);
-        (aaveTokenData.debtCeilingDecimals) = aaveData.getDebtCeilingDecimals();
-        (aaveTokenData.liquidationFee) = aaveData.getLiquidationProtocolFee(token);
-        (aaveTokenData.isPaused) = aaveData.getPaused(token);
-        (aaveTokenData.isolationBorrowEnabled) = (aaveData.getDebtCeiling(token) == 0) ? false : true;
-
-        //incentives info --> collateralEmission, debtEmission
         (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
         (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(aToken);
         (, aaveTokenData.debtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(debtToken);
@@ -257,7 +297,7 @@ contract AaveV3Helper is DSMath {
     ) internal view returns (AaveV3UserTokenData memory tokenData) {
         uint256 basePrice = IPriceOracle(IPoolAddressesProvider(getPoolAddressProvider()).getPriceOracle())
             .getAssetPrice(token);
-        // AaveTokenData aaveTokenData;
+        tokenData.price = basePrice;
 
         (
             tokenData.supplyBalance,
