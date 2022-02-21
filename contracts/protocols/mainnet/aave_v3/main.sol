@@ -13,7 +13,6 @@ contract Resolver is AaveV3Helper {
             AaveV3UserData memory
         )
     {
-        IPoolAddressesProvider addrProvider = IPoolAddressesProvider(getPoolAddressProvider());
         uint256 length = tokens.length;
         address[] memory _tokens = new address[](length);
 
@@ -25,16 +24,15 @@ contract Resolver is AaveV3Helper {
         AaveV3TokenData[] memory collData = new AaveV3TokenData[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            tokensData[i] = getUserTokenData(IAaveProtocolDataProvider(getAaveDataProvider()), user, _tokens[i]);
-            collData[i] = userCollateralData(IAaveProtocolDataProvider(getAaveDataProvider()), _tokens[i]);
+            tokensData[i] = getUserTokenData(user, _tokens[i]);
+            collData[i] = userCollateralData(_tokens[i]);
         }
 
-        return (tokensData, collData, getUserData(IAaveProtocolDataProvider(getAaveDataProvider()), user, _tokens));
+        return (tokensData, collData, getUserData(user, _tokens));
     }
 
     function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {
-        IPoolAddressesProvider addrProvider = IPoolAddressesProvider(getPoolAddressProvider());
-        uint256 data = getConfig(user, IPool(addrProvider.getPool())).data;
+        uint256 data = getConfig(user, IPool(IPoolAddressesProvider(getPoolAddressProvider()).getPool())).data;
         address[] memory reserveIndex = getList();
 
         collateral = new bool[](reserveIndex.length);
@@ -49,7 +47,6 @@ contract Resolver is AaveV3Helper {
     }
 
     function getReservesList() public view returns (address[] memory data) {
-        IPoolAddressesProvider addrProvider = IPoolAddressesProvider(getPoolAddressProvider());
         data = getList();
     }
 }
