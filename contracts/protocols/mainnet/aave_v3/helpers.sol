@@ -138,7 +138,7 @@ contract AaveV3Helper is DSMath {
     function getTokensPrices(address[] memory tokens)
         internal
         view
-        returns (uint256[] memory tokenPrices, uint256 ethPrice)
+        returns (TokenPrice[] memory tokenPrices, uint256 ethPrice)
     {
         uint256[] memory tokenPrices = IAaveOracle(getAaveOracle()).getAssetsPrices(tokens);
         (, int256 EthPrice, , , ) = (AggregatorV3Interface(getChainLinkFeed()).latestRoundData());
