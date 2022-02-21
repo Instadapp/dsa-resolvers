@@ -7,7 +7,11 @@ contract Resolver is AaveV3Helper {
     function getPosition(address user, address[] memory tokens)
         public
         view
-        returns (AaveV3UserTokenData[] memory, AaveV3UserData memory)
+        returns (
+            AaveV3UserTokenData[] memory,
+            AaveV3TokenData[] memory,
+            AaveV3UserData memory
+        )
     {
         IPoolAddressesProvider addrProvider = IPoolAddressesProvider(getPoolAddressProvider());
         uint256 length = tokens.length;
@@ -18,12 +22,14 @@ contract Resolver is AaveV3Helper {
         }
 
         AaveV3UserTokenData[] memory tokensData = new AaveV3UserTokenData[](length);
+        AaveV3TokenData[] memory collData = new AaveV3TokenData[](length);
 
         for (uint256 i = 0; i < length; i++) {
             tokensData[i] = getUserTokenData(IAaveProtocolDataProvider(getAaveDataProvider()), user, _tokens[i]);
+            collData[i] = userCollateralData(IAaveProtocolDataProvider(getAaveDataProvider()), _tokens[i]);
         }
 
-        return (tokensData, getUserData(IAaveProtocolDataProvider(getAaveDataProvider()), user, _tokens));
+        return (tokensData, collData, getUserData(IAaveProtocolDataProvider(getAaveDataProvider()), user, _tokens));
     }
 
     function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {

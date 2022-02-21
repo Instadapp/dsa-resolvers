@@ -87,7 +87,7 @@ contract AaveV3Helper is DSMath {
         uint256 variableBorrowRate;
         bool isCollateral;
         uint256 price;
-        AaveV3TokenData aaveTokenData;
+        flags flag;
     }
 
     struct AaveV3UserData {
@@ -114,7 +114,6 @@ contract AaveV3Helper is DSMath {
         uint256 collateralEmission;
         uint256 debtEmission;
         AaveV3Token token;
-        flags flag;
     }
 
     struct flags {
@@ -135,11 +134,6 @@ contract AaveV3Helper is DSMath {
         bool isolationBorrowEnabled;
         bool isPaused;
     }
-
-    // struct TokenPrice {
-    //     uint256 priceInEth;
-    //     uint256 priceInUsd;
-    // }
 
     function getTokensPrices(address[] memory tokens)
         internal
@@ -250,7 +244,7 @@ contract AaveV3Helper is DSMath {
         eModeData.price = getEmodePrices(tokens, eModeData.priceSource);
     }
 
-    function collateralData(IAaveProtocolDataProvider aaveData, address token)
+    function userCollateralData(IAaveProtocolDataProvider aaveData, address token)
         internal
         view
         returns (AaveV3TokenData memory aaveTokenData)
@@ -283,7 +277,6 @@ contract AaveV3Helper is DSMath {
 
         ) = aaveData.getReserveData(token);
         aaveTokenData.token = getV3Token(aaveData, token);
-        aaveTokenData.flag = getFlags(aaveData, token);
 
         (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
         (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(aToken);
@@ -310,9 +303,9 @@ contract AaveV3Helper is DSMath {
             ,
             tokenData.isCollateral
         ) = aaveData.getUserReserveData(token, user);
+        tokenData.flag = getFlags(aaveData, token);
 
         (, , , , , , tokenData.variableBorrowRate, tokenData.stableBorrowRate, , , , ) = aaveData.getReserveData(token);
-        tokenData.aaveTokenData = collateralData(aaveData, token);
     }
 
     function getList() public view returns (address[] memory data) {
