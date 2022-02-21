@@ -192,7 +192,7 @@ contract AaveV3Helper is DSMath {
             IAaveOracle aaveOracle = IAaveOracle(getAaveOracle());
             baseCurr.baseUnit = aaveOracle.BASE_CURRENCY_UNIT();
             baseCurr.baseAddress = (aaveOracle.BASE_CURRENCY());
-            address usd = address(0x0000000000000000000000000000000000000);
+            address usd = address(0);
             if (aaveOracle.BASE_CURRENCY() == usd) {
                 baseCurr.symbol = "USD";
             } else {
