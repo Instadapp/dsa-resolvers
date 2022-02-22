@@ -7,6 +7,7 @@ import { Tokens } from "../consts";
 
 describe("Aave V3 Resolvers", () => {
   let signer: SignerWithAddress;
+  // const account = "0xde33f4573bB315939a9D1E65522575E1a9fC3e74";
   const account = "0x15C6b352c1F767Fa2d79625a40Ca4087Fab9a198";
 
   before(async () => {
@@ -41,21 +42,31 @@ describe("Aave V3 Resolvers", () => {
     });
 
     it("Returns the positions on AaveV3", async () => {
-      const results = await resolver.getPosition(account, [Tokens.DAI.addr]);
+      const results = await resolver.getPosition(account, [
+        "0x2Ec4c6fCdBF5F9beECeB1b51848fc2DB1f3a26af",
+        "0x5B8B635c2665791cf62fe429cB149EaB42A3cEd8",
+      ]);
       const userTokenData = results[0];
-      // const userData = results[1];
+      const tokenData = results[1];
+      const userData = results[2];
 
       // check for token balances
-      console.log("Supply Balance DAI: ", formatUnits(userTokenData[0].supplyBalance, Tokens.DAI.decimals));
+      console.log("Supply Balance USDC: ", formatUnits(userTokenData[0].supplyBalance, Tokens.USDC.decimals));
       expect(userTokenData[0].supplyBalance).to.gte(0);
       console.log(
-        "Variable Borrow Balance DAI: ",
-        formatUnits(userTokenData[0].variableBorrowBalance, Tokens.DAI.decimals),
+        "Stable Borrow Balance USDC: ",
+        formatUnits(userTokenData[1].stableBorrowBalance, Tokens.USDC.decimals),
       );
+      console.log(`ltv: ${tokenData[1].ltv}`);
       expect(userTokenData[0].variableBorrowBalance).to.gte(0);
       // check for user data
-      // expect(userData.totalBorrowsBase).to.gte(0);
-      // expect(userData.totalCollateralETH).to.gte(0);
+      expect(userData.totalBorrowsBase).to.gte(0);
+      expect(userData.totalCollateralBase).to.gte(0);
+    });
+
+    it("Returns the e-mode category details of e-modeID", async () => {
+      const emodeData = await resolver.getEmodeCategoryData(1);
+      console.log(`emodeData: ${emodeData}`);
     });
   });
 });

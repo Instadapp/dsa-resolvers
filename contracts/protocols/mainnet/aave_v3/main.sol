@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 import "./interfaces.sol";
 import "./helpers.sol";
 
-contract Resolver is AaveV3Helper {
+contract AaveV3Resolver is AaveV3Helper {
     function getPosition(address user, address[] memory tokens)
         public
         view
@@ -32,7 +32,7 @@ contract Resolver is AaveV3Helper {
     }
 
     function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {
-        uint256 data = getConfig(user, IPool(IPoolAddressesProvider(getPoolAddressProvider()).getPool())).data;
+        uint256 data = getConfig(user).data;
         address[] memory reserveIndex = getList();
 
         collateral = new bool[](reserveIndex.length);
