@@ -78,7 +78,7 @@ contract AaveV3Helper is DSMath {
     }
 
     struct AaveV3UserTokenData {
-        uint256 tokenPriceInBase;
+        // uint256 tokenPriceInBase;
         uint256 supplyBalance;
         uint256 stableBorrowBalance;
         uint256 variableBorrowBalance;
@@ -87,7 +87,7 @@ contract AaveV3Helper is DSMath {
         uint256 userStableBorrowRate;
         uint256 variableBorrowRate;
         bool isCollateral;
-        uint256 price;
+        uint256 price; //price of token in base currency
         flags flag;
     }
 
@@ -112,6 +112,7 @@ contract AaveV3Helper is DSMath {
         uint256 availableLiquidity;
         uint256 totalStableDebt;
         uint256 totalVariableDebt;
+        TokenPrice tokenPrice;
         // uint256 collateralEmission;
         // uint256 debtEmission;
         AaveV3Token token;
@@ -294,7 +295,11 @@ contract AaveV3Helper is DSMath {
         (, , availableLiquidity, totalStableDebt, totalVariableDebt, , , , , , , ) = aaveData.getReserveData(token);
     }
 
-    function userCollateralData(address token) internal view returns (AaveV3TokenData memory) {
+    function userCollateralData(address token, TokenPrice memory assetPrice)
+        internal
+        view
+        returns (AaveV3TokenData memory)
+    {
         IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
             IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
         );
@@ -314,6 +319,7 @@ contract AaveV3Helper is DSMath {
                 aaveTokenData.totalVariableDebt
             ) = resData(token);
             aaveTokenData.token = getV3Token(token);
+            aaveTokenData.tokenPrice = assetPrice;
         }
 
         //-------------INCENTIVE DETAILS---------------
