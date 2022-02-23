@@ -51,7 +51,7 @@ describe("Aave V3 Resolvers", () => {
       const userData = results[2];
 
       //check tokenPrice
-      console.log(`Price of USDC: ${tokenData[1].tokenPrice}`);
+      console.log(`Price of DAI: ${tokenData[0].tokenPrice}`);
 
       // check for token balances
       console.log("Supply Balance USDC: ", formatUnits(userTokenData[0].supplyBalance, Tokens.USDC.decimals));
