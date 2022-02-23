@@ -143,19 +143,22 @@ contract AaveV3Helper is DSMath {
     }
 
     struct TokenPrice {
-        uint256 priceInBase;
+        uint256 priceInEth;
         uint256 priceInUsd;
     }
 
     function getTokensPrices(address[] memory tokens, uint256 basePriceInUSD)
         internal
         view
-        returns (TokenPrice[] memory tokenPrices)
+        returns (TokenPrice[] memory tokenPrices, uint256 ethPrice)
     {
         uint256[] memory _tokenPrices = IAaveOracle(getAaveOracle()).getAssetsPrices(tokens);
         tokenPrices = new TokenPrice[](_tokenPrices.length);
+        // (, int256 EthPrice, , , ) = (AggregatorV3Interface(getChainLinkFeed()).latestRoundData());
+        // ethPrice = uint256(EthPrice);
         for (uint256 i = 0; i < _tokenPrices.length; i++) {
-            tokenPrices[i] = TokenPrice(_tokenPrices[i], wmul(_tokenPrices[i], basePriceInUSD * 10**10));
+            uint256 _tokenPriceinETH = (_tokenPrices[i] * basePriceInUSD) / ethPrice;
+            tokenPrices[i] = TokenPrice(_tokenPriceinETH, wmul(_tokenPrices[i], basePriceInUSD));
         }
     }
 
@@ -216,10 +219,12 @@ contract AaveV3Helper is DSMath {
             IAaveOracle aaveOracle = IAaveOracle(getAaveOracle());
             baseCurr.baseUnit = aaveOracle.BASE_CURRENCY_UNIT();
             baseCurr.baseAddress = (aaveOracle.BASE_CURRENCY());
-            (, IUiPoolDataProviderV3.BaseCurrencyInfo memory baseCurrency) = IUiPoolDataProviderV3(getUiDataProvider())
-                .getReservesData(IPoolAddressesProvider(getPoolAddressProvider()));
+
+            (, BaseCurrencyInfo memory baseCurrency) = IUiPoolDataProviderV3(getUiDataProvider()).getReservesData(
+                IPoolAddressesProvider(getPoolAddressProvider())
+            );
             baseCurr.baseInUSD = uint256(baseCurrency.marketReferenceCurrencyPriceInUsd);
-            // console.log(baseCurr.baseInUSD);
+
             if (aaveOracle.BASE_CURRENCY() == address(0)) {
                 baseCurr.symbol = "USD";
             } else {
@@ -397,7 +402,7 @@ contract AaveV3Helper is DSMath {
         return (self >> (reserveIndex * 2)) & 1 != 0;
     }
 
-    function getConfig(address user) public view returns (IPool.UserConfigurationMap memory data) {
+    function getConfig(address user) public view returns (UserConfigurationMap memory data) {
         IPool aave = IPool(IPoolAddressesProvider(getPoolAddressProvider()).getPool());
         data = aave.getUserConfiguration(user);
     }

@@ -1,63 +1,161 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+struct ReserveData {
+    ReserveConfigurationMap configuration;
+    uint128 liquidityIndex; //ray
+    uint128 currentLiquidityRate; //ray
+    uint128 variableBorrowIndex; //ray
+    uint128 currentVariableBorrowRate; //ray
+    uint128 currentStableBorrowRate; //ray
+    uint40 lastUpdateTimestamp;
+    uint16 id;
+    address aTokenAddress;
+    address stableDebtTokenAddress;
+    address variableDebtTokenAddress;
+    address interestRateStrategyAddress;
+    uint128 accruedToTreasury;
+    uint128 unbacked;
+    uint128 isolationModeTotalDebt;
+}
+struct UserConfigurationMap {
+    uint256 data;
+}
+
+struct EModeCategory {
+    // each eMode category has a custom ltv and liquidation threshold
+    uint16 ltv;
+    uint16 liquidationThreshold;
+    uint16 liquidationBonus;
+    // each eMode category may or may not have a custom oracle to override the individual assets price oracles
+    address priceSource;
+    string label;
+}
+
+struct ReserveConfigurationMap {
+    uint256 data;
+}
+
+//IUiIncentives
+struct AggregatedReserveIncentiveData {
+    address underlyingAsset;
+    IncentiveData aIncentiveData;
+    IncentiveData vIncentiveData;
+    IncentiveData sIncentiveData;
+}
+
+struct IncentiveData {
+    address tokenAddress;
+    address incentiveControllerAddress;
+    RewardInfo[] rewardsTokenInformation;
+}
+
+struct RewardInfo {
+    string rewardTokenSymbol;
+    address rewardTokenAddress;
+    address rewardOracleAddress;
+    uint256 emissionPerSecond;
+    uint256 incentivesLastUpdateTimestamp;
+    uint256 tokenIncentivesIndex;
+    uint256 emissionEndTimestamp;
+    int256 rewardPriceFeed;
+    uint8 rewardTokenDecimals;
+    uint8 precision;
+    uint8 priceFeedDecimals;
+}
+
+struct UserReserveIncentiveData {
+    address underlyingAsset;
+    UserIncentiveData aTokenIncentivesUserData;
+    UserIncentiveData vTokenIncentivesUserData;
+    UserIncentiveData sTokenIncentivesUserData;
+}
+
+struct UserIncentiveData {
+    address tokenAddress;
+    address incentiveControllerAddress;
+    UserRewardInfo[] userRewardsInformation;
+}
+
+struct UserRewardInfo {
+    string rewardTokenSymbol;
+    address rewardOracleAddress;
+    address rewardTokenAddress;
+    uint256 userUnclaimedRewards;
+    uint256 tokenIncentivesUserIndex;
+    int256 rewardPriceFeed;
+    uint8 priceFeedDecimals;
+    uint8 rewardTokenDecimals;
+}
+
+//IUiDataProvider
+struct BaseCurrencyInfo {
+    uint256 marketReferenceCurrencyUnit;
+    int256 marketReferenceCurrencyPriceInUsd;
+    int256 networkBaseTokenPriceInUsd;
+    uint8 networkBaseTokenPriceDecimals;
+}
+struct AggregatedReserveData {
+    address underlyingAsset;
+    string name;
+    string symbol;
+    uint256 decimals;
+    uint256 baseLTVasCollateral;
+    uint256 reserveLiquidationThreshold;
+    uint256 reserveLiquidationBonus;
+    uint256 reserveFactor;
+    bool usageAsCollateralEnabled;
+    bool borrowingEnabled;
+    bool stableBorrowRateEnabled;
+    bool isActive;
+    bool isFrozen;
+    // base data
+    uint128 liquidityIndex;
+    uint128 variableBorrowIndex;
+    uint128 liquidityRate;
+    uint128 variableBorrowRate;
+    uint128 stableBorrowRate;
+    uint40 lastUpdateTimestamp;
+    address aTokenAddress;
+    address stableDebtTokenAddress;
+    address variableDebtTokenAddress;
+    address interestRateStrategyAddress;
+    //
+    uint256 availableLiquidity;
+    uint256 totalPrincipalStableDebt;
+    uint256 averageStableRate;
+    uint256 stableDebtLastUpdateTimestamp;
+    uint256 totalScaledVariableDebt;
+    uint256 priceInMarketReferenceCurrency;
+    address priceOracle;
+    uint256 variableRateSlope1;
+    uint256 variableRateSlope2;
+    uint256 stableRateSlope1;
+    uint256 stableRateSlope2;
+    uint256 baseStableBorrowRate;
+    uint256 baseVariableBorrowRate;
+    uint256 optimalUsageRatio;
+    // v3 only
+    bool isPaused;
+    uint128 accruedToTreasury;
+    uint128 unbacked;
+    uint128 isolationModeTotalDebt;
+    //
+    uint256 debtCeiling;
+    uint256 debtCeilingDecimals;
+    uint8 eModeCategoryId;
+    uint256 borrowCap;
+    uint256 supplyCap;
+    // eMode
+    uint16 eModeLtv;
+    uint16 eModeLiquidationThreshold;
+    uint16 eModeLiquidationBonus;
+    address eModePriceSource;
+    string eModeLabel;
+    bool borrowableInIsolation;
+}
+
 interface IPool {
-    struct UserConfigurationMap {
-        uint256 data;
-    }
-
-    struct EModeCategory {
-        // each eMode category has a custom ltv and liquidation threshold
-        uint16 ltv;
-        uint16 liquidationThreshold;
-        uint16 liquidationBonus;
-        // each eMode category may or may not have a custom oracle to override the individual assets price oracles
-        address priceSource;
-        string label;
-    }
-    struct ReserveData {
-        ReserveConfigurationMap configuration;
-        uint128 liquidityIndex; //ray
-        uint128 currentLiquidityRate; //ray
-        uint128 variableBorrowIndex; //ray
-        uint128 currentVariableBorrowRate; //ray
-        uint128 currentStableBorrowRate; //ray
-        uint40 lastUpdateTimestamp;
-        uint16 id;
-        address aTokenAddress;
-        address stableDebtTokenAddress;
-        address variableDebtTokenAddress;
-        address interestRateStrategyAddress;
-        uint128 accruedToTreasury;
-        uint128 unbacked;
-        uint128 isolationModeTotalDebt;
-    }
-
-    struct ReserveConfigurationMap {
-        //bit 0-15: LTV
-        //bit 16-31: Liq. threshold
-        //bit 32-47: Liq. bonus
-        //bit 48-55: Decimals
-        //bit 56: reserve is active
-        //bit 57: reserve is frozen
-        //bit 58: borrowing is enabled
-        //bit 59: stable rate borrowing enabled
-        //bit 60: asset is paused
-        //bit 61: borrowing in isolation mode is enabled
-        //bit 62-63: reserved
-        //bit 64-79: reserve factor
-        //bit 80-115 borrow cap in whole tokens, borrowCap == 0 => no cap
-        //bit 116-151 supply cap in whole tokens, supplyCap == 0 => no cap
-        //bit 152-167 liquidation protocol fee
-        //bit 168-175 eMode category
-        //bit 176-211 unbacked mint cap in whole tokens, unbackedMintCap == 0 => minting disabled
-        //bit 212-251 debt ceiling for isolation mode with (ReserveConfiguration::DEBT_CEILING_DECIMALS) decimals
-        //bit 252-255 unused
-
-        uint256 data;
-    }
-
-    //user account data info
     function getUserAccountData(address user)
         external
         view
@@ -270,57 +368,6 @@ interface IERC20Detailed {
 }
 
 interface IUiIncentiveDataProviderV3 {
-    struct AggregatedReserveIncentiveData {
-        address underlyingAsset;
-        IncentiveData aIncentiveData;
-        IncentiveData vIncentiveData;
-        IncentiveData sIncentiveData;
-    }
-
-    struct IncentiveData {
-        address tokenAddress;
-        address incentiveControllerAddress;
-        RewardInfo[] rewardsTokenInformation;
-    }
-
-    struct RewardInfo {
-        string rewardTokenSymbol;
-        address rewardTokenAddress;
-        address rewardOracleAddress;
-        uint256 emissionPerSecond;
-        uint256 incentivesLastUpdateTimestamp;
-        uint256 tokenIncentivesIndex;
-        uint256 emissionEndTimestamp;
-        int256 rewardPriceFeed;
-        uint8 rewardTokenDecimals;
-        uint8 precision;
-        uint8 priceFeedDecimals;
-    }
-
-    struct UserReserveIncentiveData {
-        address underlyingAsset;
-        UserIncentiveData aTokenIncentivesUserData;
-        UserIncentiveData vTokenIncentivesUserData;
-        UserIncentiveData sTokenIncentivesUserData;
-    }
-
-    struct UserIncentiveData {
-        address tokenAddress;
-        address incentiveControllerAddress;
-        UserRewardInfo[] userRewardsInformation;
-    }
-
-    struct UserRewardInfo {
-        string rewardTokenSymbol;
-        address rewardOracleAddress;
-        address rewardTokenAddress;
-        uint256 userUnclaimedRewards;
-        uint256 tokenIncentivesUserIndex;
-        int256 rewardPriceFeed;
-        uint8 priceFeedDecimals;
-        uint8 rewardTokenDecimals;
-    }
-
     function getReservesIncentivesData(IPoolAddressesProvider provider)
         external
         view
@@ -426,72 +473,6 @@ interface IRewardsController is IRewardsDistributor {
 }
 
 interface IUiPoolDataProviderV3 {
-    struct BaseCurrencyInfo {
-        uint256 marketReferenceCurrencyUnit;
-        int256 marketReferenceCurrencyPriceInUsd;
-        int256 networkBaseTokenPriceInUsd;
-        uint8 networkBaseTokenPriceDecimals;
-    }
-    struct AggregatedReserveData {
-        address underlyingAsset;
-        string name;
-        string symbol;
-        uint256 decimals;
-        uint256 baseLTVasCollateral;
-        uint256 reserveLiquidationThreshold;
-        uint256 reserveLiquidationBonus;
-        uint256 reserveFactor;
-        bool usageAsCollateralEnabled;
-        bool borrowingEnabled;
-        bool stableBorrowRateEnabled;
-        bool isActive;
-        bool isFrozen;
-        // base data
-        uint128 liquidityIndex;
-        uint128 variableBorrowIndex;
-        uint128 liquidityRate;
-        uint128 variableBorrowRate;
-        uint128 stableBorrowRate;
-        uint40 lastUpdateTimestamp;
-        address aTokenAddress;
-        address stableDebtTokenAddress;
-        address variableDebtTokenAddress;
-        address interestRateStrategyAddress;
-        //
-        uint256 availableLiquidity;
-        uint256 totalPrincipalStableDebt;
-        uint256 averageStableRate;
-        uint256 stableDebtLastUpdateTimestamp;
-        uint256 totalScaledVariableDebt;
-        uint256 priceInMarketReferenceCurrency;
-        address priceOracle;
-        uint256 variableRateSlope1;
-        uint256 variableRateSlope2;
-        uint256 stableRateSlope1;
-        uint256 stableRateSlope2;
-        uint256 baseStableBorrowRate;
-        uint256 baseVariableBorrowRate;
-        uint256 optimalUsageRatio;
-        // v3 only
-        bool isPaused;
-        uint128 accruedToTreasury;
-        uint128 unbacked;
-        uint128 isolationModeTotalDebt;
-        //
-        uint256 debtCeiling;
-        uint256 debtCeilingDecimals;
-        uint8 eModeCategoryId;
-        uint256 borrowCap;
-        uint256 supplyCap;
-        // eMode
-        uint16 eModeLtv;
-        uint16 eModeLiquidationThreshold;
-        uint16 eModeLiquidationBonus;
-        address eModePriceSource;
-        string eModeLabel;
-        bool borrowableInIsolation;
-    }
-
     function getReservesData(IPoolAddressesProvider provider)
         external
         view

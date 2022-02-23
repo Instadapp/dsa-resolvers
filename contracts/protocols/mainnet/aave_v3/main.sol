@@ -23,7 +23,7 @@ contract AaveV3Resolver is AaveV3Helper {
         AaveV3UserTokenData[] memory tokensData = new AaveV3UserTokenData[](length);
         AaveV3TokenData[] memory collData = new AaveV3TokenData[](length);
         AaveV3UserData memory userDetails = getUserData(user);
-        TokenPrice[] memory tokenPrices = getTokensPrices(_tokens, userDetails.base.baseInUSD);
+        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(_tokens, userDetails.base.baseInUSD);
 
         for (uint256 i = 0; i < length; i++) {
             tokensData[i] = getUserTokenData(user, _tokens[i]);
