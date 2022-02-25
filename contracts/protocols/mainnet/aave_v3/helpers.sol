@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.6;
 import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 import "hardhat/console.sol";
@@ -92,7 +92,7 @@ contract AaveV3Helper is DSMath {
         uint256 variableBorrowRate;
         bool isCollateral;
         // uint256 price; //price of token in base currency
-        flags flag;
+        Flags flag;
     }
 
     struct AaveV3UserData {
@@ -122,7 +122,7 @@ contract AaveV3Helper is DSMath {
         // uint256 debtEmission;
     }
 
-    struct flags {
+    struct Flags {
         bool usageAsCollateralEnabled;
         bool borrowEnabled;
         bool stableBorrowEnabled;
@@ -154,11 +154,12 @@ contract AaveV3Helper is DSMath {
     {
         uint256[] memory _tokenPrices = IAaveOracle(getAaveOracle()).getAssetsPrices(tokens);
         tokenPrices = new TokenPrice[](_tokenPrices.length);
-        (, int256 EthPrice, , , ) = (AggregatorV3Interface(getChainLinkFeed()).latestRoundData());
-        ethPrice = uint256(EthPrice);
+        ethPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
         for (uint256 i = 0; i < _tokenPrices.length; i++) {
-            uint256 _tokenPriceinETH = (_tokenPrices[i] * basePriceInUSD) / ethPrice;
-            tokenPrices[i] = TokenPrice(_tokenPriceinETH, wmul(_tokenPrices[i], basePriceInUSD));
+            tokenPrices[i] = TokenPrice(
+                (_tokenPrices[i] * basePriceInUSD) / ethPrice,
+                wmul(_tokenPrices[i], basePriceInUSD)
+            );
         }
     }
 
@@ -176,12 +177,10 @@ contract AaveV3Helper is DSMath {
     //     }
     // }
 
-    // function getPendingRewards(
-    //     address[] memory _tokens,
-    //     address user
-    // ) internal view returns (uint256 rewards) {
-
-    //     IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider());
+    // function getPendingRewards(address[] memory _tokens, address user) internal view returns (uint256 rewards) {
+    //     IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
+    //         IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
+    //     );
     //     uint256 arrLength = 2 * _tokens.length;
     //     address[] memory _atokens = new address[](arrLength);
     //     for (uint256 i = 0; i < _tokens.length; i++) {
@@ -198,49 +197,25 @@ contract AaveV3Helper is DSMath {
         );
     }
 
-    function getUserData(address user) internal view returns (AaveV3UserData memory) {
-        IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
-            IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
-        );
-        AaveV3UserData memory userData;
-        {
-            (
-                userData.totalCollateralBase,
-                userData.totalBorrowsBase,
-                userData.availableBorrowsBase,
-                userData.currentLiquidationThreshold,
-                userData.ltv,
-                userData.healthFactor
-            ) = IPool(IPoolAddressesProvider(getPoolAddressProvider()).getPool()).getUserAccountData(user);
-        }
+    function getUserData(address user) internal view returns (AaveV3UserData memory userData) {
+        address poolAddr = IPoolAddressesProvider(getPoolAddressProvider()).getPool();
 
-        {
-            BaseCurrency memory baseCurr;
-            IAaveOracle aaveOracle = IAaveOracle(getAaveOracle());
-            baseCurr.baseUnit = aaveOracle.BASE_CURRENCY_UNIT();
-            baseCurr.baseAddress = (aaveOracle.BASE_CURRENCY());
+        (
+            userData.totalCollateralBase,
+            userData.totalBorrowsBase,
+            userData.availableBorrowsBase,
+            userData.currentLiquidationThreshold,
+            userData.ltv,
+            userData.healthFactor
+        ) = IPool(poolAddr).getUserAccountData(user);
 
-            (, BaseCurrencyInfo memory baseCurrency) = IUiPoolDataProviderV3(getUiDataProvider()).getReservesData(
-                IPoolAddressesProvider(getPoolAddressProvider())
-            );
-            baseCurr.baseInUSD = uint256(baseCurrency.marketReferenceCurrencyPriceInUsd);
+        userData.base = getBaseCurrencyDetails();
 
-            if (aaveOracle.BASE_CURRENCY() == address(0)) {
-                baseCurr.symbol = "USD";
-            } else {
-                baseCurr.symbol = IERC20Detailed(aaveOracle.BASE_CURRENCY()).symbol();
-            }
-            userData.base = baseCurr;
-        }
-
-        {
-            userData.eModeId = IPool(IPoolAddressesProvider(getPoolAddressProvider()).getPool()).getUserEMode(user);
-            // userData.pendingRewards = getPendingRewards(tokens, user);
-        }
-        return userData;
+        userData.eModeId = IPool(poolAddr).getUserEMode(user);
+        // userData.pendingRewards = getPendingRewards(tokens, user);
     }
 
-    function getFlags(address token) internal view returns (flags memory flag) {
+    function getFlags(address token) internal view returns (Flags memory flag) {
         IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
             IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
         );
@@ -262,20 +237,20 @@ contract AaveV3Helper is DSMath {
         IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
             IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
         );
-        {
-            (tokenData.borrowCap, tokenData.supplyCap) = aaveData.getReserveCaps(token);
-            (tokenData.eModeCategory) = aaveData.getReserveEModeCategory(token);
-            (tokenData.debtCeiling) = aaveData.getDebtCeiling(token);
-            (tokenData.debtCeilingDecimals) = aaveData.getDebtCeilingDecimals();
-            (tokenData.liquidationFee) = aaveData.getLiquidationProtocolFee(token);
-            (tokenData.isPaused) = aaveData.getPaused(token);
-            (tokenData.isolationBorrowEnabled) = (aaveData.getDebtCeiling(token) == 0) ? false : true;
-            // (tokenData.isolationModeTotalDebt) = getIsolationDebt(token);
-        }
+
+        (tokenData.borrowCap, tokenData.supplyCap) = aaveData.getReserveCaps(token);
+        (tokenData.eModeCategory) = aaveData.getReserveEModeCategory(token);
+        (tokenData.debtCeiling) = aaveData.getDebtCeiling(token);
+        (tokenData.debtCeilingDecimals) = aaveData.getDebtCeilingDecimals();
+        (tokenData.liquidationFee) = aaveData.getLiquidationProtocolFee(token);
+        (tokenData.isPaused) = aaveData.getPaused(token);
+        (tokenData.isolationBorrowEnabled) = (aaveData.getDebtCeiling(token) == 0) ? false : true;
+        // (tokenData.isolationModeTotalDebt) = getIsolationDebt(token);
     }
 
     function getEmodeCategoryData(uint8 id) external view returns (EModeCategoryData memory eModeData) {
         IPool pool = IPool(IPoolAddressesProvider(getPoolAddressProvider()).getPool());
+
         eModeData.ltv = pool.getEModeCategoryData(id).ltv;
         eModeData.liquidationThreshold = pool.getEModeCategoryData(id).liquidationThreshold;
         eModeData.liquidationBonus = pool.getEModeCategoryData(id).liquidationBonus;
@@ -320,67 +295,75 @@ contract AaveV3Helper is DSMath {
     function userCollateralData(address token, TokenPrice memory assetPrice)
         internal
         view
-        returns (AaveV3TokenData memory)
+        returns (AaveV3TokenData memory aaveTokenData)
     {
-        IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
-            IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
+        // IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
+        //     IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
+        // );
+        (
+            aaveTokenData.decimals,
+            aaveTokenData.ltv,
+            aaveTokenData.threshold,
+            aaveTokenData.reserveFactor
+        ) = reserveConfig(token);
+
+        (aaveTokenData.availableLiquidity, aaveTokenData.totalStableDebt, aaveTokenData.totalVariableDebt) = resData(
+            token
         );
-        AaveV3TokenData memory aaveTokenData;
-        {
-            (
-                aaveTokenData.decimals,
-                aaveTokenData.ltv,
-                aaveTokenData.threshold,
-                aaveTokenData.reserveFactor
-            ) = reserveConfig(token);
-        }
-        {
-            (
-                aaveTokenData.availableLiquidity,
-                aaveTokenData.totalStableDebt,
-                aaveTokenData.totalVariableDebt
-            ) = resData(token);
-            aaveTokenData.token = getV3Token(token);
-            aaveTokenData.tokenPrice = assetPrice;
-        }
+
+        aaveTokenData.token = getV3Token(token);
+        aaveTokenData.tokenPrice = assetPrice;
 
         //-------------INCENTIVE DETAILS---------------
 
-        // {
-        //     (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
-        //     (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(
-        //         aToken
-        //     );
-        //     (, aaveTokenData.debtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(debtToken);
-        // }
-        return aaveTokenData;
+        // (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
+        // (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(aToken);
+        // (, aaveTokenData.debtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(debtToken);
     }
 
-    function getUserTokenData(address user, address token) internal view returns (AaveV3UserTokenData memory) {
+    function getUserTokenData(address user, address token)
+        internal
+        view
+        returns (AaveV3UserTokenData memory tokenData)
+    {
         IAaveProtocolDataProvider aaveData = IAaveProtocolDataProvider(
             IPoolAddressesProvider(getPoolAddressProvider()).getPoolDataProvider()
         );
         // uint256 basePrice = IPriceOracle(IPoolAddressesProvider(getPoolAddressProvider()).getPriceOracle())
         //     .getAssetPrice(token);
-        AaveV3UserTokenData memory tokenData;
         // tokenData.price = basePrice;
-        {
-            (
-                tokenData.supplyBalance,
-                tokenData.stableBorrowBalance,
-                tokenData.variableBorrowBalance,
-                ,
-                ,
-                tokenData.userStableBorrowRate,
-                tokenData.supplyRate,
-                ,
-                tokenData.isCollateral
-            ) = aaveData.getUserReserveData(token, user);
-            tokenData.flag = getFlags(token);
-        }
+        (
+            tokenData.supplyBalance,
+            tokenData.stableBorrowBalance,
+            tokenData.variableBorrowBalance,
+            ,
+            ,
+            tokenData.userStableBorrowRate,
+            tokenData.supplyRate,
+            ,
+            tokenData.isCollateral
+        ) = aaveData.getUserReserveData(token, user);
 
+        tokenData.flag = getFlags(token);
         (, , , , , , tokenData.variableBorrowRate, tokenData.stableBorrowRate, , , , ) = aaveData.getReserveData(token);
-        return tokenData;
+    }
+
+    function getBaseCurrencyDetails() internal view returns (BaseCurrency memory baseCurr) {
+        IAaveOracle aaveOracle = IAaveOracle(getAaveOracle());
+
+        baseCurr.baseUnit = aaveOracle.BASE_CURRENCY_UNIT();
+        baseCurr.baseAddress = aaveOracle.BASE_CURRENCY();
+
+        (, BaseCurrencyInfo memory baseCurrency) = IUiPoolDataProviderV3(getUiDataProvider()).getReservesData(
+            IPoolAddressesProvider(getPoolAddressProvider())
+        );
+        baseCurr.baseInUSD = uint256(baseCurrency.marketReferenceCurrencyPriceInUsd);
+
+        if (aaveOracle.BASE_CURRENCY() == address(0)) {
+            baseCurr.symbol = "USD";
+        } else {
+            baseCurr.symbol = IERC20Detailed(aaveOracle.BASE_CURRENCY()).symbol();
+        }
     }
 
     function getList() public view returns (address[] memory data) {

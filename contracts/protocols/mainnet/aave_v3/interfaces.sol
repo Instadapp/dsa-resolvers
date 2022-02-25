@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.6;
 
 struct ReserveData {
     ReserveConfigurationMap configuration;
@@ -359,6 +359,8 @@ interface AggregatorV3Interface {
             uint256 updatedAt,
             uint80 answeredInRound
         );
+
+    function latestAnswer() external view returns (int256);
 }
 
 interface IERC20Detailed {
