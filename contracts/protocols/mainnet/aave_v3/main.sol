@@ -31,7 +31,7 @@ contract AaveV3Resolver is AaveV3Helper {
             collData[i] = userCollateralData(_tokens[i], tokenPrices[i]);
         }
 
-        return (tokensData, collData, getUserData(user));
+        return (tokensData, collData, userDetails);
     }
 
     function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {

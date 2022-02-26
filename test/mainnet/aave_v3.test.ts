@@ -1,11 +1,12 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { formatUnits } from "ethers/lib/utils";
-import { ethers } from "hardhat";
+import { ethers, web3 } from "hardhat";
 import { AaveV3Resolver, AaveV3Resolver__factory } from "../../typechain";
 import { Tokens } from "../consts";
+import BigNumber from "bignumber.js";
 
-describe("Aave V3 Resolvers", () => {
+describe("Aave", () => {
   let signer: SignerWithAddress;
   // const account = "0xde33f4573bB315939a9D1E65522575E1a9fC3e74";
   const account = "0x15C6b352c1F767Fa2d79625a40Ca4087Fab9a198";
@@ -42,7 +43,7 @@ describe("Aave V3 Resolvers", () => {
     });
 
     it("Returns the positions on AaveV3", async () => {
-      const results = await resolver.getPosition(account, [
+      const results = await resolver.callStatic.getPosition(account, [
         "0x2Ec4c6fCdBF5F9beECeB1b51848fc2DB1f3a26af",
         "0x5B8B635c2665791cf62fe429cB149EaB42A3cEd8",
       ]);
@@ -51,7 +52,11 @@ describe("Aave V3 Resolvers", () => {
       const userData = results[2];
 
       //check tokenPrice
-      console.log(`Price of DAI: ${tokenData[0].tokenPrice}`);
+      const daiPriceInETH = tokenData[0].tokenPrice.priceInEth;
+      const daiPriceInUsd = tokenData[0].tokenPrice.priceInUsd;
+
+      console.log(`Price of DAI in ETH: ${Number(daiPriceInETH) / 10 ** 18}`);
+      console.log(`Price of DAI in Usd: ${Number(daiPriceInUsd) / 10 ** 18}`);
 
       // check for token balances
       console.log("Supply Balance USDC: ", formatUnits(userTokenData[0].supplyBalance, Tokens.USDC.decimals));
@@ -61,6 +66,7 @@ describe("Aave V3 Resolvers", () => {
         formatUnits(userTokenData[1].stableBorrowBalance, Tokens.USDC.decimals),
       );
       console.log(`ltv: ${tokenData[1].ltv}`);
+
       expect(userTokenData[0].variableBorrowBalance).to.gte(0);
       // check for user data
       expect(userData.totalBorrowsBase).to.gte(0);
