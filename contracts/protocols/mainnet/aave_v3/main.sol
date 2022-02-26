@@ -8,9 +8,9 @@ contract AaveV3Resolver is AaveV3Helper {
         public
         view
         returns (
+            AaveV3UserData memory,
             AaveV3UserTokenData[] memory,
-            AaveV3TokenData[] memory,
-            AaveV3UserData memory
+            AaveV3TokenData[] memory
         )
     {
         uint256 length = tokens.length;
@@ -20,18 +20,18 @@ contract AaveV3Resolver is AaveV3Helper {
             _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
         }
 
+        AaveV3UserData memory userDetails = getUserData(user);
+        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(userDetails.base.baseInUSD, _tokens);
+
         AaveV3UserTokenData[] memory tokensData = new AaveV3UserTokenData[](length);
         AaveV3TokenData[] memory collData = new AaveV3TokenData[](length);
-        AaveV3UserData memory userDetails = getUserData(user);
-
-        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(_tokens, userDetails.base.baseInUSD);
 
         for (uint256 i = 0; i < length; i++) {
             tokensData[i] = getUserTokenData(user, _tokens[i]);
             collData[i] = userCollateralData(_tokens[i], tokenPrices[i]);
         }
 
-        return (tokensData, collData, userDetails);
+        return (userDetails, tokensData, collData);
     }
 
     function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {

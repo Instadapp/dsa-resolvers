@@ -257,6 +257,8 @@ interface IPoolDataProvider {
 interface IPriceOracle {
     // @notice Returns the asset price in the base currency
     function getAssetPrice(address asset) external view returns (uint256);
+
+    function getAssetsPrices(address[] calldata assets) external view returns (uint256[] memory);
 }
 
 interface IStableDebtToken {
