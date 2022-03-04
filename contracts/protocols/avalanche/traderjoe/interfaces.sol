@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
 
 interface IJoetrollerV1Storage {
     enum Version {
@@ -62,26 +61,11 @@ interface Joetroller {
 }
 
 interface IJoeLens {
-    function jTokenMetadata(JToken jToken) external view returns (JTokenMetadata memory);
+    function jTokenMetadata(JToken jToken) external returns (JTokenMetadata memory);
 
-    function jTokenBalances(JToken jToken, address account) external view returns (JTokenBalances memory);
+    function jTokenBalances(JToken jToken, address account) external returns (JTokenBalances memory);
 
-    function getAccountLimits(Joetroller joetroller, address account) external view returns (AccountLimits memory);
-}
-
-interface AggregatorV3Interface {
-    function decimals() external view returns (uint8);
-
-    function latestRoundData()
-        external
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        );
+    function getAccountLimits(Joetroller joetroller, address account) external returns (AccountLimits memory);
 }
 
 interface IPriceOracle {

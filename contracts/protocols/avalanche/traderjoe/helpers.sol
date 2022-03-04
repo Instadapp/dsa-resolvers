@@ -1,8 +1,4 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
-import "./interfaces.sol";
-import { DSMath } from "../../../utils/dsmath.sol";
-import "hardhat/console.sol";
 
 contract TraderJoeHelper is DSMath {
     function getJoetroller() internal view returns (address) {
@@ -17,10 +13,6 @@ contract TraderJoeHelper is DSMath {
         return 0xd7Ae651985a871C1BC254748c40Ecc733110BC2E;
     }
 
-    function aggregatorAvaxUsd() internal view returns (address) {
-        return 0x0A77230d17318075983913bC2145DB16C7366156;
-    }
-
     function getWethAddress() internal view returns (address) {
         return 0x929f5caB61DFEc79a5431a7734a68D714C4633fa;
     }
@@ -29,7 +21,7 @@ contract TraderJoeHelper is DSMath {
         uint256 supplyRatePerSecond;
         uint256 borrowRatePerSecond;
         uint256 collateralCap;
-        uint256 underlyingPrice; //AVAX (check)
+        uint256 underlyingPrice;
         uint256 priceInETH;
         uint256 priceInUSD;
         // uint256 totalBorrows;
@@ -76,7 +68,7 @@ contract TraderJoeHelper is DSMath {
         priceInEth = wdiv(priceInUsd, ethPrice);
     }
 
-    function getTraderjoeData(address owner, address[] memory jTokens) public view returns (UserData memory userData) {
+    function getTraderjoeData(address owner, address[] memory jTokens) public returns (UserData memory userData) {
         Joetroller joetroller = Joetroller(getJoetroller());
         IJoeLens joeLens = IJoeLens(getJoelens());
         AccountLimits memory account = joeLens.getAccountLimits(joetroller, owner);
@@ -99,27 +91,13 @@ contract TraderJoeHelper is DSMath {
         userData.tokensData = assetData;
     }
 
-    function getAssetData(address owner, address[] memory jTokens)
-        internal
-        view
-        returns (UserTokenData[] memory joeTokens)
-    {
+    function getAssetData(address owner, address[] memory jTokens) internal returns (UserTokenData[] memory joeTokens) {
         IJoeLens joeLens = IJoeLens(getJoelens());
         joeTokens = new UserTokenData[](jTokens.length);
         for (uint256 i = 0; i < jTokens.length; i++) {
             JToken jtoken = JToken(jTokens[i]);
             JTokenBalances memory balanceData = joeLens.jTokenBalances(jtoken, owner);
-            (
-                joeTokens[i].jTokenBalance,
-                joeTokens[i].supplyBalance,
-                joeTokens[i].supplyValueUSD,
-                joeTokens[i].collateralValueUSD,
-                joeTokens[i].borrowBalanceStored,
-                joeTokens[i].borrowValueUSD,
-                joeTokens[i].underlyingTokenBalance,
-                joeTokens[i].underlyingTokenAllowance,
-
-            ) = (
+            joeTokens[i] = UserTokenData(
                 balanceData.jTokenBalance,
                 balanceData.balanceOfUnderlyingStored,
                 balanceData.supplyValueUSD,
@@ -128,37 +106,28 @@ contract TraderJoeHelper is DSMath {
                 balanceData.borrowValueUSD,
                 balanceData.underlyingTokenBalance,
                 balanceData.underlyingTokenAllowance,
-
+                getTokenData(jtoken)
             );
-            joeTokens[i].tokenData = getTokenData(jtoken);
         }
     }
 
-    function getTokenData(JToken jtoken) internal view returns (JoeTokenData memory tokenData) {
+    function getTokenData(JToken jtoken) internal returns (JoeTokenData memory tokenData) {
         IJoeLens joeLens = IJoeLens(getJoelens());
         JTokenMetadata memory jData = joeLens.jTokenMetadata(jtoken);
-        (
-            tokenData.supplyRatePerSecond,
-            tokenData.borrowRatePerSecond,
-            tokenData.reserveFactorMantissa,
-            tokenData.collateralFactorMantissa,
-            tokenData.jTokenDecimals,
-            tokenData.underlyingDecimals,
-            tokenData.collateralCap,
-            tokenData.underlyingPrice,
-            tokenData.supplyCap,
-            tokenData.borrowCap
-        ) = (
+        (uint256 priceInEth, uint256 priceInUsd) = getTokenPrices(jtoken, tokenData.underlyingDecimals);
+        tokenData = JoeTokenData(
             jData.supplyRatePerSecond,
             jData.borrowRatePerSecond,
+            jData.collateralCap,
+            jData.underlyingPrice,
+            priceInEth,
+            priceInUsd,
+            jData.supplyCap,
+            jData.borrowCap,
             jData.reserveFactorMantissa,
             jData.collateralFactorMantissa,
             jData.jTokenDecimals,
-            jData.underlyingDecimals,
-            jData.collateralCap,
-            jData.underlyingPrice,
-            jData.supplyCap,
-            jData.borrowCap
-        )(tokenData.priceInETH, tokenData.priceInUSD) = getTokenPrices(jtoken, tokenData.underlyingDecimals);
+            jData.underlyingDecimals
+        );
     }
 }
