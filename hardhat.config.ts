@@ -104,7 +104,6 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
-      gasPrice: 80000000000, //5
     },
   },
   paths: {

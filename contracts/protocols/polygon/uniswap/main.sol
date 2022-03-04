@@ -62,13 +62,13 @@ contract Resolver is Helpers {
             uint256 amount1Min
         )
     {
-        mintParams.tokenA = mintParams.tokenA == ethAddr ? (wethAddr) : (mintParams.tokenA);
-        mintParams.tokenB = mintParams.tokenB == ethAddr ? (wethAddr) : (mintParams.tokenB);
+        mintParams.tokenA = mintParams.tokenA == maticAddr ? (wmaticAddr) : (mintParams.tokenA);
+        mintParams.tokenB = mintParams.tokenB == maticAddr ? (wmaticAddr) : (mintParams.tokenB);
 
         (token0, token1, liquidity, amount0, amount1, amount0Min, amount1Min) = mintAmount(mintParams);
 
-        token0 == wethAddr ? (ethAddr) : (token0);
-        token1 == wethAddr ? (ethAddr) : (token1);
+        token0 == wmaticAddr ? (maticAddr) : (token0);
+        token1 == wmaticAddr ? (maticAddr) : (token1);
     }
 
     function getDepositAmount(
@@ -160,6 +160,6 @@ contract Resolver is Helpers {
     }
 }
 
-contract InstaUniswapV3ResolverArbitrum is Resolver {
-    string public constant name = "UniswapV3-Resolver-v2";
+contract InstaUniswapV3ResolverPolygon is Resolver {
+    string public constant name = "UniswapV3-Resolver-v1";
 }

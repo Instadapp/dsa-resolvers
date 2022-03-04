@@ -13,14 +13,14 @@ import "./interfaces.sol";
 
 abstract contract Helpers is DSMath {
     /**
-     * @dev Return ethereum address
+     * @dev Return matic address
      */
-    address internal constant ethAddr = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address internal constant maticAddr = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
-     * @dev Return Wrapped ETH address
+     * @dev Return Wrapped matic address
      */
-    address internal constant wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address internal constant wmaticAddr = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
 
     INonfungiblePositionManager private nftManager = INonfungiblePositionManager(getUniswapNftManagerAddr());
 
@@ -32,7 +32,7 @@ abstract contract Helpers is DSMath {
     }
 
     function changeETHtoWETH(address token) internal pure returns (address) {
-        if (token == ethAddr) return wethAddr;
+        if (token == maticAddr) return wmaticAddr;
         return token;
     }
 
@@ -104,8 +104,8 @@ abstract contract Helpers is DSMath {
     }
 
     function poolDetails(PoolConfig memory poolConfig) internal view returns (PoolData memory poolData) {
-        poolData.token0 = poolConfig.tokenA == ethAddr ? (wethAddr) : (poolConfig.tokenA);
-        poolData.token1 = poolConfig.tokenB == ethAddr ? (wethAddr) : (poolConfig.tokenB);
+        poolData.token0 = poolConfig.tokenA == maticAddr ? (wmaticAddr) : (poolConfig.tokenA);
+        poolData.token1 = poolConfig.tokenB == maticAddr ? (wmaticAddr) : (poolConfig.tokenB);
         poolData.fee = poolConfig.fee;
         (poolData.token0, poolData.token1) = poolData.token0 < poolData.token1
             ? (poolData.token0, poolData.token1)
@@ -118,8 +118,8 @@ abstract contract Helpers is DSMath {
             (poolData.sqrtRatio, poolData.currentTick, , , , , ) = pool.slot0();
         }
 
-        poolData.token0 = poolData.token0 == wethAddr ? (ethAddr) : (poolData.token0);
-        poolData.token1 = poolData.token1 == wethAddr ? (ethAddr) : (poolData.token1);
+        poolData.token0 = poolData.token0 == wmaticAddr ? (maticAddr) : (poolData.token0);
+        poolData.token1 = poolData.token1 == wmaticAddr ? (maticAddr) : (poolData.token1);
     }
 
     struct PositionInfo {
@@ -161,9 +161,8 @@ abstract contract Helpers is DSMath {
         {
             (pInfo.amount0, pInfo.amount1, , ) = withdrawAmount(tokenId, pInfo.liquidity, 0);
         }
-
-        pInfo.token0 == wethAddr ? (ethAddr) : (pInfo.token0);
-        pInfo.token1 == wethAddr ? (ethAddr) : (pInfo.token1);
+        pInfo.token0 == wmaticAddr ? (maticAddr) : (pInfo.token0);
+        pInfo.token1 == wmaticAddr ? (maticAddr) : (pInfo.token1);
     }
 
     function getPoolAddress(
