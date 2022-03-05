@@ -40,6 +40,7 @@ contract TraderJoeHelper is DSMath {
     }
 
     struct UserTokenData {
+        address jToken;
         uint256 jTokenBalance;
         uint256 supplyBalance;
         uint256 supplyValueUSD;
@@ -103,6 +104,7 @@ contract TraderJoeHelper is DSMath {
             JToken jtoken = JToken(jTokens[i]);
             JTokenBalances memory balanceData = joeLens.jTokenBalances(jtoken, owner);
             joeTokens[i] = UserTokenData(
+                balanceData.jToken,
                 balanceData.jTokenBalance,
                 balanceData.balanceOfUnderlyingStored,
                 balanceData.supplyValueUSD,
