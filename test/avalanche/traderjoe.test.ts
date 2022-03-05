@@ -108,7 +108,7 @@ describe("TraderJoe", () => {
         console.log(`tokenAddress: ${data.jToken}`);
         console.log(`tokenSupplyBalance: ${data.supplyBalance}`);
         console.log(`tokenSupplyUSD: ${data.supplyValueUSD}`);
-        console.log(`collateralUSD: ${data.collateralValueUSD}`);
+        console.log(`collateralValueUSD: ${data.collateralValueUSD}`);
         console.log(`borrowBalance: ${data.borrowBalanceStored}`);
         console.log(`borrowUSD: ${data.borrowValueUSD}`);
         console.log(`underlyingTokenBalance: ${data.underlyingTokenBalance}`);

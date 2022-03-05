@@ -119,8 +119,7 @@ contract TraderJoeHelper is DSMath {
     }
 
     function getTokenData(JToken jtoken) internal returns (JoeTokenData memory tokenData) {
-        IJoeLens joeLens = IJoeLens(getJoelens());
-        JTokenMetadata memory jData = joeLens.jTokenMetadata(jtoken);
+        JTokenMetadata memory jData = IJoeLens(getJoelens()).jTokenMetadata(jtoken);
         (uint256 priceInEth, uint256 priceInUsd) = getTokenPrices(jtoken, tokenData.underlyingDecimals);
         tokenData = JoeTokenData(
             jData.supplyRatePerSecond,
@@ -136,5 +135,13 @@ contract TraderJoeHelper is DSMath {
             jData.jTokenDecimals,
             jData.underlyingDecimals
         );
+    }
+
+    function getAllJTokens() internal view returns (address[] memory jTokens) {
+        JToken[] memory joeTokens = Joetroller(getJoetroller()).getAllMarkets();
+        jTokens = new address[](joeTokens.length);
+        for (uint256 i = 0; i < joeTokens.length; i++) {
+            jTokens[i] = address(joeTokens[i]);
+        }
     }
 }
