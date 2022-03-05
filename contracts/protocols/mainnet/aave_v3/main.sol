@@ -34,6 +34,18 @@ contract AaveV3Resolver is AaveV3Helper {
         return (userDetails, tokensData, collData);
     }
 
+    function getPositionAll(address user)
+        public
+        view
+        returns (
+            AaveV3UserData memory,
+            AaveV3UserTokenData[] memory,
+            AaveV3TokenData[] memory
+        )
+    {
+        return getPosition(user, getList());
+    }
+
     function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {
         uint256 data = getConfig(user).data;
         address[] memory reserveIndex = getList();
