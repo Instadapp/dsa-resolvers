@@ -29,17 +29,52 @@ describe("TraderJoe", () => {
         "0xc988c170d0E38197DC634A45bF00169C7Aa7CA19",
       ]);
 
-      //check user collateral and supplies
+      //check user data
+      console.log();
+      console.log("**********************************************");
+      console.log("User Data");
+      console.log("**********************************************");
       const supplies = results.totalCollateralUSD;
       const borrows = results.totalBorrowUSD;
       expect(supplies).to.gte(0);
       expect(borrows).to.gte(0);
       console.log(`Supplies in USD: ${Number(supplies) / 10 ** 18}`);
       console.log(`Borrows in USD: ${Number(borrows) / 10 ** 18}`);
+      console.log(`liquidity: ${results.liquidity}`);
+      console.log(`shortfall: ${results.shortfall}`);
+      console.log(`healthFactor: ${results.healthFactor}`);
 
       // check for token data
-      console.log(`tokenData USDC: ${results.tokensData[0]}`);
-      console.log(`tokenData DAI: ${results.tokensData[1]}`);
+      for (let i = 0; i < 2; i++) {
+        const data = results.tokensData[i];
+
+        console.log();
+        console.log("**********************************************");
+        if (i == 0) console.log("USDC data:");
+        else console.log("DAI data: ");
+        console.log("**********************************************");
+
+        console.log(`tokenSupplyBalance: ${data.supplyBalance}`);
+        console.log(`tokenSupplyUSD: ${data.supplyValueUSD}`);
+        console.log(`collateralUSD: ${data.collateralValueUSD}`);
+        console.log(`borrowBalance: ${data.borrowBalanceStored}`);
+        console.log(`borrowUSD: ${data.borrowValueUSD}`);
+        console.log(`underlyingTokenBalance: ${data.underlyingTokenBalance}`);
+        console.log(`underlyingTokenAllowance: ${data.underlyingTokenAllowance}`);
+        console.log(`supplyRatePerSec: ${data.tokenData.supplyRatePerSecond}`);
+        console.log(`borrowRatePerSec: ${data.tokenData.borrowRatePerSecond}`);
+        console.log(`collateralCap: ${data.tokenData.collateralCap}`);
+        console.log(`underlyingPrice: ${data.tokenData.underlyingPrice}`);
+        console.log(`EthPrice: ${data.tokenData.priceInETH}`);
+        console.log(`UsdPrice: ${data.tokenData.priceInUSD}`);
+        console.log(`supplyCap: ${data.tokenData.supplyCap}`);
+        console.log(`borrowCap: ${data.tokenData.borrowCap}`);
+        console.log(`reserveFactorMantissa: ${data.tokenData.reserveFactorMantissa}`);
+        console.log(`collateralFactorMantissa: ${data.tokenData.collateralFactorMantissa}`);
+        console.log(`jTokenDecimal: ${data.tokenData.jTokenDecimals}`);
+        console.log(`underlyingDecimal: ${data.tokenData.underlyingDecimals}`);
+        console.log();
+      }
     });
   });
 });
