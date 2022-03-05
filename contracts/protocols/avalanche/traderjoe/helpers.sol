@@ -1,4 +1,6 @@
 //SPDX-License-Identifier: MIT
+import "./interfaces.sol";
+import { DSMath } from "../../../utils/dsmath.sol";
 
 contract TraderJoeHelper is DSMath {
     function getJoetroller() internal view returns (address) {
@@ -64,6 +66,8 @@ contract TraderJoeHelper is DSMath {
     {
         uint256 price = IPriceOracle(getPriceOracle()).getUnderlyingPrice(jToken);
         uint256 ethPrice = IPriceOracle(getPriceOracle()).getUnderlyingPrice(JToken(getWethAddress()));
+        // console.log("ethPrice");
+        // console.log(ethPrice);
         priceInUsd = price / 10**(18 - decimals);
         priceInEth = wdiv(priceInUsd, ethPrice);
     }
