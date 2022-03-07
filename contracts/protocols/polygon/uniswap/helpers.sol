@@ -306,9 +306,9 @@ abstract contract Helpers is DSMath {
     function calculateSingleAmount(SingleAmountParams memory singleAmountParams)
         internal
         view
-        returns (uint256 amountB, uint128 liquidity)
+        returns (uint256 amountB, uint256 liquidity)
     {
-        uint128 liquidity;
+        uint256 liquidity;
         if (!singleAmountParams.reverseFlag) {
             liquidity = LiquidityAmounts.getLiquidityForAmounts(
                 singleAmountParams.sqrtPriceX96,
