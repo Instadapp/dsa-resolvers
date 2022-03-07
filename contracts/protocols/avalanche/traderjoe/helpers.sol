@@ -27,10 +27,6 @@ contract TraderJoeHelper is DSMath {
         uint256 underlyingPrice;
         uint256 priceInETH;
         uint256 priceInUSD;
-        // uint256 totalBorrows;
-        // uint256 totalReserves;
-        // uint256 totalSupply;
-        // uint256 totalCash;
         uint256 supplyCap;
         uint256 borrowCap;
         uint256 reserveFactorMantissa;
@@ -68,8 +64,6 @@ contract TraderJoeHelper is DSMath {
     {
         uint256 price = IPriceOracle(getPriceOracle()).getUnderlyingPrice(jToken);
         uint256 ethPrice = IPriceOracle(getPriceOracle()).getUnderlyingPrice(JToken(getWethAddress()));
-        // console.log("ethPrice");
-        // console.log(ethPrice);
         priceInUsd = price / 10**(18 - decimals);
         priceInEth = wdiv(priceInUsd, ethPrice);
     }
