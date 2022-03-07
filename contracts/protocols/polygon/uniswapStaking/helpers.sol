@@ -13,14 +13,14 @@ import "./interfaces.sol";
 
 abstract contract Helpers is DSMath {
     /**
-     * @dev Return ethereum address
+     * @dev Return matic address
      */
-    address internal constant ethAddr = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address internal constant maticAddr = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
-     * @dev Return Wrapped ETH address
+     * @dev Return Wrapped matic address
      */
-    address internal constant wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address internal constant wmaticAddr = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
 
     INonfungiblePositionManager internal nftManager = INonfungiblePositionManager(getUniswapNftManagerAddr());
 
