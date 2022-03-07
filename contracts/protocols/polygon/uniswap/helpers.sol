@@ -308,7 +308,6 @@ abstract contract Helpers is DSMath {
         view
         returns (uint256 amountB, uint256 liquidity)
     {
-        uint256 liquidity;
         if (!singleAmountParams.reverseFlag) {
             liquidity = LiquidityAmounts.getLiquidityForAmounts(
                 singleAmountParams.sqrtPriceX96,
@@ -317,6 +316,7 @@ abstract contract Helpers is DSMath {
                 singleAmountParams.amountA,
                 0x1000000000000000000000000 // Q96
             );
+
             (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
                 singleAmountParams.sqrtPriceX96,
                 singleAmountParams.sqrtPriceX96Lower,
