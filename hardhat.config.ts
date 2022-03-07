@@ -105,10 +105,6 @@ const config: HardhatUserConfig = {
       url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
     },
-    mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
-      accounts: [`0x${process.env.PRIVATE_KEY}`],
-    },
   },
   paths: {
     artifacts: "./artifacts",
