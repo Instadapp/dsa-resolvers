@@ -65,3 +65,7 @@ contract AaveV3Resolver is AaveV3Helper {
         data = getList();
     }
 }
+
+contract InstaAaveV3ResolverPolygon is AaveV3Resolver {
+    string public constant name = "AaveV3-Resolver-v1.0";
+}
