@@ -21,14 +21,14 @@ contract AaveV3Resolver is AaveV3Helper {
         }
 
         AaveV3UserData memory userDetails = getUserData(user);
-        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(userDetails.base.baseInUSD, _tokens);
+        // (TokenPrice[] memory tokenPrices, ) = getTokensPrices(userDetails.base.baseInUSD, _tokens);
 
         AaveV3UserTokenData[] memory tokensData = new AaveV3UserTokenData[](length);
         AaveV3TokenData[] memory collData = new AaveV3TokenData[](length);
 
         for (uint256 i = 0; i < length; i++) {
             tokensData[i] = getUserTokenData(user, _tokens[i]);
-            collData[i] = userCollateralData(_tokens[i], tokenPrices[i]);
+            collData[i] = userCollateralData(_tokens[i]);
         }
 
         return (userDetails, tokensData, collData);

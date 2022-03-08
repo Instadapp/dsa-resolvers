@@ -69,7 +69,7 @@ contract AaveV3Helper is DSMath {
     struct BaseCurrency {
         uint256 baseUnit;
         address baseAddress;
-        uint256 baseInUSD;
+        // uint256 baseInUSD;
         string symbol;
     }
 
@@ -87,7 +87,7 @@ contract AaveV3Helper is DSMath {
         uint256 userStableBorrowRate;
         uint256 variableBorrowRate;
         bool isCollateral;
-        // uint256 price; //price of token in base currency
+        uint256 price; //price of token in base currency
         Flags flag;
     }
 
@@ -112,7 +112,7 @@ contract AaveV3Helper is DSMath {
         uint256 availableLiquidity;
         uint256 totalStableDebt;
         uint256 totalVariableDebt;
-        TokenPrice tokenPrice;
+        // TokenPrice tokenPrice;
         AaveV3Token token;
         // uint256 collateralEmission;
         // uint256 debtEmission;
@@ -166,18 +166,14 @@ contract AaveV3Helper is DSMath {
     }
 
     function getEmodePrices(address priceOracleAddr, address[] memory tokens)
-        public
+        internal
         view
         returns (uint256[] memory tokenPrices)
     {
         tokenPrices = IPriceOracle(priceOracleAddr).getAssetsPrices(tokens);
-        // tokenPrices = new uint256[](tokens.length);
-        // for (uint256 i = 0; i < tokens.length; i++) {
-        //     tokenPrices[i] = IPriceOracle(priceOracleAddr).getAssetPrice(tokens[i]);
-        // }
     }
 
-    function getPendingRewards(address user, address[] memory _tokens) public view returns (uint256 rewards) {
+    function getPendingRewards(address user, address[] memory _tokens) internal view returns (uint256 rewards) {
         uint256 arrLength = 2 * _tokens.length;
         address[] memory _atokens = new address[](arrLength);
         for (uint256 i = 0; i < _tokens.length; i++) {
@@ -279,11 +275,7 @@ contract AaveV3Helper is DSMath {
         (, , availableLiquidity, totalStableDebt, totalVariableDebt, , , , , , , ) = aaveData.getReserveData(token);
     }
 
-    function userCollateralData(address token, TokenPrice memory assetPrice)
-        internal
-        view
-        returns (AaveV3TokenData memory aaveTokenData)
-    {
+    function userCollateralData(address token) internal view returns (AaveV3TokenData memory aaveTokenData) {
         (
             aaveTokenData.decimals,
             aaveTokenData.ltv,
@@ -300,7 +292,7 @@ contract AaveV3Helper is DSMath {
         }
 
         aaveTokenData.token = getV3Token(token);
-        aaveTokenData.tokenPrice = assetPrice;
+        // aaveTokenData.tokenPrice = assetPrice;
 
         //-------------INCENTIVE DETAILS---------------
 
@@ -314,9 +306,9 @@ contract AaveV3Helper is DSMath {
         view
         returns (AaveV3UserTokenData memory tokenData)
     {
-        // uint256 basePrice = IPriceOracle(IPoolAddressesProvider(getPoolAddressProvider()).getPriceOracle())
-        //     .getAssetPrice(token);
-        // tokenData.price = basePrice;
+        uint256 basePrice = IPriceOracle(IPoolAddressesProvider(getPoolAddressProvider()).getPriceOracle())
+            .getAssetPrice(token);
+        tokenData.price = basePrice;
         (
             tokenData.supplyBalance,
             tokenData.stableBorrowBalance,
@@ -351,12 +343,13 @@ contract AaveV3Helper is DSMath {
 
         baseCurr.baseUnit = aaveOracle.BASE_CURRENCY_UNIT();
         baseCurr.baseAddress = aaveOracle.BASE_CURRENCY();
-        {
-            (, bytes memory data) = getUiDataProvider().staticcall(
-                abi.encodeWithSignature("getReservesData(address)", IPoolAddressesProvider(getPoolAddressProvider()))
-            );
-            baseCurr.baseInUSD = getPrices(data);
-        }
+        //TODO
+        // {
+        //     (, bytes memory data) = getUiDataProvider().staticcall(
+        //         abi.encodeWithSignature("getReservesData(address)", IPoolAddressesProvider(getPoolAddressProvider()))
+        //     );
+        //     baseCurr.baseInUSD = getPrices(data);
+        // }
     }
 
     function getList() public view returns (address[] memory data) {
