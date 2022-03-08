@@ -20,7 +20,7 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiDataProvider() internal pure returns (address) {
-        return 0x507CdaD90F8AE7D4BBa5e05F2a1012f7f4b07053; //polygon UiPoolDataProvider Address
+        return 0x053D55f9B5AF8694c503EB288a1B7E552f590710; //polygon UiPoolDataProvider Address
     }
 
     /**
@@ -166,18 +166,14 @@ contract AaveV3Helper is DSMath {
     }
 
     function getEmodePrices(address priceOracleAddr, address[] memory tokens)
-        public
+        internal
         view
         returns (uint256[] memory tokenPrices)
     {
         tokenPrices = IPriceOracle(priceOracleAddr).getAssetsPrices(tokens);
-        // tokenPrices = new uint256[](tokens.length);
-        // for (uint256 i = 0; i < tokens.length; i++) {
-        //     tokenPrices[i] = IPriceOracle(priceOracleAddr).getAssetPrice(tokens[i]);
-        // }
     }
 
-    function getPendingRewards(address user, address[] memory _tokens) public view returns (uint256 rewards) {
+    function getPendingRewards(address user, address[] memory _tokens) internal view returns (uint256 rewards) {
         uint256 arrLength = 2 * _tokens.length;
         address[] memory _atokens = new address[](arrLength);
         for (uint256 i = 0; i < _tokens.length; i++) {
