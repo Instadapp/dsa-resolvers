@@ -329,6 +329,10 @@ contract AaveV3Helper is DSMath {
         }
     }
 
+    function getEthPrice() public view returns (uint256 ethPrice) {
+        ethPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
+    }
+
     function getPrices(bytes memory data) internal view returns (uint256) {
         (, BaseCurrencyInfo memory baseCurrency) = abi.decode(data, (AggregatedReserveData[], BaseCurrencyInfo));
         return uint256(baseCurrency.marketReferenceCurrencyPriceInUsd);
