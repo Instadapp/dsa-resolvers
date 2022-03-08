@@ -238,6 +238,10 @@ contract AaveV3Helper is DSMath {
         // (tokenData.isolationModeTotalDebt) = getIsolationDebt(token);
     }
 
+    function getEthPrice() public view returns (uint256 ethPrice) {
+        ethPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
+    }
+
     function getEmodeCategoryData(uint8 id, address[] memory tokens)
         external
         view

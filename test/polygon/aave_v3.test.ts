@@ -149,5 +149,10 @@ describe("Aave", () => {
       ]);
       console.log(`emodeData: ${emodeData}`);
     });
+
+    it("Returns the ethPrice", async () => {
+      const ethPrice = await resolver.getEthPrice();
+      console.log(`ethPrice: ${ethPrice}`);
+    });
   });
 });
