@@ -79,7 +79,8 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-        url: String(getNetworkUrl(String(process.env.networkType))),
+        // url: String(getNetworkUrl(String(process.env.networkType))),
+        url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       },
     },
     goerli: createTestnetConfig("goerli"),
@@ -115,7 +116,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.4",
+        version: "0.8.6",
         settings: {
           metadata: {
             bytecodeHash: "none",
