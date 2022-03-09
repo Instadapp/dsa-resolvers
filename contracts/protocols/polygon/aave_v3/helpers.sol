@@ -45,21 +45,21 @@ contract AaveV3Helper is DSMath {
     }
 
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0xfC3A957FdC54503Bb0c70Ca349804BEeF4514a20; //Rinkeby IncentivesProxyAddress
+        return 0xfC3A957FdC54503Bb0c70Ca349804BEeF4514a20; //Polygon IncentivesProxyAddress
     }
 
     /**
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
-        return 0xFa893869e03D15d98D8A75e07F365B45a60D1A74; //Rinkeby address
+        return 0xFa893869e03D15d98D8A75e07F365B45a60D1A74; //Polygon address
     }
 
     /**
      *@dev Returns StableDebtToken Address
      */
     function getStableDebtToken() internal pure returns (address) {
-        return 0x9bFA5264ceddb62F998397ee70c73d48Cba3aD03; //Rinkeby address
+        return 0x9bFA5264ceddb62F998397ee70c73d48Cba3aD03; //Polygon address
     }
 
     function getChainLinkFeed() internal pure returns (address) {
@@ -71,6 +71,12 @@ contract AaveV3Helper is DSMath {
         address baseAddress;
         // uint256 baseInUSD;   //TODO
         string symbol;
+    }
+
+    struct ReserveAddresses {
+        address aTokenAddress;
+        address stableDebtTokenAddress;
+        address variableDebtTokenAddress;
     }
 
     struct EmodeData {
@@ -104,6 +110,8 @@ contract AaveV3Helper is DSMath {
     }
 
     struct AaveV3TokenData {
+        address asset;
+        string symbol;
         uint256 decimals;
         uint256 ltv;
         uint256 threshold;
@@ -112,10 +120,12 @@ contract AaveV3Helper is DSMath {
         uint256 availableLiquidity;
         uint256 totalStableDebt;
         uint256 totalVariableDebt;
+        ReserveAddresses reserves;
         // TokenPrice tokenPrice;
         AaveV3Token token;
         // uint256 collateralEmission;
-        // uint256 debtEmission;
+        // uint256 stableDebtEmission;
+        // uint256 varDebtEmission;
     }
 
     struct Flags {
@@ -216,6 +226,14 @@ contract AaveV3Helper is DSMath {
         ) = aaveData.getReserveConfigurationData(token);
     }
 
+    function getReserveAddresses(address token) internal view returns (ReserveAddresses memory reserves) {
+        (
+            reserves.aTokenAddress,
+            reserves.stableDebtTokenAddress,
+            reserves.variableDebtTokenAddress
+        ) = IAaveProtocolDataProvider(getAaveDataProvider()).getReserveTokensAddresses(token);
+    }
+
     function getV3Token(address token) internal view returns (AaveV3Token memory tokenData) {
         (
             (tokenData.borrowCap, tokenData.supplyCap),
@@ -280,6 +298,8 @@ contract AaveV3Helper is DSMath {
     }
 
     function userCollateralData(address token) internal view returns (AaveV3TokenData memory aaveTokenData) {
+        aaveTokenData.asset = token;
+        aaveTokenData.symbol = IERC20Detailed(token).symbol();
         (
             aaveTokenData.decimals,
             aaveTokenData.ltv,
@@ -296,13 +316,25 @@ contract AaveV3Helper is DSMath {
         }
 
         aaveTokenData.token = getV3Token(token);
+        aaveTokenData.reserves = getReserveAddresses(token);
         // aaveTokenData.tokenPrice = assetPrice;
 
         //-------------INCENTIVE DETAILS---------------
 
-        // (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
-        // (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(aToken);
-        // (, aaveTokenData.debtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(debtToken);
+        (
+            aaveTokenData.reserves.aTokenAddress,
+            aaveTokenData.reserves.stableDebtTokenAddress,
+            aaveTokenData.reserves.variableDebtTokenAddress
+        ) = aaveData.getReserveTokensAddresses(token);
+        // (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(
+        //     aaveTokenData.reserves.aTokenAddress
+        // );
+        // (, aaveTokenData.varDebtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(
+        //     aaveTokenData.reserves.variableDebtTokenAddress
+        // );
+        // (, aaveTokenData.stableDebtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(
+        //     aaveTokenData.reserves.stableDebtTokenAddress
+        // );
     }
 
     function getUserTokenData(address user, address token)
