@@ -78,6 +78,12 @@ contract AaveV3Helper is DSMath {
         EModeCategory data;
     }
 
+    struct ReserveAddresses {
+        address aTokenAddress;
+        address stableDebtTokenAddress;
+        address variableDebtTokenAddress;
+    }
+
     struct AaveV3UserTokenData {
         uint256 supplyBalance;
         uint256 stableBorrowBalance;
@@ -104,6 +110,8 @@ contract AaveV3Helper is DSMath {
     }
 
     struct AaveV3TokenData {
+        address asset;
+        string symbol;
         uint256 decimals;
         uint256 ltv;
         uint256 threshold;
@@ -112,6 +120,7 @@ contract AaveV3Helper is DSMath {
         uint256 availableLiquidity;
         uint256 totalStableDebt;
         uint256 totalVariableDebt;
+        ReserveAddresses reserves;
         // TokenPrice tokenPrice;
         AaveV3Token token;
         // uint256 collateralEmission;
@@ -280,6 +289,8 @@ contract AaveV3Helper is DSMath {
     }
 
     function userCollateralData(address token) internal view returns (AaveV3TokenData memory aaveTokenData) {
+        aaveTokenData.asset = token;
+        aaveTokenData.symbol = IERC20Detailed(token).symbol();
         (
             aaveTokenData.decimals,
             aaveTokenData.ltv,
@@ -297,6 +308,12 @@ contract AaveV3Helper is DSMath {
 
         aaveTokenData.token = getV3Token(token);
         // aaveTokenData.tokenPrice = assetPrice;
+
+        (
+            aaveTokenData.reserves.aTokenAddress,
+            aaveTokenData.reserves.stableDebtTokenAddress,
+            aaveTokenData.reserves.variableDebtTokenAddress
+        ) = aaveData.getReserveTokensAddresses(token);
 
         //-------------INCENTIVE DETAILS---------------
 
