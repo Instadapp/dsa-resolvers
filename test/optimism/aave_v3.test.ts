@@ -75,7 +75,6 @@ describe("Aave", () => {
 
     it("Returns the user's positions on AaveV3 for all assets", async () => {
       const results = await resolver.callStatic.getPositionAll(account);
-      const reservesList = await resolver.getReservesList();
       const userTokenData = results[1];
       const tokenData = results[2];
       const userData = results[0];
@@ -104,7 +103,11 @@ describe("Aave", () => {
       console.log("*************************************************");
       for (let i = 0; i < tokenData.length; i++) {
         console.log();
-        console.log(`Reserve: ${reservesList[i]}`);
+        console.log(`Reserve: ${tokenData[i].asset}`);
+        console.log(`Symbol: ${tokenData[i].symbol}`);
+        console.log(`aToken: ${tokenData[i].reserves.aTokenAddress}`);
+        console.log(`Stable Debt Token: ${tokenData[i].reserves.stableDebtTokenAddress}`);
+        console.log(`Variable Debt Token: ${tokenData[i].reserves.variableDebtTokenAddress}`);
         console.log("Supply Balance: ", formatUnits(userTokenData[i].supplyBalance, tokenData[i].decimals));
         console.log(
           "Stable Borrow Balance: ",
