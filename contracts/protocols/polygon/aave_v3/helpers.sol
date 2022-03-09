@@ -226,14 +226,6 @@ contract AaveV3Helper is DSMath {
         ) = aaveData.getReserveConfigurationData(token);
     }
 
-    function getReserveAddresses(address token) internal view returns (ReserveAddresses memory reserves) {
-        (
-            reserves.aTokenAddress,
-            reserves.stableDebtTokenAddress,
-            reserves.variableDebtTokenAddress
-        ) = IAaveProtocolDataProvider(getAaveDataProvider()).getReserveTokensAddresses(token);
-    }
-
     function getV3Token(address token) internal view returns (AaveV3Token memory tokenData) {
         (
             (tokenData.borrowCap, tokenData.supplyCap),
@@ -316,7 +308,6 @@ contract AaveV3Helper is DSMath {
         }
 
         aaveTokenData.token = getV3Token(token);
-        aaveTokenData.reserves = getReserveAddresses(token);
         // aaveTokenData.tokenPrice = assetPrice;
 
         //-------------INCENTIVE DETAILS---------------
