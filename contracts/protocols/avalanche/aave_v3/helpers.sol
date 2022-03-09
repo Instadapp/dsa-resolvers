@@ -78,6 +78,12 @@ contract AaveV3Helper is DSMath {
         EModeCategory data;
     }
 
+    struct ReserveAddresses {
+        address aTokenAddress;
+        address stableDebtTokenAddress;
+        address variableDebtTokenAddress;
+    }
+
     struct AaveV3UserTokenData {
         uint256 supplyBalance;
         uint256 stableBorrowBalance;
@@ -104,6 +110,8 @@ contract AaveV3Helper is DSMath {
     }
 
     struct AaveV3TokenData {
+        address asset;
+        string symbol;
         uint256 decimals;
         uint256 ltv;
         uint256 threshold;
@@ -112,10 +120,12 @@ contract AaveV3Helper is DSMath {
         uint256 availableLiquidity;
         uint256 totalStableDebt;
         uint256 totalVariableDebt;
+        ReserveAddresses reserves;
         // TokenPrice tokenPrice;
         AaveV3Token token;
         // uint256 collateralEmission;
-        // uint256 debtEmission;
+        // uint256 stableDebtEmission;
+        // uint256 varDebtEmission;
     }
 
     struct Flags {
@@ -276,6 +286,8 @@ contract AaveV3Helper is DSMath {
     }
 
     function userCollateralData(address token) internal view returns (AaveV3TokenData memory aaveTokenData) {
+        aaveTokenData.asset = token;
+        aaveTokenData.symbol = IERC20Detailed(token).symbol();
         (
             aaveTokenData.decimals,
             aaveTokenData.ltv,
@@ -292,13 +304,24 @@ contract AaveV3Helper is DSMath {
         }
 
         aaveTokenData.token = getV3Token(token);
+        (
+            aaveTokenData.reserves.aTokenAddress,
+            aaveTokenData.reserves.stableDebtTokenAddress,
+            aaveTokenData.reserves.variableDebtTokenAddress
+        ) = aaveData.getReserveTokensAddresses(token);
         // aaveTokenData.tokenPrice = assetPrice;
 
         //-------------INCENTIVE DETAILS---------------
 
-        // (address aToken, , address debtToken) = aaveData.getReserveTokensAddresses(token);
-        // (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(aToken);
-        // (, aaveTokenData.debtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(debtToken);
+        // (, aaveTokenData.collateralEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(
+        //     aaveTokenData.reserves.aTokenAddress
+        // );
+        // (, aaveTokenData.varDebtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(
+        //     aaveTokenData.reserves.variableDebtTokenAddress
+        // );
+        // (, aaveTokenData.stableDebtEmission, ) = IAaveIncentivesController(getAaveIncentivesAddress()).assets(
+        //     aaveTokenData.reserves.stableDebtTokenAddress
+        // );
     }
 
     function getUserTokenData(address user, address token)
