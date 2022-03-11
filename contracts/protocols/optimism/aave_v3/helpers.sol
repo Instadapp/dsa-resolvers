@@ -2,9 +2,10 @@
 pragma solidity ^0.8.6;
 import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
-import "hardhat/console.sol";
 
 contract AaveV3Helper is DSMath {
+    // ----------------------- USING LATEST ADDRESSES -----------------------------
+
     /**
      *@dev Returns ethereum address
      */
@@ -20,46 +21,46 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiDataProvider() internal pure returns (address) {
-        return 0xeb4574A23832D913A981b749796BDC81554A79fF; //Optimism UiPoolDataProvider Address
+        return 0x64f558d4BFC1c03a8c8B2ff84976fF04c762b51f; //Optimism UiPoolDataProvider Address
     }
 
     /**
      *@dev Returns Pool AddressProvider Address
      */
     function getPoolAddressProvider() internal pure returns (address) {
-        return 0x7013523049CeC8b06F594edb8c5fb7F232c0Df7C; //Optimism PoolAddressesProvider address
+        return 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb; //Optimism PoolAddressesProvider address
     }
 
     /**
      *@dev Returns Pool DataProvider Address
      */
     function getPoolDataProvider() internal pure returns (address) {
-        return 0x44C7324E9d84D6534DD6f292Cc08f1816e45Ff6e; //Optimism PoolDataProvider address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Optimism PoolDataProvider address
     }
 
     /**
      *@dev Returns Aave Data Provider Address
      */
     function getAaveDataProvider() internal pure returns (address) {
-        return 0x44C7324E9d84D6534DD6f292Cc08f1816e45Ff6e; //Optimism address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Optimism address
     }
 
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0x5366898b1b520A04EA813525930B36A444aE83d8; //Optimism IncentivesProxyAddress
+        return 0x0aadeE9418641b5749e872eDEF9844200143865D; //Optimism IncentivesProxyAddress
     }
 
     /**
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
-        return 0x1A5740D6e64b60Eb3635c0F1B66bc39Da821daaa; //Optimism address
+        return 0xD81eb3728a631871a7eBBaD631b5f424909f0c77; //Optimism address
     }
 
     /**
      *@dev Returns StableDebtToken Address
      */
     function getStableDebtToken() internal pure returns (address) {
-        return 0x9bFA5264ceddb62F998397ee70c73d48Cba3aD03; //Optimism address
+        return 0x52A1CeB68Ee6b7B5D13E0376A1E0E4423A8cE26e; //Optimism address
     }
 
     function getChainLinkFeed() internal pure returns (address) {
@@ -67,7 +68,7 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiIncetivesProvider() internal view returns (address) {
-        return 0xf1485Aa729DF94083ab61B2C65EeA99894Aabdb3;
+        return 0x6dD4b295B457A26CC2646aAf2519436681afb5d4;
     }
 
     struct Token {
