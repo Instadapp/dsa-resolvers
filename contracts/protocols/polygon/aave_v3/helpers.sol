@@ -2,9 +2,10 @@
 pragma solidity ^0.8.6;
 import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
-import "hardhat/console.sol";
 
 contract AaveV3Helper is DSMath {
+    // ----------------------- USING LATEST ADDRESSES -----------------------------
+
     /**
      *@dev Returns ethereum address
      */
@@ -20,46 +21,46 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiDataProvider() internal pure returns (address) {
-        return 0x053D55f9B5AF8694c503EB288a1B7E552f590710; //polygon UiPoolDataProvider Address
+        return 0x8F1AD487C9413d7e81aB5B4E88B024Ae3b5637D0; //polygon UiPoolDataProvider Address
     }
 
     /**
      *@dev Returns Pool AddressProvider Address
      */
     function getPoolAddressProvider() internal pure returns (address) {
-        return 0x7013523049CeC8b06F594edb8c5fb7F232c0Df7C; //Polygon Mainnet PoolAddressesProvider address
+        return 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb; //Polygon Mainnet PoolAddressesProvider address
     }
 
     /**
      *@dev Returns Pool DataProvider Address
      */
     function getPoolDataProvider() internal pure returns (address) {
-        return 0x44C7324E9d84D6534DD6f292Cc08f1816e45Ff6e; //Polygon Mainnet PoolDataProvider address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Polygon Mainnet PoolDataProvider address
     }
 
     /**
      *@dev Returns Aave Data Provider Address
      */
     function getAaveDataProvider() internal pure returns (address) {
-        return 0x44C7324E9d84D6534DD6f292Cc08f1816e45Ff6e; //Polygon mainnet address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Polygon mainnet address
     }
 
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0xfC3A957FdC54503Bb0c70Ca349804BEeF4514a20; //Polygon IncentivesProxyAddress
+        return 0xdA609ee88e40194803A27222b009FC9EbC75f725; //Polygon IncentivesProxyAddress
     }
 
     /**
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
-        return 0xFa893869e03D15d98D8A75e07F365B45a60D1A74; //Polygon address
+        return 0xb023e699F5a33916Ea823A16485e259257cA8Bd1; //Polygon address
     }
 
     /**
      *@dev Returns StableDebtToken Address
      */
     function getStableDebtToken() internal pure returns (address) {
-        return 0x9bFA5264ceddb62F998397ee70c73d48Cba3aD03; //Polygon address
+        return 0x52A1CeB68Ee6b7B5D13E0376A1E0E4423A8cE26e; //Polygon address
     }
 
     function getChainLinkFeed() internal pure returns (address) {
@@ -67,7 +68,7 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiIncetivesProvider() internal view returns (address) {
-        return 0xce3Aa85237C075d2102b7B35079d305307D745C8;
+        return 0x05E309C97317d8abc0f7e78185FC966FfbD2CEC0;
     }
 
     struct BaseCurrency {
