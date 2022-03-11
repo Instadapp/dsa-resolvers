@@ -2,9 +2,10 @@
 pragma solidity ^0.8.6;
 import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
-import "hardhat/console.sol";
 
 contract AaveV3Helper is DSMath {
+    // ----------------------- USING LATEST ADDRESSES -----------------------------
+
     /**
      *@dev Returns ethereum address
      */
@@ -20,50 +21,50 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiDataProvider() internal pure returns (address) {
-        return 0xd428E98992696A79a844dE8e2E2a3d29F90b8872; //Arbitrum UiPoolDataProvider Address
+        return 0x3f960bB91e85Ae2dB561BDd01B515C5A5c65802b; //Arbitrum UiPoolDataProvider Address
     }
 
     /**
      *@dev Returns Pool AddressProvider Address
      */
     function getPoolAddressProvider() internal pure returns (address) {
-        return 0x7B291364Ce799edd4CD471E5C023FF965347E1E1; //Arbitrum PoolAddressesProvider address
+        return 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb; //Arbitrum PoolAddressesProvider address
     }
 
     /**
      *@dev Returns Pool DataProvider Address
      */
     function getPoolDataProvider() internal pure returns (address) {
-        return 0x224cD29570ED4Bfb2b55fF3eE27bEd28c58BBa86; //Arbitrum PoolDataProvider address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Arbitrum PoolDataProvider address
     }
 
     /**
      *@dev Returns Aave Data Provider Address
      */
     function getAaveDataProvider() internal pure returns (address) {
-        return 0x224cD29570ED4Bfb2b55fF3eE27bEd28c58BBa86; //Arbitrum address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Arbitrum address
     }
 
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0xb0451834e603dbc13F593136549206f0D0B1d007; //Arbitrum IncentivesProxyAddress
+        return 0xb023e699F5a33916Ea823A16485e259257cA8Bd1; //Arbitrum IncentivesProxyAddress
     }
 
     /**
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
-        return 0xcdB0F4A4e3797577c35E16CDbD0469E3F70E5BBA; //Arbitrum address
+        return 0xb56c2F0B653B2e0b10C9b928C8580Ac5Df02C7C7; //Arbitrum address
     }
 
     function getUiIncetivesProvider() internal view returns (address) {
-        return 0x6eC984De9E9b0b4E042F19FeEFb8B04674B5c40a;
+        return 0xEFdd7374551897B11a23Ec7b5694C713DFDa76f1;
     }
 
     /**
      *@dev Returns StableDebtToken Address
      */
     function getStableDebtToken() internal pure returns (address) {
-        return 0x33673C4D11eF3Ef8eE5803a2C44fb8f8aE694cE9; //Arbitrum address
+        return 0x52A1CeB68Ee6b7B5D13E0376A1E0E4423A8cE26e; //Arbitrum address
     }
 
     function getChainLinkFeed() internal pure returns (address) {
@@ -231,7 +232,6 @@ contract AaveV3Helper is DSMath {
         view
         returns (RewardsInfo[] memory rewardData)
     {
-        // console.log(rewards.length);
         rewardData = new RewardsInfo[](rewards.length);
         for (uint256 i = 0; i < rewards.length; i++) {
             rewardData[i] = RewardsInfo(
@@ -347,7 +347,7 @@ contract AaveV3Helper is DSMath {
         EModeCategory memory data_ = pool.getEModeCategoryData(id);
         {
             eModeData.data = data_;
-            // eModeData.price = getEmodePrices(data_.priceSource, tokens);     //TODO
+            // eModeData.price = getEmodePrices(data_.priceSource, tokens);
         }
     }
 
