@@ -2,9 +2,10 @@
 pragma solidity ^0.8.6;
 import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
-import "hardhat/console.sol";
 
 contract AaveV3Helper is DSMath {
+    // ----------------------- USING LATEST ADDRESSES -----------------------------
+
     /**
      *@dev Returns avax address
      */
@@ -20,50 +21,50 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiDataProvider() internal pure returns (address) {
-        return 0x41e70CC0bB48c96FeC69212A4E8057076c5cF699; //Avalanche UiPoolDataProvider Address
+        return 0xdBbFaFC45983B4659E368a3025b81f69Ab6E5093; //Avalanche UiPoolDataProvider Address
     }
 
     /**
      *@dev Returns Pool AddressProvider Address
      */
     function getPoolAddressProvider() internal pure returns (address) {
-        return 0x7013523049CeC8b06F594edb8c5fb7F232c0Df7C; //Avalanche PoolAddressesProvider address
+        return 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb; //Avalanche PoolAddressesProvider address
     }
 
     /**
      *@dev Returns Pool DataProvider Address
      */
     function getPoolDataProvider() internal pure returns (address) {
-        return 0x44C7324E9d84D6534DD6f292Cc08f1816e45Ff6e; //Avalanche PoolDataProvider address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Avalanche PoolDataProvider address
     }
 
     /**
      *@dev Returns Aave Data Provider Address
      */
     function getAaveDataProvider() internal pure returns (address) {
-        return 0x44C7324E9d84D6534DD6f292Cc08f1816e45Ff6e; //Avalanche address
+        return 0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654; //Avalanche address
     }
 
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0xb0451834e603dbc13F593136549206f0D0B1d007; //Avalanche IncentivesProxyAddress
+        return 0xF88807B552aa22C4Dd7b00FD1645A63b2fca9F7b; //Avalanche IncentivesProxyAddress
     }
 
     /**
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
-        return 0x5a43d6D0810E470B80Bf74808Fc4fbe64b80dF0f; //Avalanche address
+        return 0xEBd36016B3eD09D4693Ed4251c67Bd858c3c7C9C; //Avalanche address
     }
 
     /**
      *@dev Returns StableDebtToken Address
      */
     function getStableDebtToken() internal pure returns (address) {
-        return 0x9bFA5264ceddb62F998397ee70c73d48Cba3aD03; //Avalanche address
+        return 0x52A1CeB68Ee6b7B5D13E0376A1E0E4423A8cE26e; //Avalanche address
     }
 
     function getUiIncetivesProvider() internal view returns (address) {
-        return 0x532C90cB5bFC8E929409678224D6D420E25c4F37;
+        return 0x270f51cf3F681010B46f5c4Ee2aD5120Db33026F;
     }
 
     function getChainLinkFeed() internal pure returns (address) {
