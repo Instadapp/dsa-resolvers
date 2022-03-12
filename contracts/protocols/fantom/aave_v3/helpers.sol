@@ -7,14 +7,14 @@ contract AaveV3Helper is DSMath {
     // ----------------------- USING LATEST ADDRESSES -----------------------------
 
     /**
-     *@dev Returns avax address
+     *@dev Returns ftm address
      */
     function getFTMAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
     /**
-     *@dev Returns WAVAX address
+     *@dev Returns WFTM address
      */
     function getWFTMAddr() internal pure returns (address) {
         return 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; //fantom WFTM Address
