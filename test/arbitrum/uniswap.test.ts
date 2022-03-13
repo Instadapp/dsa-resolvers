@@ -129,10 +129,27 @@ describe("Uniswap", () => {
       console.log("amount1", amount1.toString());
     });
 
-    it("Returns collect Amount", async () => {
-      const [amount0, amount1] = await uniswap.getCollectAmount(BigNumber.from("20933"));
-      console.log("amount0", amount0.toString());
-      console.log("amount1", amount1.toString());
+    // it("Returns collect Amount", async () => {
+    //   const [amount0, amount1] = await uniswap.getCollectAmount(BigNumber.from("20933"));
+    //   console.log("amount0", amount0.toString());
+    //   console.log("amount1", amount1.toString());
+    // });
+
+    it("Returns position Info from tokenId", async () => {
+      // const tokenIds = await uniswap.getUserNFTs(account);
+      const tokenIds = [BigNumber.from("20933"), BigNumber.from("20934")];
+      const result = await uniswap.getPositionInfoByTokenIds(tokenIds);
+      for (let i = 0; i < tokenIds.length; i++) {
+        console.log("Token0 Address: ", result[i].token0);
+        console.log("Token1 Address: ", result[i].token1);
+        console.log("Pool Address: ", result[i].pool);
+        console.log("Liquidity: ", result[i].liquidity.toString());
+        console.log("Amount0: ", result[i].amount0.toString());
+        console.log("Amount1: ", result[i].amount1.toString());
+        console.log("Collect Amount0: ", result[i].collectAmount0.toString());
+        console.log("Collect Amount1: ", result[i].collectAmount1.toString());
+        console.log();
+      }
     });
   });
 });
