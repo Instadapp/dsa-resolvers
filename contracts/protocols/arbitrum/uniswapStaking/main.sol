@@ -303,11 +303,7 @@ contract Resolver is Helpers {
     function isPoolExist(address[] memory pools) public view returns (bool[] memory isValidPools) {
         isValidPools = new bool[](pools.length);
         for (uint256 i = 0; i < pools.length; i++) {
-            if (isContract(pools[i]) == true) {
-                isValidPools[i] = true;
-            } else {
-                isValidPools[i] = false;
-            }
+            isValidPools[i] = isContract(pools[i]);
         }
     }
 }

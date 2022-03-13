@@ -100,9 +100,8 @@ abstract contract Helpers is DSMath {
 
     function isContract(address account) public view returns (bool) {
         uint32 size;
-        address a = account;
         assembly {
-            size := extcodesize(a)
+            size := extcodesize(account)
         }
         return (size > 0);
     }
