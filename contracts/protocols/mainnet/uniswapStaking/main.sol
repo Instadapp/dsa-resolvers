@@ -299,6 +299,17 @@ contract Resolver is Helpers {
 
         return positionInfo;
     }
+
+    function isPoolExist(address[] memory pools) public view returns (bool[] memory isValidPools) {
+        isValidPools = new bool[](pools.length);
+        for (uint256 i = 0; i < pools.length; i++) {
+            if (isContract(pools[i]) == true) {
+                isValidPools[i] = true;
+            } else {
+                isValidPools[i] = false;
+            }
+        }
+    }
 }
 
 contract InstaUniswapStakerResolver is Resolver {

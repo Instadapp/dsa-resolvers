@@ -97,4 +97,13 @@ abstract contract Helpers is DSMath {
             );
         }
     }
+
+    function isContract(address account) public view returns (bool) {
+        uint32 size;
+        address a = account;
+        assembly {
+            size := extcodesize(a)
+        }
+        return (size > 0);
+    }
 }
