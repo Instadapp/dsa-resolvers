@@ -79,8 +79,7 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-        // url: String(getNetworkUrl(String(process.env.networkType))),
-        url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+        url: String(getNetworkUrl(String(process.env.networkType))),
       },
     },
     goerli: createTestnetConfig("goerli"),

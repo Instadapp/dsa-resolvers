@@ -75,10 +75,10 @@ describe("Aave", () => {
 
     it("Returns the user's positions on AaveV3 for all assets", async () => {
       const results = await resolver.callStatic.getPositionAll(account);
-      const reservesList = await resolver.getReservesList();
       const userTokenData = results[1];
       const tokenData = results[2];
       const userData = results[0];
+      const rewards = results[3];
 
       // check for user data
       expect(userData.totalBorrowsBase).to.gte(0);
@@ -104,7 +104,9 @@ describe("Aave", () => {
       console.log("*************************************************");
       for (let i = 0; i < tokenData.length; i++) {
         console.log();
-        console.log(`Reserve: ${reservesList[i]}`);
+        console.log(`Reserve: ${tokenData[i].asset}`);
+        console.log(`Symbol: ${tokenData[i].symbol}`);
+
         console.log("Supply Balance: ", formatUnits(userTokenData[i].supplyBalance, tokenData[i].decimals));
         console.log(
           "Stable Borrow Balance: ",
@@ -130,6 +132,51 @@ describe("Aave", () => {
         // console.log(`Price in Usd: ${Number(tokenData[i].tokenPrice.priceInUsd) / 10 ** 18}`);
         console.log(`Supply cap: ${tokenData[i].token.supplyCap}`);
         console.log(`Borrow cap: ${tokenData[i].token.borrowCap}`);
+
+        console.log("----------------------------------------------------");
+        console.log("aToken Rewards Details - ");
+        console.log("----------------------------------------------------");
+        console.log(`aToken: ${tokenData[i].reserves.aToken.tokenAddress}`);
+        console.log(`aToken symbol: ${tokenData[i].reserves.aToken.symbol}`);
+        console.log(`aToken decimals: ${tokenData[i].reserves.aToken.decimals}`);
+
+        for (let j = 0; j < rewards[i].aIncentiveData.rewardsTokenInfo.length; j++) {
+          console.log(`Reward token address: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].rewardTokenAddress}`);
+          console.log(`Reward token symbol: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].rewardTokenSymbol}`);
+          console.log(`Reward token decimals: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].rewardTokenDecimals}`);
+          console.log(`Reward token precision: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].precision}`);
+          console.log(`Emission rate per second: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
+          console.log(`Unclaimed user rewards : ${rewards[i].aIncentiveData.rewardsTokenInfo[j].userUnclaimedRewards}`);
+        }
+        console.log("----------------------------------------------------");
+        console.log("sToken Rewards Details - ");
+        console.log("----------------------------------------------------");
+        console.log(`Stable Debt Token: ${tokenData[i].reserves.stableDebtToken.tokenAddress}`);
+        console.log(`Stable Debt symbol: ${tokenData[i].reserves.stableDebtToken.symbol}`);
+        console.log(`Stable Debt decimals: ${tokenData[i].reserves.stableDebtToken.decimals}`);
+        for (let j = 0; j < rewards[i].sIncentiveData.rewardsTokenInfo.length; j++) {
+          console.log(`Reward token address: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].rewardTokenAddress}`);
+          console.log(`Reward token symbol: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].rewardTokenSymbol}`);
+          console.log(`Reward token decimals: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].rewardTokenDecimals}`);
+          console.log(`Reward token precision: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].precision}`);
+          console.log(`Emission rate per second: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
+          console.log(`Unclaimed user rewards : ${rewards[i].sIncentiveData.rewardsTokenInfo[j].userUnclaimedRewards}`);
+        }
+        console.log("----------------------------------------------------");
+        console.log("vToken Rewards Details - ");
+        console.log("----------------------------------------------------");
+        console.log(`Variable Debt Token: ${tokenData[i].reserves.variableDebtToken.tokenAddress}`);
+        console.log(`Variable Debt symbol: ${tokenData[i].reserves.variableDebtToken.symbol}`);
+        console.log(`Variable Debt decimals: ${tokenData[i].reserves.variableDebtToken.decimals}`);
+        for (let j = 0; j < rewards[i].vIncentiveData.rewardsTokenInfo.length; j++) {
+          console.log(`Reward token address: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].rewardTokenAddress}`);
+          console.log(`Reward token symbol: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].rewardTokenSymbol}`);
+          console.log(`Reward token decimals: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].rewardTokenDecimals}`);
+          console.log(`Reward token precision: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].precision}`);
+          console.log(`Emission rate per second: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
+          console.log(`Unclaimed user rewards : ${rewards[i].vIncentiveData.rewardsTokenInfo[j].userUnclaimedRewards}`);
+        }
+        console.log();
         console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);
         console.log(
           "Debt ceiling: ",
@@ -147,11 +194,20 @@ describe("Aave", () => {
         "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
         "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39",
       ]);
-      console.log(`emodeData: ${emodeData}`);
+      console.log();
+      console.log("*************************************************");
+      console.log("E-Mode category Data");
+      console.log("*************************************************");
+      console.log(`e-mode LTV: ${emodeData.data.ltv}`);
+      console.log(`e-mode liquidation threshold: ${emodeData.data.liquidationThreshold}`);
+      console.log(`e-mode liquidation bonus: ${emodeData.data.liquidationBonus}`);
+      console.log(`e-mode price oracle: ${emodeData.data.priceSource}`);
+      console.log(`e-mode label: ${emodeData.data.label}`);
     });
 
     it("Returns the ethPrice", async () => {
       const ethPrice = await resolver.getEthPrice();
+
       console.log(`ethPrice: ${ethPrice}`);
     });
   });

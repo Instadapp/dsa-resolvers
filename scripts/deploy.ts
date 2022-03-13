@@ -4,14 +4,14 @@ import { Contract } from "@ethersproject/contracts";
 // you'll find the Hardhat Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
 
-import { AaveV3Resolver__factory } from "../typechain";
+import { Greeter__factory } from "../typechain";
 
 async function main(): Promise<void> {
-  const AaveV3Resolver: AaveV3Resolver__factory = await ethers.getContractFactory("AaveV3Resolver");
-  const aaveV3Resolver: Contract = await AaveV3Resolver.deploy();
-  await aaveV3Resolver.deployed();
+  const Greeter: Greeter__factory = await ethers.getContractFactory("Greeter");
+  const greeter: Contract = await Greeter.deploy("Hello, Buidler!");
+  await greeter.deployed();
 
-  console.log("Resolver deployed to: ", aaveV3Resolver.address);
+  console.log("Greeter deployed to: ", greeter.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere and properly handle errors.
