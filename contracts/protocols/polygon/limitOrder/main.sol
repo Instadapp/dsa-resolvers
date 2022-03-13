@@ -3,13 +3,16 @@ pragma solidity >=0.8.0;
 pragma abicoder v2;
 
 import { Helpers } from "./helpers.sol";
+import "@uniswap/v3-core/contracts/interfaces/IERC20Minimal.sol";
 
 /**
  * @title LimitOrderResolver.
  * @dev Resolver for Limit Order Swap on Uni V3.
  */
 contract LimitOrderResolver is Helpers {
-    function fetchNFTsOfContract(address contr_, uint256 count_) public view returns (uint256[] memory tokenIDs_) {
+    function getNFTs(address contr_) public view returns (uint256[] memory tokenIDs_) {
+        uint256 count_ = IERC20Minimal.balanceOf(contr_);
+
         for (uint256 i = 0; i < count_; i++) {
             tokenIDs_[i] = nftManager.tokenOfOwnerByIndex(contr_, i);
         }
