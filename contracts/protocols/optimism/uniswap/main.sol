@@ -31,6 +31,13 @@ contract Resolver is Helpers {
         (pInfo) = positions(tokenId);
     }
 
+    function getPositionInfoByTokenIds(uint256[] memory tokenIds) public view returns (PositionInfo[] memory pInfos) {
+        pInfos = new PositionInfo[](tokenIds.length);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            pInfos[i] = getPositionInfoByTokenId(tokenIds[i]);
+        }
+    }
+
     function getPositionsInfo(address user, uint256[] memory stakedTokenIds)
         public
         view
