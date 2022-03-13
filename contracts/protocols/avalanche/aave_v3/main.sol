@@ -10,7 +10,8 @@ contract AaveV3Resolver is AaveV3Helper {
         returns (
             AaveV3UserData memory,
             AaveV3UserTokenData[] memory,
-            AaveV3TokenData[] memory
+            AaveV3TokenData[] memory,
+            ReserveIncentiveData[] memory
         )
     {
         uint256 length = tokens.length;
@@ -31,7 +32,7 @@ contract AaveV3Resolver is AaveV3Helper {
             collData[i] = userCollateralData(_tokens[i]);
         }
 
-        return (userDetails, tokensData, collData);
+        return (userDetails, tokensData, collData, getIncentivesInfo(user));
     }
 
     function getPositionAll(address user)
@@ -40,7 +41,8 @@ contract AaveV3Resolver is AaveV3Helper {
         returns (
             AaveV3UserData memory,
             AaveV3UserTokenData[] memory,
-            AaveV3TokenData[] memory
+            AaveV3TokenData[] memory,
+            ReserveIncentiveData[] memory
         )
     {
         return getPosition(user, getList());
