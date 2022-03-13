@@ -1,4 +1,4 @@
-pragma solidity ^0.8.1;
+pragma solidity >=0.8.0;
 // SPDX-License-Identifier: MIT
 import "./interface.sol";
 import "./libraries/PoolAddress.sol";
@@ -10,13 +10,13 @@ contract Helpers {
     IUniLimitOrder public limitCon_ = IUniLimitOrder(0x94F401fAD3ebb89fB7380f5fF6E875A88E6Af916);
 
     function getPoolAddress(
-        address token0,
-        address token1,
-        uint24 fee
+        address token0_,
+        address token1_,
+        uint24 fee_
     ) internal view returns (address poolAddr) {
         poolAddr = PoolAddress.computeAddress(
             nftManager.factory(),
-            PoolAddress.PoolKey({ token0: token0, token1: token1, fee: fee })
+            PoolAddress.PoolKey({ token0: token0_, token1: token1_, fee: fee_ })
         );
     }
 

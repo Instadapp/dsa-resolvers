@@ -90,7 +90,7 @@
   "dependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "^3.4.1-solc-0.7-2",
+    "@openzeppelin/contracts": "^3.4.2",
     "@uniswap/v3-periphery": "^1.2.0",
     "hardhat-etherscan": "^1.0.1",
     "web3": "^1.6.0"

@@ -1,5 +1,6 @@
-pragma solidity ^0.8.1;
+pragma solidity >=0.8.0;
 // SPDX-License-Identifier: MIT
+pragma abicoder v2;
 
 import { Helpers } from "./helpers.sol";
 
@@ -8,6 +9,12 @@ import { Helpers } from "./helpers.sol";
  * @dev Resolver for Limit Order Swap on Uni V3.
  */
 contract LimitOrderResolver is Helpers {
+    function fetchNFTsOfContract(address contr_, uint256 count_) public view returns (uint256[] memory tokenIDs_) {
+        for (uint256 i = 0; i < count_; i++) {
+            tokenIDs_[i] = nftManager.tokenOfOwnerByIndex(contr_, i);
+        }
+    }
+
     function nftsToClose(uint256[] memory tokenIds_) public view returns (bool[] memory result_) {
         for (uint256 i = 0; i < tokenIds_.length; i++) {
             if (limitCon_.nftToOwner(tokenIds_[i]) != address(0)) {

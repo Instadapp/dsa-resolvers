@@ -1,6 +1,7 @@
-pragma solidity ^0.8.1;
-
+pragma solidity >=0.8.0;
 // SPDX-License-Identifier: MIT
+
+import "@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol";
 
 interface IUniswapV3Factory {
     function getPool(
@@ -29,7 +30,7 @@ interface IPeripheryImmutableState {
     function factory() external view returns (address);
 }
 
-interface INonfungiblePositionManager is IPeripheryImmutableState {
+interface INonfungiblePositionManager is IPeripheryImmutableState, IERC721Enumerable {
     function positions(uint256 tokenId)
         external
         view
