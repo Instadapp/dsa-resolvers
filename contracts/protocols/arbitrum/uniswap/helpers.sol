@@ -307,9 +307,8 @@ abstract contract Helpers is DSMath {
     function calculateSingleAmount(SingleAmountParams memory singleAmountParams)
         internal
         view
-        returns (uint256 amountB)
+        returns (uint256 amountB, uint256 liquidity)
     {
-        uint128 liquidity;
         if (!singleAmountParams.reverseFlag) {
             liquidity = LiquidityAmounts.getLiquidityForAmounts(
                 singleAmountParams.sqrtPriceX96,
@@ -318,6 +317,7 @@ abstract contract Helpers is DSMath {
                 singleAmountParams.amountA,
                 0x1000000000000000000000000 // Q96
             );
+
             (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
                 singleAmountParams.sqrtPriceX96,
                 singleAmountParams.sqrtPriceX96Lower,
@@ -387,7 +387,7 @@ abstract contract Helpers is DSMath {
         );
         (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
 
-        amountB = calculateSingleAmount(
+        (amountB, liquidity) = calculateSingleAmount(
             SingleAmountParams(
                 amountA,
                 slippage,
@@ -431,7 +431,7 @@ abstract contract Helpers is DSMath {
         IUniswapV3Pool pool = IUniswapV3Pool(getPoolAddress(tokenA, tokenB, fee));
         (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
 
-        amountB = calculateSingleAmount(
+        (amountB, liquidity) = calculateSingleAmount(
             SingleAmountParams(
                 amountA,
                 slippage,
