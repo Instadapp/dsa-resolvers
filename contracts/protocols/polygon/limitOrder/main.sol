@@ -13,6 +13,8 @@ contract LimitOrderResolver is Helpers {
     function getNFTs(address contr_) public view returns (uint256[] memory tokenIDs_) {
         uint256 count_ = IERC20Minimal.balanceOf(contr_);
 
+        tokenIDs_ = new uint256[](count_);
+
         for (uint256 i = 0; i < count_; i++) {
             tokenIDs_[i] = nftManager.tokenOfOwnerByIndex(contr_, i);
         }
