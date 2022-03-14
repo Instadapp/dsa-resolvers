@@ -21,7 +21,7 @@ contract LimitOrderResolver is Helpers {
 
     function nftsToClose(uint256[] memory tokenIds_) public view returns (bool[] memory result_) {
         uint256 arrLen_ = tokenIds_.length;
-        result_ = new uint256[](arrLen_);
+        result_ = new bool[](arrLen_);
 
         for (uint256 i = 0; i < arrLen_; i++) {
             if (limitCon_.nftToOwner(tokenIds_[i]) != address(0)) {
