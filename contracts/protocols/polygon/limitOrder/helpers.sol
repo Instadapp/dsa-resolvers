@@ -1,4 +1,4 @@
-pragma solidity >=0.8.0;
+pragma solidity ^0.7.6;
 // SPDX-License-Identifier: MIT
 import "./interface.sol";
 import "./libraries/PoolAddress.sol";
@@ -7,7 +7,7 @@ contract Helpers {
     INonfungiblePositionManager public constant nftManager =
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
     IUniswapV3Factory public constant factory = IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
-    IUniLimitOrder public limitCon_ = IUniLimitOrder(0x94F401fAD3ebb89fB7380f5fF6E875A88E6Af916);
+    IUniLimitOrder public constant limitCon_ = IUniLimitOrder(0x94F401fAD3ebb89fB7380f5fF6E875A88E6Af916);
 
     function getPoolAddress(
         address token0_,

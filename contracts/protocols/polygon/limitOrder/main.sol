@@ -1,4 +1,4 @@
-pragma solidity >=0.8.0;
+pragma solidity ^0.7.6;
 // SPDX-License-Identifier: MIT
 pragma abicoder v2;
 
@@ -24,19 +24,22 @@ contract LimitOrderResolver is Helpers {
         result_ = new bool[](arrLen_);
 
         for (uint256 i = 0; i < arrLen_; i++) {
+            (address token0_, address token1_, uint24 fee_, int24 tickLower_, int24 tickUpper_) = getPositionInfo(
+                tokenIds_[i]
+            );
+
+            int24 currentTick_ = getCurrentTick(token0_, token1_, fee_);
+
             if (limitCon_.nftToOwner(tokenIds_[i]) != address(0)) {
-                (address token0_, address token1_, uint24 fee_, int24 tickLower_, int24 tickUpper_) = getPositionInfo(
-                    tokenIds_[i]
-                );
-
-                int24 currentTick_ = getCurrentTick(token0_, token1_, fee_);
-
                 if (limitCon_.token0to1(tokenIds_[i]) && currentTick_ > tickUpper_) {
                     result_[i] = true;
-                }
-                if ((!limitCon_.token0to1(tokenIds_[i])) && currentTick_ < tickLower_) {
+                } else if ((!limitCon_.token0to1(tokenIds_[i])) && currentTick_ < tickLower_) {
                     result_[i] = true;
+                } else {
+                    result_[i] = false;
                 }
+            } else {
+                result_[i] = false;
             }
         }
     }
