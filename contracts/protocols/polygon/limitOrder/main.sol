@@ -30,7 +30,7 @@ contract LimitOrderResolver is Helpers {
 
             int24 currentTick_ = getCurrentTick(token0_, token1_, fee_);
 
-            if (limitCon_.nftToOwner(tokenIds_[i]) != address(0)) {
+            if (limitCon_.NftToOwner(tokenIds_[i]) != address(0)) {
                 if (limitCon_.token0to1(tokenIds_[i]) && currentTick_ > tickUpper_) {
                     result_[i] = true;
                 } else if ((!limitCon_.token0to1(tokenIds_[i])) && currentTick_ < tickLower_) {

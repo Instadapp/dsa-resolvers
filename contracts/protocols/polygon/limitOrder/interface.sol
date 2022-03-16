@@ -51,7 +51,7 @@ interface INonfungiblePositionManager is IPeripheryImmutableState, IERC721Enumer
 }
 
 interface IUniLimitOrder {
-    function nftToOwner(uint256) external view returns (address);
+    function NftToOwner(uint256) external view returns (address);
 
     function token0to1(uint256) external view returns (bool);
 }
