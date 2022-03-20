@@ -2,7 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
-import { AaveV3Resolver, AaveV3Resolver__factory } from "../../typechain";
+import { InstaAaveV3ResolverFantom, InstaAaveV3ResolverFantom__factory } from "../../typechain";
 import { Tokens } from "../consts";
 import BigNumber from "bignumber.js";
 
@@ -16,9 +16,9 @@ describe("Aave", () => {
   });
 
   describe("Aave V3 Resolver", () => {
-    let resolver: AaveV3Resolver;
+    let resolver: InstaAaveV3ResolverFantom;
     before(async () => {
-      const deployer = new AaveV3Resolver__factory(signer);
+      const deployer = new InstaAaveV3ResolverFantom__factory(signer);
       resolver = await deployer.deploy();
       await resolver.deployed();
     });
