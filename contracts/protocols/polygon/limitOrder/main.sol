@@ -23,7 +23,7 @@ contract LimitOrderResolver is Helpers {
         uint256 arrLen_ = tokenIds_.length;
         result_ = new bool[](arrLen_);
 
-        for (uint256 i = 0; i < arrLen_; i++) {
+        for (uint128 i = 0; i < arrLen_; i++) {
             (address token0_, address token1_, uint24 fee_, int24 tickLower_, int24 tickUpper_) = getPositionInfo(
                 tokenIds_[i]
             );
@@ -40,6 +40,20 @@ contract LimitOrderResolver is Helpers {
                 }
             } else {
                 result_[i] = false;
+            }
+        }
+    }
+
+    function nftsUser(address user_) public view returns (uint256[] memory tokenIDs_, bool[] memory idsBool_) {
+        tokenIDs_ = limitCon_.ownerToNfts(user_);
+        uint256 arrLen_ = tokenIDs_.length;
+        idsBool_ = new bool[](arrLen_);
+
+        for (uint128 i = 0; i < arrLen_; i++) {
+            if (limitCon_.NftToOwner(tokenIDs_[i]) != address(0)) {
+                idsBool_[i] = true; //ID open
+            } else {
+                idsBool_[i] = false; //ID closed
             }
         }
     }
