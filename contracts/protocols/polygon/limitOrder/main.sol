@@ -45,7 +45,7 @@ contract LimitOrderResolver is Helpers {
     }
 
     function nftsUser(address user_) public view returns (uint256[] memory tokenIDs_, bool[] memory idsBool_) {
-        tokenIDs_ = limitCon_.ownerToNfts(user_);
+        tokenIDs_ = limitCon_.returnArray(user_);
         uint256 arrLen_ = tokenIDs_.length;
         idsBool_ = new bool[](arrLen_);
 
