@@ -31,10 +31,10 @@ contract LimitOrderResolver is Helpers {
             int24 currentTick_ = getCurrentTick(token0_, token1_, fee_);
 
             if (limitCon_.NftToOwner(tokenIds_[i]) != address(0)) {
-                if (limitCon_.token0to1(tokenIds_[i]) && currentTick_ > tickUpper_) {
-                    result_[i] = true;
-                } else if ((!limitCon_.token0to1(tokenIds_[i])) && currentTick_ < tickLower_) {
-                    result_[i] = true;
+                if (limitCon_.token0To1(tokenIds_[i]) && currentTick_ > tickUpper_) {
+                    result_[i] = true; //Close NFT
+                } else if ((!limitCon_.token0To1(tokenIds_[i])) && currentTick_ < tickLower_) {
+                    result_[i] = true; //Close NFT
                 } else {
                     result_[i] = false;
                 }
@@ -51,9 +51,9 @@ contract LimitOrderResolver is Helpers {
 
         for (uint128 i = 0; i < arrLen_; i++) {
             if (limitCon_.NftToOwner(tokenIDs_[i]) != address(0)) {
-                idsBool_[i] = true; //ID open
+                idsBool_[i] = true; //user ID open
             } else {
-                idsBool_[i] = false; //ID closed
+                idsBool_[i] = false; //user ID closed
             }
         }
     }
