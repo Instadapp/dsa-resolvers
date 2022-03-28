@@ -23,7 +23,7 @@ contract Helpers is DSMath {
      * @param _account address of the account to retrieve Reward data from
      * @return Reward[] array of Reward data
      */
-    function getVestingData(address _account) public view returns (Reward[] memory) {
+    function getVestingData(address _account) internal view returns (Reward[] memory) {
         uint64 rewardCount = IBoostedSavingsVault(imUsdVault).userData(_account).rewardCount;
 
         Reward[] memory rewards = new Reward[](rewardCount);
@@ -58,7 +58,6 @@ contract Helpers is DSMath {
         earned = IBoostedSavingsVault(imUsdVault).earned(_account);
 
         (unclaimed, , ) = IBoostedSavingsVault(imUsdVault).unclaimedRewards(_account);
-        locked = 0;
         uint256 time = block.timestamp;
 
         for (uint256 i = 0; i < rewards.length; i++) {
