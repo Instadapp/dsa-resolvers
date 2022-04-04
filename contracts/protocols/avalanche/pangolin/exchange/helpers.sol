@@ -1,7 +1,7 @@
 pragma solidity ^0.7.6;
 pragma abicoder v2;
 
-import { DSMath } from "../../../utils/dsmath.sol";
+import { DSMath } from "../../../../utils/dsmath.sol";
 import { IPangolinRouter, IPangolinFactory, TokenInterface } from "./interfaces.sol";
 import "./library.sol";
 
