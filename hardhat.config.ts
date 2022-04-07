@@ -41,6 +41,12 @@ const alchemyApiKey = process.env.ALCHEMY_API_KEY;
 if (!alchemyApiKey) {
   throw new Error("Please set your ALCHEMY_ETH_API_KEY in a .env file");
 }
+const ETHERSCAN_API = process.env.ETHERSCAN_API_KEY;
+const POLYGONSCAN_API = process.env.POLYGON_API_KEY;
+const ARBISCAN_API = process.env.ARBISCAN_API_KEY;
+const OPTIMISM_API = process.env.OPTIMISM_API_KEY;
+const SNOWTRACE_API = process.env.SNOWTRACE_API_KEY;
+const FANTOMSCAN_API = process.env.FANTOM_API_KEY;
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   const url: string = "https://eth-" + network + ".alchemyapi.io/v2/" + alchemyApiKey;
@@ -54,6 +60,14 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
     chainId: chainIds[network],
     url,
   };
+}
+function getScanApiKey(networkType: string) {
+  if (networkType === "avalanche") return SNOWTRACE_API;
+  else if (networkType === "polygon") return POLYGONSCAN_API;
+  else if (networkType === "arbitrum") return ARBISCAN_API;
+  else if (networkType === "fantom") return FANTOMSCAN_API;
+  else if (networkType === "optimism") return OPTIMISM_API;
+  else return ETHERSCAN_API;
 }
 
 function getNetworkUrl(networkType: string) {
@@ -101,15 +115,9 @@ const config: HardhatUserConfig = {
     arbitrum: {
       url: `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
-      gasPrice: 1000000000, // 1 gwei
     },
     fantom: {
       url: `https://rpc.ftm.tools/`,
-      accounts: [`0x${process.env.PRIVATE_KEY}`],
-      gasPrice: 100000000000, // 100 GWEI
-    },
-    polygon: {
-      url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
     },
     mainnet: {
@@ -156,7 +164,7 @@ const config: HardhatUserConfig = {
     timeout: 10000 * 1000,
   },
   etherscan: {
-    apiKey: String(process.env.SCANAPI),
+    apiKey: getScanApiKey(String(process.env.networkType)),
   },
 };
 
