@@ -11,7 +11,7 @@ import { Helpers } from "./helpers.sol";
 contract LimitOrderResolver is Helpers {
     /**
      * @dev Returns all the NFTs
-     * @notice Get all the NFTs of contract
+     * @notice Get all the NFTs using nftManager
      * @param contr_ All the tokenIds in the contract
      */
     function getNFTs(address contr_) public view returns (uint256[] memory tokenIDs_) {
@@ -40,7 +40,7 @@ contract LimitOrderResolver is Helpers {
 
             int24 currentTick_ = getCurrentTick(token0_, token1_, fee_);
 
-            if (limitCon_.NftToOwner(tokenIds_[i]) != address(0)) {
+            if (limitCon_.nftToOwner(tokenIds_[i]) != address(0)) {
                 if (limitCon_.token0To1(tokenIds_[i]) && currentTick_ > tickUpper_) {
                     result_[i] = true; //Close NFT
                 } else if ((!limitCon_.token0To1(tokenIds_[i])) && currentTick_ < tickLower_) {
@@ -65,7 +65,7 @@ contract LimitOrderResolver is Helpers {
         idsBool_ = new bool[](arrLen_);
 
         for (uint128 i = 0; i < arrLen_; i++) {
-            if (limitCon_.NftToOwner(tokenIDs_[i]) != address(0)) {
+            if (limitCon_.nftToOwner(tokenIDs_[i]) != address(0)) {
                 idsBool_[i] = true; //user ID open
             } else {
                 idsBool_[i] = false; //user ID closed
