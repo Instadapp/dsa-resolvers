@@ -9,6 +9,11 @@ import { Helpers } from "./helpers.sol";
  * @dev Resolver for Limit Order Swap on Uni V3.
  */
 contract LimitOrderResolver is Helpers {
+    /**
+     * @dev Returns all the NFTs
+     * @notice Get all the NFTs of contract
+     * @param contr_ All the tokenIds in the contract
+     */
     function getNFTs(address contr_) public view returns (uint256[] memory tokenIDs_) {
         uint256 count_ = nftManager.balanceOf(contr_);
 
@@ -19,6 +24,11 @@ contract LimitOrderResolver is Helpers {
         }
     }
 
+    /**
+     * @dev Get NFTs to close.
+     * @notice If bool = true, close the tokenId
+     * @param tokenIds_ All the tokenIds in the contract
+     */
     function nftsToClose(uint256[] memory tokenIds_) public view returns (bool[] memory result_) {
         uint256 arrLen_ = tokenIds_.length;
         result_ = new bool[](arrLen_);
@@ -44,6 +54,11 @@ contract LimitOrderResolver is Helpers {
         }
     }
 
+    /**
+     * @dev Get open and closed NFTs.
+     * @notice Returns "True" if ID is open, "false" if ID is closed
+     * @param user_ The address of the user
+     */
     function nftsUser(address user_) public view returns (uint256[] memory tokenIDs_, bool[] memory idsBool_) {
         tokenIDs_ = limitCon_.returnArray(user_);
         uint256 arrLen_ = tokenIDs_.length;
