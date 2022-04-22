@@ -232,13 +232,13 @@ contract AaveV3Helper is DSMath {
                 _aRewards,
                 getUserReward(user, rToken, _aRewards)
             );
-            rToken[0] = _aggregateIncentive[i].aIncentiveData.tokenAddress;
+            rToken[0] = _aggregateIncentive[i].sIncentiveData.tokenAddress;
             IncentivesData memory _sToken = IncentivesData(
                 _aggregateIncentive[i].sIncentiveData.tokenAddress,
                 _sRewards,
                 getUserReward(user, rToken, _sRewards)
             );
-            rToken[0] = _aggregateIncentive[i].aIncentiveData.tokenAddress;
+            rToken[0] = _aggregateIncentive[i].vIncentiveData.tokenAddress;
             IncentivesData memory _vToken = IncentivesData(
                 _aggregateIncentive[i].vIncentiveData.tokenAddress,
                 _vRewards,
