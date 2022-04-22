@@ -71,6 +71,10 @@ contract AaveV3Helper is DSMath {
         return 0x11DdD3d147E5b83D01cee7070027092397d63658;
     }
 
+    function getRewardsController() internal view returns (address) {
+        return 0x929EC64c34a17401F460460D4B9390518E5B473e;
+    }
+
     struct BaseCurrency {
         uint256 baseUnit;
         address baseAddress;
@@ -175,13 +179,18 @@ contract AaveV3Helper is DSMath {
     struct IncentivesData {
         address token;
         RewardsInfo[] rewardsTokenInfo;
+        UserRewards userRewards;
+    }
+
+    struct UserRewards {
+        address[] rewardsToken;
+        uint256[] unbalancedAmounts;
     }
 
     struct RewardsInfo {
         string rewardTokenSymbol;
         address rewardTokenAddress;
         uint256 emissionPerSecond;
-        uint256 userUnclaimedRewards;
         uint256 rewardTokenDecimals;
         uint256 precision;
     }
@@ -191,48 +200,56 @@ contract AaveV3Helper is DSMath {
     IAaveProtocolDataProvider internal aaveData = IAaveProtocolDataProvider(provider.getPoolDataProvider());
     IPool internal pool = IPool(provider.getPool());
     IUiIncentiveDataProviderV3 internal uiIncentives = IUiIncentiveDataProviderV3(getUiIncetivesProvider());
+    IRewardsController internal rewardsCntr = IRewardsController(getRewardsController());
+
+    function getUserReward(
+        address user,
+        address[] memory assets,
+        RewardsInfo[] memory _rewards
+    ) internal view returns (UserRewards memory unclaimedRewards) {
+        if (_rewards.length > 0) {
+            (address[] memory reserves, uint256[] memory rewards) = rewardsCntr.getAllUserRewards(assets, user);
+            unclaimedRewards = UserRewards(reserves, rewards);
+        }
+    }
 
     function getIncentivesInfo(address user) internal view returns (ReserveIncentiveData[] memory incentives) {
         AggregatedReserveIncentiveData[] memory _aggregateIncentive = uiIncentives.getReservesIncentivesData(provider);
-        UserReserveIncentiveData[] memory _aggregateUserIncentive = uiIncentives.getUserReservesIncentivesData(
-            provider,
-            user
-        );
         incentives = new ReserveIncentiveData[](_aggregateIncentive.length);
         for (uint256 i = 0; i < _aggregateIncentive.length; i++) {
+            address[] memory rToken = new address[](1);
             RewardsInfo[] memory _aRewards = getRewardInfo(
-                _aggregateIncentive[i].aIncentiveData.rewardsTokenInformation,
-                _aggregateUserIncentive[i].aTokenIncentivesUserData.userRewardsInformation
+                _aggregateIncentive[i].aIncentiveData.rewardsTokenInformation
             );
             RewardsInfo[] memory _sRewards = getRewardInfo(
-                _aggregateIncentive[i].sIncentiveData.rewardsTokenInformation,
-                _aggregateUserIncentive[i].sTokenIncentivesUserData.userRewardsInformation
+                _aggregateIncentive[i].sIncentiveData.rewardsTokenInformation
             );
             RewardsInfo[] memory _vRewards = getRewardInfo(
-                _aggregateIncentive[i].vIncentiveData.rewardsTokenInformation,
-                _aggregateUserIncentive[i].vTokenIncentivesUserData.userRewardsInformation
+                _aggregateIncentive[i].vIncentiveData.rewardsTokenInformation
             );
+            rToken[0] = _aggregateIncentive[i].aIncentiveData.tokenAddress;
             IncentivesData memory _aToken = IncentivesData(
                 _aggregateIncentive[i].aIncentiveData.tokenAddress,
-                _aRewards
+                _aRewards,
+                getUserReward(user, rToken, _aRewards)
             );
+            rToken[0] = _aggregateIncentive[i].sIncentiveData.tokenAddress;
             IncentivesData memory _sToken = IncentivesData(
                 _aggregateIncentive[i].sIncentiveData.tokenAddress,
-                _sRewards
+                _sRewards,
+                getUserReward(user, rToken, _sRewards)
             );
+            rToken[0] = _aggregateIncentive[i].vIncentiveData.tokenAddress;
             IncentivesData memory _vToken = IncentivesData(
                 _aggregateIncentive[i].vIncentiveData.tokenAddress,
-                _vRewards
+                _vRewards,
+                getUserReward(user, rToken, _vRewards)
             );
             incentives[i] = ReserveIncentiveData(_aggregateIncentive[i].underlyingAsset, _aToken, _vToken, _sToken);
         }
     }
 
-    function getRewardInfo(RewardInfo[] memory rewards, UserRewardInfo[] memory userRewards)
-        internal
-        view
-        returns (RewardsInfo[] memory rewardData)
-    {
+    function getRewardInfo(RewardInfo[] memory rewards) internal view returns (RewardsInfo[] memory rewardData) {
         // console.log(rewards.length);
         rewardData = new RewardsInfo[](rewards.length);
         for (uint256 i = 0; i < rewards.length; i++) {
@@ -240,7 +257,6 @@ contract AaveV3Helper is DSMath {
                 rewards[i].rewardTokenSymbol,
                 rewards[i].rewardTokenAddress,
                 rewards[i].emissionPerSecond,
-                userRewards[i].userUnclaimedRewards,
                 uint256(rewards[i].rewardTokenDecimals),
                 uint256(rewards[i].precision)
             );
@@ -315,6 +331,12 @@ contract AaveV3Helper is DSMath {
         ) = aaveData.getReserveConfigurationData(token);
     }
 
+    function getIsolationBorrowStatus(address token) internal view returns (bool iBorrowStatus) {
+        ReserveConfigurationMap memory self = (pool.getReserveData(token)).configuration;
+        uint256 BORROWABLE_IN_ISOLATION_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFFFFFFFFFFFFF;
+        return (self.data & ~BORROWABLE_IN_ISOLATION_MASK) != 0;
+    }
+
     function getV3Token(address token) internal view returns (AaveV3Token memory tokenData) {
         (
             (tokenData.borrowCap, tokenData.supplyCap),
@@ -332,7 +354,7 @@ contract AaveV3Helper is DSMath {
             aaveData.getPaused(token)
         );
         {
-            (tokenData.isolationBorrowEnabled) = (aaveData.getDebtCeiling(token) == 0) ? false : true;
+            (tokenData.isolationBorrowEnabled) = getIsolationBorrowStatus(token);
         }
         // (tokenData.isolationModeTotalDebt) = getIsolationDebt(token);
     }
