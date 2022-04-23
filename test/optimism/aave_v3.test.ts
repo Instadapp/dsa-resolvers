@@ -9,7 +9,7 @@ import BigNumber from "bignumber.js";
 describe("Aave", () => {
   let signer: SignerWithAddress;
   // const account = "0xde33f4573bB315939a9D1E65522575E1a9fC3e74";
-  const account = "0x15C6b352c1F767Fa2d79625a40Ca4087Fab9a198";
+  const account = "0xF1229410497686300cca7Bf6CCa3ba582cF872f7";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -131,6 +131,7 @@ describe("Aave", () => {
         // console.log(`Price in Usd: ${Number(tokenData[i].tokenPrice.priceInUsd) / 10 ** 18}`);
         console.log(`Supply cap: ${tokenData[i].token.supplyCap}`);
         console.log(`Borrow cap: ${tokenData[i].token.borrowCap}`);
+        console.log(`Borrowable in isolation mode: ${tokenData[i].token.isolationBorrowEnabled}`);
         console.log("----------------------------------------------------");
         console.log("aToken Rewards Details - ");
         console.log("----------------------------------------------------");
@@ -144,7 +145,12 @@ describe("Aave", () => {
           console.log(`Reward token decimals: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].rewardTokenDecimals}`);
           console.log(`Reward token precision: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].precision}`);
           console.log(`Emission rate per second: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
-          console.log(`Unclaimed user rewards : ${rewards[i].aIncentiveData.rewardsTokenInfo[j].userUnclaimedRewards}`);
+        }
+
+        for (let j = 0; j < rewards[i].aIncentiveData.userRewards.rewardsToken.length; j++) {
+          console.log(
+            `Unclaimed Reward: ${rewards[i].aIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].aIncentiveData.userRewards.rewardsToken[j]}`,
+          );
         }
         console.log("----------------------------------------------------");
         console.log("sToken Rewards Details - ");
@@ -158,7 +164,11 @@ describe("Aave", () => {
           console.log(`Reward token decimals: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].rewardTokenDecimals}`);
           console.log(`Reward token precision: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].precision}`);
           console.log(`Emission rate per second: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
-          console.log(`Unclaimed user rewards : ${rewards[i].sIncentiveData.rewardsTokenInfo[j].userUnclaimedRewards}`);
+        }
+        for (let j = 0; j < rewards[i].vIncentiveData.userRewards.rewardsToken.length; j++) {
+          console.log(
+            `Unclaimed Reward: ${rewards[i].vIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].vIncentiveData.userRewards.rewardsToken[j]}`,
+          );
         }
         console.log("----------------------------------------------------");
         console.log("vToken Rewards Details - ");
@@ -172,7 +182,11 @@ describe("Aave", () => {
           console.log(`Reward token decimals: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].rewardTokenDecimals}`);
           console.log(`Reward token precision: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].precision}`);
           console.log(`Emission rate per second: ${rewards[i].vIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
-          console.log(`Unclaimed user rewards : ${rewards[i].vIncentiveData.rewardsTokenInfo[j].userUnclaimedRewards}`);
+        }
+        for (let j = 0; j < rewards[i].vIncentiveData.userRewards.rewardsToken.length; j++) {
+          console.log(
+            `Unclaimed Reward: ${rewards[i].vIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].sIncentiveData.userRewards.rewardsToken[j]}`,
+          );
         }
         console.log();
         console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);

@@ -436,7 +436,7 @@ interface IRewardsDistributor {
      * @param reward The address of the reward token
      * @return The rewards amount
      **/
-    function getUserRewardsBalance(
+    function getUserRewards(
         address[] calldata assets,
         address user,
         address reward
@@ -448,7 +448,7 @@ interface IRewardsDistributor {
      * @param user The address of the user
      * @return The function returns a Tuple of rewards list and the unclaimed rewards list
      **/
-    function getAllUserRewardsBalance(address[] calldata assets, address user)
+    function getAllUserRewards(address[] calldata assets, address user)
         external
         view
         returns (address[] memory, uint256[] memory);
