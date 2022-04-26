@@ -32,13 +32,61 @@ contract Helpers is DSMath {
     function convertFromUnderlying(AssetRateParameters memory ar, int256 underlyingBalance)
         internal
         pure
-        returns (int256)
+        returns (int256 assetBalance)
     {
         // Calculation here represents:
         // rateDecimals * balance * underlyingPrecision / rate * internalPrecision
-        int256 assetBalance = (underlyingBalance * ASSET_RATE_DECIMAL_DIFFERENCE * ar.underlyingDecimals) / ar.rate;
+        assetBalance = (underlyingBalance * ASSET_RATE_DECIMAL_DIFFERENCE * ar.underlyingDecimals) / ar.rate;
+    }
 
-        return assetBalance;
+    function getNetCashToAccount(uint16 currencyId, int256 cashUnderlying)
+        internal
+        view
+        returns (int256 netCashToAccount)
+    {
+        // prettier-ignore
+        (
+            /* Token memory assetToken */,
+            /* Token memory underlyingToken */,
+            /* ETHRate memory ethRate */,
+            AssetRateParameters memory assetRate
+        ) = notional.getCurrencyAndRates(currencyId);
+
+        netCashToAccount = convertFromUnderlying(assetRate, cashUnderlying);
+    }
+
+    function calculatefCashAndExchangeRate(
+        uint16 currencyId,
+        int256 netCashToAccount,
+        uint256 marketIndex,
+        uint256 blockTime,
+        uint256 maturity,
+        int128 defaultAnnualizedSlippage
+    ) internal view returns (int256 fCashAmount, int256 exchangeRatePostSlippage) {
+        require(
+            netCashToAccount >= type(int88).min && netCashToAccount <= type(int88).max,
+            "netCashToAccount overflow"
+        );
+
+        fCashAmount = notional.getfCashAmountGivenCashAmount(
+            currencyId,
+            int88(netCashToAccount),
+            marketIndex,
+            blockTime
+        );
+
+        // exchangeRate = abs(fCashAmount * RATE_PRECISION / netCashToAccount)
+        int256 exchangeRate = (fCashAmount * RATE_PRECISION) / netCashToAccount;
+        if (exchangeRate < 0) exchangeRate *= -1;
+
+        int256 exchangeSlippageFactor = interestToExchangeRate(defaultAnnualizedSlippage, blockTime, maturity);
+
+        // Exchange rates are non-linear so we apply slippage using the exponent identity:
+        // exchangeRatePostSlippage = e^((r + delta) * t)
+        // exchangeRate = e^(r * t)
+        // slippageFactor = e^(delta * t)
+        // exchangeRatePostSlippage = exchangeRate * slippageFactor
+        exchangeRatePostSlippage = (exchangeRate * exchangeSlippageFactor) / RATE_PRECISION;
     }
 
     /**

@@ -6,6 +6,8 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
+    /// @notice Returns all account details in a single view
+    /// @param account account address
     function getAccount(address account)
         external
         view
@@ -18,12 +20,16 @@ contract Resolver is Helpers {
         return notional.getAccount(account);
     }
 
+    /// @notice Returns free collateral of an account along with an array of the individual net available
+    /// asset cash amounts
+    /// @param account account address
     function getFreeCollateral(address account) external view returns (int256, int256[] memory) {
         return notional.getFreeCollateral(account);
     }
 
     /// @notice Returns a currency and its corresponding asset rate and ETH exchange rates.
     /// @dev Note that this does not recalculate cToken interest rates, it only retrieves the latest stored rate.
+    /// @param currencyId currency ID
     function getCurrencyAndRates(uint16 currencyId)
         external
         view
@@ -37,18 +43,30 @@ contract Resolver is Helpers {
         return notional.getCurrencyAndRates(currencyId);
     }
 
+    /// @notice Returns the asset settlement rate for a given maturity
+    /// @param currencyId currency ID
+    /// @param maturity fCash maturity
     function getSettlementRate(uint16 currencyId, uint40 maturity) external view returns (AssetRateParameters memory) {
         return notional.getSettlementRate(currencyId, maturity);
     }
 
+    /// @notice Returns all currently active markets for a currency
+    /// @param currencyId currency ID
     function getActiveMarkets(uint16 currencyId) external view returns (MarketParameters[] memory) {
         return notional.getActiveMarkets(currencyId);
     }
 
+    /// @notice Returns the claimable incentives for all nToken balances
+    /// @param account The address of the account which holds the tokens
+    /// @param blockTime The block time when incentives will be minted
+    /// @return Incentives an account is eligible to claim
     function nTokenGetClaimableIncentives(address account, uint256 blockTime) external view returns (uint256) {
         return notional.nTokenGetClaimableIncentives(account, blockTime);
     }
 
+    /// @notice Returns the nTokens that will be minted when some amount of asset tokens are deposited
+    /// @param currencyId currency ID
+    /// @param amountToDepositExternalPrecision amount of cash to deposit in external precision
     function calculateNTokensToMint(uint16 currencyId, uint88 amountToDepositExternalPrecision)
         external
         view
@@ -57,6 +75,14 @@ contract Resolver is Helpers {
         return notional.calculateNTokensToMint(currencyId, amountToDepositExternalPrecision);
     }
 
+    /// @notice Returns the fCash amount to send when given a cash amount
+    /// @dev Use this version for lending
+    /// @param currencyId currency ID
+    /// @param cashUnderlying cash deposit amount of the underlying in external precision
+    /// @param marketIndex market index used for the calculation
+    /// @param blockTime block time used for the calculation
+    /// @param maturity fCash maturity used for the calculate
+    /// @param defaultAnnualizedSlippage default slippage amount
     function getLendfCashAmount(
         uint16 currencyId,
         int256 cashUnderlying,
@@ -65,42 +91,22 @@ contract Resolver is Helpers {
         uint256 maturity,
         int128 defaultAnnualizedSlippage
     ) external view returns (int256) {
-        // prettier-ignore
-        (
-            /* Token memory assetToken */,
-            /* Token memory underlyingToken */,
-            /* ETHRate memory ethRate */,
-            AssetRateParameters memory assetRate
-        ) = notional.getCurrencyAndRates(currencyId);
-
-        int256 netCashToAccount = convertFromUnderlying(assetRate, cashUnderlying);
+        int256 netCashToAccount = getNetCashToAccount(currencyId, cashUnderlying);
 
         if (netCashToAccount == 0) return 0;
 
-        require(
-            netCashToAccount >= type(int88).min && netCashToAccount <= type(int88).max,
-            "netCashToAccount overflow"
-        );
-
-        int256 fCashAmount = notional.getfCashAmountGivenCashAmount(
+        // prettier-ignore
+        (
+            /* int256 fCashAmount */, 
+            int256 exchangeRatePostSlippage
+        ) = calculatefCashAndExchangeRate(
             currencyId,
-            int88(netCashToAccount),
+            netCashToAccount,
             marketIndex,
-            blockTime
+            blockTime,
+            maturity,
+            defaultAnnualizedSlippage
         );
-
-        // exchangeRate = abs(fCashAmount * RATE_PRECISION / netCashToAccount)
-        int256 exchangeRate = (fCashAmount * RATE_PRECISION) / netCashToAccount;
-        if (exchangeRate < 0) exchangeRate *= -1;
-
-        int256 exchangeSlippageFactor = interestToExchangeRate(defaultAnnualizedSlippage, blockTime, maturity);
-
-        // Exchange rates are non-linear so we apply slippage using the exponent identity:
-        // exchangeRatePostSlippage = e^((r + delta) * t)
-        // exchangeRate = e^(r * t)
-        // slippageFactor = e^(delta * t)
-        // exchangeRatePostSlippage = exchangeRate * slippageFactor
-        int256 exchangeRatePostSlippage = (exchangeRate * exchangeSlippageFactor) / RATE_PRECISION;
 
         // Calculate annualized slippage rate
         int256 slippageRate = exchangeToInterestRate(exchangeRatePostSlippage, blockTime, maturity);
@@ -118,6 +124,14 @@ contract Resolver is Helpers {
         return (netCashToAccount * exchangeRatePostSlippage) / RATE_PRECISION;
     }
 
+    /// @notice Returns the fCash amount to send when given a cash amount
+    /// @dev Use this version for borrowing
+    /// @param currencyId currency ID
+    /// @param cashUnderlying cash deposit amount of the underlying in external precision
+    /// @param marketIndex market index used for the calculation
+    /// @param blockTime block time used for the calculation
+    /// @param maturity fCash maturity used for the calculate
+    /// @param defaultAnnualizedSlippage default slippage amount
     function getBorrowfCashAmount(
         uint16 currencyId,
         int256 cashUnderlying,
@@ -126,42 +140,18 @@ contract Resolver is Helpers {
         uint256 maturity,
         int128 defaultAnnualizedSlippage
     ) external view returns (int256) {
-        // prettier-ignore
-        (
-            /* Token memory assetToken */,
-            /* Token memory underlyingToken */,
-            /* ETHRate memory ethRate */,
-            AssetRateParameters memory assetRate
-        ) = notional.getCurrencyAndRates(currencyId);
-
-        int256 netCashToAccount = convertFromUnderlying(assetRate, cashUnderlying);
+        int256 netCashToAccount = getNetCashToAccount(currencyId, cashUnderlying);
 
         if (netCashToAccount == 0) return 0;
 
-        require(
-            netCashToAccount >= type(int88).min && netCashToAccount <= type(int88).max,
-            "netCashToAccount overflow"
-        );
-
-        int256 fCashAmount = notional.getfCashAmountGivenCashAmount(
+        (int256 fCashAmount, int256 exchangeRatePostSlippage) = calculatefCashAndExchangeRate(
             currencyId,
-            int88(netCashToAccount),
+            netCashToAccount,
             marketIndex,
-            blockTime
+            blockTime,
+            maturity,
+            defaultAnnualizedSlippage
         );
-
-        // exchangeRate = abs(fCashAmount * RATE_PRECISION / netCashToAccount)
-        int256 exchangeRate = (fCashAmount * RATE_PRECISION) / netCashToAccount;
-        if (exchangeRate < 0) exchangeRate *= -1;
-
-        int256 exchangeSlippageFactor = interestToExchangeRate(defaultAnnualizedSlippage, blockTime, maturity);
-
-        // Exchange rates are non-linear so we apply slippage using the exponent identity:
-        // exchangeRatePostSlippage = e^((r + delta) * t)
-        // exchangeRate = e^(r * t)
-        // slippageFactor = e^(delta * t)
-        // exchangeRatePostSlippage = exchangeRate * slippageFactor
-        int256 exchangeRatePostSlippage = (exchangeRate * exchangeSlippageFactor) / RATE_PRECISION;
 
         return (fCashAmount * exchangeRatePostSlippage) / RATE_PRECISION;
     }
