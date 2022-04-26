@@ -59,6 +59,7 @@ contract Resolver is Helpers {
 
     function getLendfCashAmount(
         uint16 currencyId,
+        int256 cashUnderlying,
         uint256 marketIndex,
         uint256 blockTime,
         uint256 maturity,
@@ -72,14 +73,9 @@ contract Resolver is Helpers {
             AssetRateParameters memory assetRate
         ) = notional.getCurrencyAndRates(currencyId);
 
-        // prettier-ignore
-        (            
-            /* AccountContext memory accountContext */,
-            AccountBalance[] memory accountBalances,
-            /* PortfolioAsset[] memory portfolio */
-        ) = notional.getAccount(address(this));
+        int256 netCashToAccount = convertFromUnderlying(assetRate, cashUnderlying);
 
-        int256 netCashToAccount = accountBalances[currencyId].cashBalance * assetRate.rate;
+        if (netCashToAccount == 0) return 0;
 
         require(
             netCashToAccount >= type(int88).min && netCashToAccount <= type(int88).max,
@@ -106,7 +102,9 @@ contract Resolver is Helpers {
         // exchangeRatePostSlippage = exchangeRate * slippageFactor
         int256 exchangeRatePostSlippage = (exchangeRate * exchangeSlippageFactor) / RATE_PRECISION;
 
+        // Calculate annualized slippage rate
         int256 slippageRate = exchangeToInterestRate(exchangeRatePostSlippage, blockTime, maturity);
+        if (slippageRate < 0) slippageRate = 0;
 
         // If slippage rate is zero then interest rates are so low that slippage may take the lending
         // below zero.This will only occur if interest rates are below the slippage amount, currently
@@ -122,6 +120,7 @@ contract Resolver is Helpers {
 
     function getBorrowfCashAmount(
         uint16 currencyId,
+        int256 cashUnderlying,
         uint256 marketIndex,
         uint256 blockTime,
         uint256 maturity,
@@ -135,14 +134,9 @@ contract Resolver is Helpers {
             AssetRateParameters memory assetRate
         ) = notional.getCurrencyAndRates(currencyId);
 
-        // prettier-ignore
-        (            
-            /* AccountContext memory accountContext */,
-            AccountBalance[] memory accountBalances,
-            /* PortfolioAsset[] memory portfolio */
-        ) = notional.getAccount(address(this));
+        int256 netCashToAccount = convertFromUnderlying(assetRate, cashUnderlying);
 
-        int256 netCashToAccount = accountBalances[currencyId].cashBalance * assetRate.rate;
+        if (netCashToAccount == 0) return 0;
 
         require(
             netCashToAccount >= type(int88).min && netCashToAccount <= type(int88).max,

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
-import { NotionalInterface, Token } from "./interfaces.sol";
+import { NotionalInterface, Token, AssetRateParameters } from "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
 contract Helpers is DSMath {
@@ -17,10 +17,29 @@ contract Helpers is DSMath {
      */
     int128 private constant MAX_64x64 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
-    int256 private constant SECONDS_IN_YEAR = 31104000;
+    uint256 private constant SECONDS_IN_YEAR = 31104000;
 
     // Number of decimal places that rates are stored in, equals 100%
     int256 internal constant RATE_PRECISION = 1e9;
+
+    // Asset rates are in 1e18 decimals (cToken exchange rates), internal balances
+    // are in 1e8 decimals. Therefore we leave this as 1e18 / 1e8 = 1e10
+    int256 private constant ASSET_RATE_DECIMAL_DIFFERENCE = 1e10;
+
+    /// @notice Converts an internal underlying cash value to its asset cash value
+    /// @param ar exchange rate object between asset and underlying
+    /// @param underlyingBalance amount to convert to asset cash, denominated in internal token precision
+    function convertFromUnderlying(AssetRateParameters memory ar, int256 underlyingBalance)
+        internal
+        pure
+        returns (int256)
+    {
+        // Calculation here represents:
+        // rateDecimals * balance * underlyingPrecision / rate * internalPrecision
+        int256 assetBalance = (underlyingBalance * ASSET_RATE_DECIMAL_DIFFERENCE * ar.underlyingDecimals) / ar.rate;
+
+        return assetBalance;
+    }
 
     /**
      * @notice Calculate binary exponent of x.  Revert on overflow.
@@ -199,8 +218,22 @@ contract Helpers is DSMath {
         uint256 maturity
     ) internal pure returns (int256) {
         uint256 timeToMaturity = maturity - blockTime;
-        int256 expValue = toInt(exp(mulFixed(fromInt(annualizedSlippage), fromUInt(timeToMaturity))));
-        return (expValue / SECONDS_IN_YEAR / RATE_PRECISION) * RATE_PRECISION;
+        /// @dev e ^ ((annualRate * timeToMaturity) / SECONDS_IN_YEAR / RATE_PRECISION) * RATE_PRECISION
+        return
+            toInt(
+                mulFixed(
+                    exp(
+                        divFixed(
+                            divFixed(
+                                mulFixed(fromInt(annualizedSlippage), fromUInt(timeToMaturity)),
+                                fromUInt(SECONDS_IN_YEAR)
+                            ),
+                            fromInt(RATE_PRECISION)
+                        )
+                    ),
+                    fromInt(RATE_PRECISION)
+                )
+            );
     }
 
     /**
@@ -217,9 +250,20 @@ contract Helpers is DSMath {
         uint256 maturity
     ) internal pure returns (int256) {
         uint256 timeToMaturity = maturity - blockTime;
-        require(timeToMaturity <= uint256(type(int256).max));
-        int256 logValue = toInt(ln(divFixed(fromInt(exchangeRate), fromInt(RATE_PRECISION))));
-        return ((logValue * SECONDS_IN_YEAR) / int256(timeToMaturity)) * RATE_PRECISION;
+        /// @dev ((log(exchangeRate / RATE_PRECISION) * SECONDS_IN_YEAR) / timeToMaturity) * RATE_PRECISION;
+        return
+            toInt(
+                mulFixed(
+                    divFixed(
+                        mulFixed(
+                            ln(divFixed(fromInt(exchangeRate), fromInt(RATE_PRECISION))),
+                            fromUInt(SECONDS_IN_YEAR)
+                        ),
+                        fromUInt(timeToMaturity)
+                    ),
+                    fromInt(RATE_PRECISION)
+                )
+            );
     }
 
     /**
