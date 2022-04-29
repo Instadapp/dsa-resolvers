@@ -78,7 +78,7 @@ describe("Notional Resolvers", () => {
 
     it("test_getBorrowfCashAmount", async () => {
       const markets = await resolver.getActiveMarkets(3);
-      const amount = await resolver.getBorrowfCashAmount(
+      const resp = await resolver.getBorrowfCashAmount(
         3,
         parseUnits("1000", 6),
         1,
@@ -86,12 +86,13 @@ describe("Notional Resolvers", () => {
         markets[0].maturity,
         parseUnits("5", 6),
       );
-      expect(amount).to.lte(ethers.utils.parseUnits("-45007970000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("45007970000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("50074000", 0));
     });
 
     it("test_getLendingfCashAmount", async () => {
       const markets = await resolver.getActiveMarkets(3);
-      const amount = await resolver.getLendfCashAmount(
+      const resp = await resolver.getLendfCashAmount(
         3,
         parseUnits("1000", 6),
         1,
@@ -99,7 +100,8 @@ describe("Notional Resolvers", () => {
         markets[0].maturity,
         parseUnits("5", 6),
       );
-      expect(amount).to.gte(ethers.utils.parseUnits("44659570000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("44659570000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("50074000", 0));
     });
   });
 });

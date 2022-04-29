@@ -26,6 +26,9 @@ contract Helpers is DSMath {
     // are in 1e8 decimals. Therefore we leave this as 1e18 / 1e8 = 1e10
     int256 private constant ASSET_RATE_DECIMAL_DIFFERENCE = 1e10;
 
+    uint8 internal constant LEND_TRADE = 0;
+    uint8 internal constant BORROW_TRADE = 1;
+
     /// @notice Converts an internal underlying cash value to its asset cash value
     /// @param ar exchange rate object between asset and underlying
     /// @param underlyingBalance amount to convert to asset cash, denominated in internal token precision
@@ -58,11 +61,19 @@ contract Helpers is DSMath {
     function calculatefCashAndExchangeRate(
         uint16 currencyId,
         int256 netCashToAccount,
-        uint256 marketIndex,
+        uint8 marketIndex,
         uint256 blockTime,
         uint256 maturity,
         int128 defaultAnnualizedSlippage
-    ) internal view returns (int256 fCashAmount, int256 exchangeRatePostSlippage) {
+    )
+        internal
+        view
+        returns (
+            int256 fCashAmount,
+            int256 exchangeRatePostSlippage,
+            int256 annualizedRate
+        )
+    {
         require(
             netCashToAccount >= type(int88).min && netCashToAccount <= type(int88).max,
             "netCashToAccount overflow"
@@ -71,7 +82,7 @@ contract Helpers is DSMath {
         fCashAmount = notional.getfCashAmountGivenCashAmount(
             currencyId,
             int88(netCashToAccount),
-            marketIndex,
+            uint256(marketIndex),
             blockTime
         );
 
@@ -87,6 +98,8 @@ contract Helpers is DSMath {
         // slippageFactor = e^(delta * t)
         // exchangeRatePostSlippage = exchangeRate * slippageFactor
         exchangeRatePostSlippage = (exchangeRate * exchangeSlippageFactor) / RATE_PRECISION;
+
+        annualizedRate = exchangeToInterestRate(exchangeRatePostSlippage, blockTime, maturity);
     }
 
     /**
@@ -387,5 +400,35 @@ contract Helpers is DSMath {
         int256 result = (int256(x) << 64) / y;
         require(result >= MIN_64x64 && result <= MAX_64x64);
         return int128(result);
+    }
+
+    function encodeLendTrade(
+        uint8 marketIndex,
+        int256 fCashAmount,
+        int256 minLendRate
+    ) internal pure returns (bytes32) {
+        require(fCashAmount >= 0 && uint256(fCashAmount) <= type(uint88).max, "Invalid fCashAmount");
+        require(minLendRate >= 0 && uint256(minLendRate) <= type(uint32).max, "Invalid minLendRate");
+
+        return
+            (bytes32(uint256(LEND_TRADE)) << 248) |
+            (bytes32(uint256(marketIndex)) << 240) |
+            (bytes32(uint256(fCashAmount)) << 152) |
+            (bytes32(uint256(minLendRate)) << 120);
+    }
+
+    function encodeBorrowTrade(
+        uint8 marketIndex,
+        int256 fCashAmount,
+        int256 maxBorrowRate
+    ) internal pure returns (bytes32) {
+        require(fCashAmount >= 0 && uint256(fCashAmount) <= type(uint88).max, "Invalid fCashAmount");
+        require(maxBorrowRate >= 0 && uint256(maxBorrowRate) <= type(uint32).max, "Invalid maxBorrowRate");
+
+        return
+            (bytes32(uint256(BORROW_TRADE)) << 248) |
+            (bytes32(uint256(marketIndex)) << 240) |
+            (bytes32(uint256(fCashAmount)) << 152) |
+            (bytes32(uint256(maxBorrowRate)) << 120);
     }
 }

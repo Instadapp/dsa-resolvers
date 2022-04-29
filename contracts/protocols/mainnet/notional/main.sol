@@ -86,19 +86,28 @@ contract Resolver is Helpers {
     function getLendfCashAmount(
         uint16 currencyId,
         int256 cashUnderlying,
-        uint256 marketIndex,
+        uint8 marketIndex,
         uint256 blockTime,
         uint256 maturity,
         int128 defaultAnnualizedSlippage
-    ) external view returns (int256) {
+    )
+        external
+        view
+        returns (
+            int256,
+            int256,
+            bytes32
+        )
+    {
         int256 netCashToAccount = getNetCashToAccount(currencyId, cashUnderlying);
 
-        if (netCashToAccount == 0) return 0;
+        if (netCashToAccount == 0) return (0, 0, bytes32(0));
 
         // prettier-ignore
         (
             /* int256 fCashAmount */, 
-            int256 exchangeRatePostSlippage
+            int256 exchangeRatePostSlippage,
+            int256 annualizedRate
         ) = calculatefCashAndExchangeRate(
             currencyId,
             netCashToAccount,
@@ -109,19 +118,20 @@ contract Resolver is Helpers {
         );
 
         // Calculate annualized slippage rate
-        int256 slippageRate = exchangeToInterestRate(exchangeRatePostSlippage, blockTime, maturity);
-        if (slippageRate < 0) slippageRate = 0;
+        if (annualizedRate < 0) annualizedRate = 0;
 
         // If slippage rate is zero then interest rates are so low that slippage may take the lending
         // below zero.This will only occur if interest rates are below the slippage amount, currently
         // set to 50 basis points(0.50 % annualized)
-        require(slippageRate != 0, "Insufficient liquidity");
+        require(annualizedRate != 0, "Insufficient liquidity");
 
         // When lending the cash amount required for the reported fCash may undershoot what is required.
         // We use the exchange rate post slippage to get a lower fCash amount to ensure that the deposited
         // cash will be able to get sufficient fCash. If the rate does not slip then the account will end
         // up lending slightly less cash at a better rate.
-        return (netCashToAccount * exchangeRatePostSlippage) / RATE_PRECISION;
+        int256 fCashAmount = (netCashToAccount * exchangeRatePostSlippage) / RATE_PRECISION;
+
+        return (fCashAmount, annualizedRate, encodeLendTrade(marketIndex, fCashAmount, annualizedRate));
     }
 
     /// @notice Returns the fCash amount to send when given a cash amount
@@ -135,16 +145,29 @@ contract Resolver is Helpers {
     function getBorrowfCashAmount(
         uint16 currencyId,
         int256 cashUnderlying,
-        uint256 marketIndex,
+        uint8 marketIndex,
         uint256 blockTime,
         uint256 maturity,
         int128 defaultAnnualizedSlippage
-    ) external view returns (int256) {
+    )
+        external
+        view
+        returns (
+            int256,
+            int256,
+            bytes32
+        )
+    {
         int256 netCashToAccount = getNetCashToAccount(currencyId, cashUnderlying);
 
-        if (netCashToAccount == 0) return 0;
+        if (netCashToAccount == 0) return (0, 0, bytes32(0));
 
-        (int256 fCashAmount, int256 exchangeRatePostSlippage) = calculatefCashAndExchangeRate(
+        // prettier-ignore
+        (
+            int256 fCashAmount, 
+            int256 exchangeRatePostSlippage, 
+            int256 annualizedRate
+        ) = calculatefCashAndExchangeRate(
             currencyId,
             netCashToAccount,
             marketIndex,
@@ -153,7 +176,12 @@ contract Resolver is Helpers {
             defaultAnnualizedSlippage
         );
 
-        return (fCashAmount * exchangeRatePostSlippage) / RATE_PRECISION;
+        fCashAmount = (fCashAmount * exchangeRatePostSlippage) / RATE_PRECISION;
+
+        // Return positive borrow amount
+        if (fCashAmount <= 0) fCashAmount *= -1;
+
+        return (fCashAmount, annualizedRate, encodeBorrowTrade(marketIndex, fCashAmount, annualizedRate));
     }
 }
 
