@@ -75,113 +75,154 @@ contract Resolver is Helpers {
         return notional.calculateNTokensToMint(currencyId, amountToDepositExternalPrecision);
     }
 
-    /// @notice Returns the fCash amount to send when given a cash amount
-    /// @dev Use this version for lending
-    /// @param currencyId currency ID
-    /// @param cashUnderlying cash deposit amount of the underlying in external precision
-    /// @param marketIndex market index used for the calculation
-    /// @param blockTime block time used for the calculation
-    /// @param maturity fCash maturity used for the calculate
-    /// @param defaultAnnualizedSlippage default slippage amount
-    function getLendfCashAmount(
+    /// @notice Returns the amount of fCash that would received if lending deposit amount.
+    /// @param currencyId id number of the currency
+    /// @param depositAmountExternal amount to deposit in the token's native precision. For aTokens use
+    /// what is returned by the balanceOf selector (not scaledBalanceOf).
+    /// @param maturity the maturity of the fCash to lend
+    /// @param minLendRate the minimum lending rate (slippage protection)
+    /// @param blockTime the block time for when the trade will be calculated
+    /// @param useUnderlying true if specifying the underlying token, false if specifying the asset token
+    /// @return fCashAmount the amount of fCash that the lender will receive
+    /// @return marketIndex the corresponding market index for the lending
+    /// @return encodedTrade the encoded bytes32 object to pass to batch trade
+    function getfCashLendFromDeposit(
         uint16 currencyId,
-        int256 cashUnderlying,
-        uint8 marketIndex,
-        uint256 blockTime,
+        uint256 depositAmountExternal,
         uint256 maturity,
-        int128 defaultAnnualizedSlippage
+        uint32 minLendRate,
+        uint256 blockTime,
+        bool useUnderlying
     )
         external
         view
         returns (
-            int256,
-            int256,
-            bytes32
+            uint88 fCashAmount,
+            uint8 marketIndex,
+            bytes32 encodedTrade
         )
     {
-        int256 netCashToAccount = getNetCashToAccount(currencyId, cashUnderlying);
-
-        if (netCashToAccount == 0) return (0, 0, bytes32(0));
-
-        // prettier-ignore
-        (
-            /* int256 fCashAmount */, 
-            int256 exchangeRatePostSlippage,
-            int256 annualizedRate
-        ) = calculatefCashAndExchangeRate(
-            currencyId,
-            netCashToAccount,
-            marketIndex,
-            blockTime,
-            maturity,
-            defaultAnnualizedSlippage
-        );
-
-        // Calculate annualized slippage rate
-        if (annualizedRate < 0) annualizedRate = 0;
-
-        // If slippage rate is zero then interest rates are so low that slippage may take the lending
-        // below zero.This will only occur if interest rates are below the slippage amount, currently
-        // set to 50 basis points(0.50 % annualized)
-        require(annualizedRate != 0, "Insufficient liquidity");
-
-        // When lending the cash amount required for the reported fCash may undershoot what is required.
-        // We use the exchange rate post slippage to get a lower fCash amount to ensure that the deposited
-        // cash will be able to get sufficient fCash. If the rate does not slip then the account will end
-        // up lending slightly less cash at a better rate.
-        int256 fCashAmount = (netCashToAccount * exchangeRatePostSlippage) / RATE_PRECISION;
-
-        return (fCashAmount, annualizedRate, encodeLendTrade(marketIndex, fCashAmount, annualizedRate));
+        return
+            notional.getfCashLendFromDeposit(
+                currencyId,
+                depositAmountExternal,
+                maturity,
+                minLendRate,
+                blockTime,
+                useUnderlying
+            );
     }
 
-    /// @notice Returns the fCash amount to send when given a cash amount
-    /// @dev Use this version for borrowing
-    /// @param currencyId currency ID
-    /// @param cashUnderlying cash deposit amount of the underlying in external precision
-    /// @param marketIndex market index used for the calculation
-    /// @param blockTime block time used for the calculation
-    /// @param maturity fCash maturity used for the calculate
-    /// @param defaultAnnualizedSlippage default slippage amount
-    function getBorrowfCashAmount(
+    /// @notice Returns the amount of fCash that would received if lending deposit amount.
+    /// @param currencyId id number of the currency
+    /// @param borrowedAmountExternal amount to borrow in the token's native precision. For aTokens use
+    /// what is returned by the balanceOf selector (not scaledBalanceOf).
+    /// @param maturity the maturity of the fCash to lend
+    /// @param maxBorrowRate the maximum borrow rate (slippage protection). If zero then no slippage will be applied
+    /// @param blockTime the block time for when the trade will be calculated
+    /// @param useUnderlying true if specifying the underlying token, false if specifying the asset token
+    /// @return fCashDebt the amount of fCash that the borrower will owe, this will be stored as a negative
+    /// balance in Notional
+    /// @return marketIndex the corresponding market index for the lending
+    /// @return encodedTrade the encoded bytes32 object to pass to batch trade
+    function getfCashBorrowFromPrincipal(
         uint16 currencyId,
-        int256 cashUnderlying,
-        uint8 marketIndex,
-        uint256 blockTime,
+        uint256 borrowedAmountExternal,
         uint256 maturity,
-        int128 defaultAnnualizedSlippage
+        uint32 maxBorrowRate,
+        uint256 blockTime,
+        bool useUnderlying
     )
         external
         view
         returns (
-            int256,
-            int256,
-            bytes32
+            uint88 fCashDebt,
+            uint8 marketIndex,
+            bytes32 encodedTrade
         )
     {
-        int256 netCashToAccount = getNetCashToAccount(currencyId, cashUnderlying);
+        return
+            notional.getfCashBorrowFromPrincipal(
+                currencyId,
+                borrowedAmountExternal,
+                maturity,
+                maxBorrowRate,
+                blockTime,
+                useUnderlying
+            );
+    }
 
-        if (netCashToAccount == 0) return (0, 0, bytes32(0));
+    /// @notice Returns the amount of underlying cash and asset cash required to lend fCash. When specifying a
+    /// trade, deposit either underlying or asset tokens (not both). Asset tokens tend to be more gas efficient.
+    /// @param currencyId id number of the currency
+    /// @param fCashAmount amount of fCash (in underlying) that will be received at maturity. Always 8 decimal precision.
+    /// @param maturity the maturity of the fCash to lend
+    /// @param minLendRate the minimum lending rate (slippage protection)
+    /// @param blockTime the block time for when the trade will be calculated
+    /// @return depositAmountUnderlying the amount of underlying tokens the lender must deposit
+    /// @return depositAmountAsset the amount of asset tokens the lender must deposit
+    /// @return marketIndex the corresponding market index for the lending
+    /// @return encodedTrade the encoded bytes32 object to pass to batch trade
+    function getDepositFromfCashLend(
+        uint16 currencyId,
+        uint256 fCashAmount,
+        uint256 maturity,
+        uint32 minLendRate,
+        uint256 blockTime
+    )
+        external
+        view
+        returns (
+            uint256 depositAmountUnderlying,
+            uint256 depositAmountAsset,
+            uint8 marketIndex,
+            bytes32 encodedTrade
+        )
+    {
+        return notional.getDepositFromfCashLend(currencyId, fCashAmount, maturity, minLendRate, blockTime);
+    }
 
-        // prettier-ignore
-        (
-            int256 fCashAmount, 
-            int256 exchangeRatePostSlippage, 
-            int256 annualizedRate
-        ) = calculatefCashAndExchangeRate(
-            currencyId,
-            netCashToAccount,
-            marketIndex,
-            blockTime,
-            maturity,
-            defaultAnnualizedSlippage
-        );
+    /// @notice Returns the amount of underlying cash and asset cash required to borrow fCash. When specifying a
+    /// trade, choose to receive either underlying or asset tokens (not both). Asset tokens tend to be more gas efficient.
+    /// @param currencyId id number of the currency
+    /// @param fCashBorrow amount of fCash (in underlying) that will be received at maturity. Always 8 decimal precision.
+    /// @param maturity the maturity of the fCash to lend
+    /// @param maxBorrowRate the maximum borrow rate (slippage protection)
+    /// @param blockTime the block time for when the trade will be calculated
+    /// @return borrowAmountUnderlying the amount of underlying tokens the borrower will receive
+    /// @return borrowAmountAsset the amount of asset tokens the borrower will receive
+    /// @return marketIndex the corresponding market index for the lending
+    /// @return encodedTrade the encoded bytes32 object to pass to batch trade
+    function getPrincipalFromfCashBorrow(
+        uint16 currencyId,
+        uint256 fCashBorrow,
+        uint256 maturity,
+        uint32 maxBorrowRate,
+        uint256 blockTime
+    )
+        external
+        view
+        returns (
+            uint256 borrowAmountUnderlying,
+            uint256 borrowAmountAsset,
+            uint8 marketIndex,
+            bytes32 encodedTrade
+        )
+    {
+        return notional.getPrincipalFromfCashBorrow(currencyId, fCashBorrow, maturity, maxBorrowRate, blockTime);
+    }
 
-        fCashAmount = (fCashAmount * exchangeRatePostSlippage) / RATE_PRECISION;
-
-        // Return positive borrow amount
-        if (fCashAmount <= 0) fCashAmount *= -1;
-
-        return (fCashAmount, annualizedRate, encodeBorrowTrade(marketIndex, fCashAmount, annualizedRate));
+    /// @notice Converts an internal cash balance to an external token denomination
+    /// @param currencyId the currency id of the cash balance
+    /// @param cashBalanceInternal the signed cash balance that is stored in Notional
+    /// @param convertToUnderlying true if the value should be converted to underlying
+    /// @return the cash balance converted to the external token denomination
+    function convertCashBalanceToExternal(
+        uint16 currencyId,
+        int256 cashBalanceInternal,
+        bool convertToUnderlying
+    ) external view returns (int256) {
+        return notional.convertCashBalanceToExternal(currencyId, cashBalanceInternal, convertToUnderlying);
     }
 }
 
