@@ -248,25 +248,51 @@ abstract contract Helpers is DSMath {
             (token0, token1) = mintParams.tokenA < mintParams.tokenB
                 ? (mintParams.tokenA, mintParams.tokenB)
                 : (mintParams.tokenB, mintParams.tokenA);
+
+            if (mintParams.tokenA < mintParams.tokenB) {
+                amount0 = mintParams.amountA;
+                (amount1, liquidity) = calculateSingleAmount(
+                    SingleAmountParams(
+                        amount0,
+                        mintParams.slippage,
+                        true,
+                        TickMath.getSqrtRatioAtTick(newCurrentTick),
+                        TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
+                        TickMath.getSqrtRatioAtTick(mintParams.upperTick)
+                    )
+                );
+            } else {
+                amount1 = mintParams.amountA;
+                (amount0, liquidity) = calculateSingleAmount(
+                    SingleAmountParams(
+                        amount1,
+                        mintParams.slippage,
+                        false,
+                        TickMath.getSqrtRatioAtTick(newCurrentTick),
+                        TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
+                        TickMath.getSqrtRatioAtTick(mintParams.upperTick)
+                    )
+                );
+            }
         }
 
-        // compute the liquidity amount
-        {
-            liquidity = LiquidityAmounts.getLiquidityForAmounts(
-                TickMath.getSqrtRatioAtTick(newCurrentTick),
-                TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
-                TickMath.getSqrtRatioAtTick(mintParams.upperTick),
-                mintParams.amountA,
-                mintParams.amountB
-            );
+        // // compute the liquidity amount
+        // {
+        //     liquidity = LiquidityAmounts.getLiquidityForAmounts(
+        //         TickMath.getSqrtRatioAtTick(newCurrentTick),
+        //         TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
+        //         TickMath.getSqrtRatioAtTick(mintParams.upperTick),
+        //         mintParams.amountA,
+        //         mintParams.amountB
+        //     );
 
-            (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
-                TickMath.getSqrtRatioAtTick(newCurrentTick),
-                TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
-                TickMath.getSqrtRatioAtTick(mintParams.upperTick),
-                uint128(liquidity)
-            );
-        }
+        //     (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
+        //         TickMath.getSqrtRatioAtTick(newCurrentTick),
+        //         TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
+        //         TickMath.getSqrtRatioAtTick(mintParams.upperTick),
+        //         uint128(liquidity)
+        //     );
+        // }
 
         amount0Min = getMinAmount(TokenInterface(token0), amount0, mintParams.slippage);
         amount1Min = getMinAmount(TokenInterface(token1), amount1, mintParams.slippage);
