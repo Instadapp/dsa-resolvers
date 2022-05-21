@@ -187,6 +187,16 @@ abstract contract Helpers is DSMath {
         uint256 slippage;
     }
 
+    struct MintNewParams {
+        address tokenA;
+        address tokenB;
+        uint24 fee;
+        int24 lowerTick;
+        int24 upperTick;
+        uint256 amountA;
+        uint256 slippage;
+    }
+
     function mintAmount(MintParams memory mintParams)
         internal
         view
@@ -231,7 +241,7 @@ abstract contract Helpers is DSMath {
         amount1Min = getMinAmount(TokenInterface(token1), amount1, mintParams.slippage);
     }
 
-    function mintNewAmount(MintParams memory mintParams, int24 newCurrentTick)
+    function mintNewAmount(MintNewParams memory mintParams, int24 newCurrentTick)
         internal
         view
         returns (
@@ -255,7 +265,7 @@ abstract contract Helpers is DSMath {
                     SingleAmountParams(
                         amount0,
                         mintParams.slippage,
-                        true,
+                        false,
                         TickMath.getSqrtRatioAtTick(newCurrentTick),
                         TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
                         TickMath.getSqrtRatioAtTick(mintParams.upperTick)
@@ -267,7 +277,7 @@ abstract contract Helpers is DSMath {
                     SingleAmountParams(
                         amount1,
                         mintParams.slippage,
-                        false,
+                        true,
                         TickMath.getSqrtRatioAtTick(newCurrentTick),
                         TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
                         TickMath.getSqrtRatioAtTick(mintParams.upperTick)
@@ -275,24 +285,6 @@ abstract contract Helpers is DSMath {
                 );
             }
         }
-
-        // // compute the liquidity amount
-        // {
-        //     liquidity = LiquidityAmounts.getLiquidityForAmounts(
-        //         TickMath.getSqrtRatioAtTick(newCurrentTick),
-        //         TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
-        //         TickMath.getSqrtRatioAtTick(mintParams.upperTick),
-        //         mintParams.amountA,
-        //         mintParams.amountB
-        //     );
-
-        //     (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
-        //         TickMath.getSqrtRatioAtTick(newCurrentTick),
-        //         TickMath.getSqrtRatioAtTick(mintParams.lowerTick),
-        //         TickMath.getSqrtRatioAtTick(mintParams.upperTick),
-        //         uint128(liquidity)
-        //     );
-        // }
 
         amount0Min = getMinAmount(TokenInterface(token0), amount0, mintParams.slippage);
         amount1Min = getMinAmount(TokenInterface(token1), amount1, mintParams.slippage);
