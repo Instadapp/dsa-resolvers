@@ -78,7 +78,7 @@ contract Resolver is Helpers {
         token1 == wethAddr ? (ethAddr) : (token1);
     }
 
-    function getMintNewAmount(MintParams memory mintParams, int24 newCurrentTick)
+    function getMintNewAmount(MintNewParams memory mintParams, int24 newCurrentTick)
         public
         view
         returns (

@@ -115,6 +115,7 @@ const config: HardhatUserConfig = {
     arbitrum: {
       url: `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 0.5 * 1e9, // 0.0001 GWEI
     },
     fantom: {
       url: `https://rpc.ftm.tools/`,
@@ -123,6 +124,7 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 20 * 1e9, // 0.0001 GWEI
     },
   },
   paths: {
@@ -164,7 +166,7 @@ const config: HardhatUserConfig = {
     timeout: 10000 * 1000,
   },
   etherscan: {
-    apiKey: getScanApiKey(String(process.env.networkType)),
+    apiKey: "NSXM4E486FHRDEVDY57CWE4ZM1G2QIGHPZ",
   },
 };
 
