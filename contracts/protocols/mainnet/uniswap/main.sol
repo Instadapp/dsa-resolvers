@@ -78,6 +78,31 @@ contract Resolver is Helpers {
         token1 == wethAddr ? (ethAddr) : (token1);
     }
 
+    function getMintNewAmount(MintNewParams memory mintParams, int24 newCurrentTick)
+        public
+        view
+        returns (
+            address token0,
+            address token1,
+            uint256 liquidity,
+            uint256 amount0,
+            uint256 amount1,
+            uint256 amount0Min,
+            uint256 amount1Min
+        )
+    {
+        mintParams.tokenA = mintParams.tokenA == ethAddr ? (wethAddr) : (mintParams.tokenA);
+        mintParams.tokenB = mintParams.tokenB == ethAddr ? (wethAddr) : (mintParams.tokenB);
+
+        (token0, token1, liquidity, amount0, amount1, amount0Min, amount1Min) = mintNewAmount(
+            mintParams,
+            newCurrentTick
+        );
+
+        token0 == wethAddr ? (ethAddr) : (token0);
+        token1 == wethAddr ? (ethAddr) : (token1);
+    }
+
     function getDepositAmount(
         uint256 tokenId,
         uint256 amountA,
@@ -160,6 +185,10 @@ contract Resolver is Helpers {
         )
     {
         (amount0, amount1, amount0Min, amount1Min) = withdrawAmount(tokenId, liquidity, slippage);
+    }
+
+    function getCollectAmount(uint256 tokenId) public returns (uint256 amountA, uint256 amountB) {
+        (amountA, amountB) = collectInfo(tokenId);
     }
 
     function getUserNFTs(address user) public view returns (uint256[] memory tokenIds) {
