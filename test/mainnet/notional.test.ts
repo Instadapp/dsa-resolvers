@@ -110,32 +110,70 @@ describe("Notional Resolvers", () => {
       expect(amount).to.gte(ethers.utils.parseUnits("1998890000000000000", 0));
     });
 
-    it("test_getBorrowfCashAmount", async () => {
+    it("test_getfCashBorrowFromPrincipal", async () => {
       const markets = await resolver.getActiveMarkets(3);
-      const resp = await resolver.getBorrowfCashAmount(
+      const resp = await resolver.getfCashBorrowFromPrincipal(
         3,
         parseUnits("1000", 6),
-        1,
-        1650925608,
         markets[0].maturity,
         parseUnits("5", 6),
+        1654408809,
+        true,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("44800000000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("43500000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("100233000000", 0));
+      expect(resp[1]).to.equal(1);
     });
 
-    it("test_getLendingfCashAmount", async () => {
+    it("test_getfCashLendFromDeposit", async () => {
       const markets = await resolver.getActiveMarkets(3);
-      const resp = await resolver.getLendfCashAmount(
+      const resp = await resolver.getfCashLendFromDeposit(
         3,
         parseUnits("1000", 6),
-        1,
-        1650925608,
         markets[0].maturity,
         parseUnits("5", 6),
+        1654408809,
+        true,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("44500000000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("43500000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("100196000000", 0));
+      expect(resp[1]).to.equal(1);
+    });
+
+    it("test_getDepositFromfCashLend", async () => {
+      const markets = await resolver.getActiveMarkets(3);
+      const resp = await resolver.getDepositFromfCashLend(
+        3,
+        parseUnits("1000", 8),
+        markets[0].maturity,
+        parseUnits("5", 6),
+        1654408809,
+      );
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("998000000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("4413890000000", 0));
+      expect(resp[2]).to.equal(1);
+    });
+
+    it("test_getPrincipalFromfCashBorrow", async () => {
+      const markets = await resolver.getActiveMarkets(3);
+      const resp = await resolver.getPrincipalFromfCashBorrow(
+        3,
+        parseUnits("1000", 8),
+        markets[0].maturity,
+        0,
+        1654408809,
+      );
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("997000000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("4412290000000", 0));
+      expect(resp[2]).to.equal(1);
+    });
+
+    it("test_convertCashBalanceToExternal_asset", async () => {
+      const resp = await resolver.convertCashBalanceToExternal(3, parseUnits("1000", 8), false);
+      expect(resp).to.equal(ethers.utils.parseUnits("100000000000", 0));
+    });
+
+    it("test_convertCashBalanceToExternal_underlying", async () => {
+      const resp = await resolver.convertCashBalanceToExternal(3, parseUnits("1000", 8), true);
+      expect(resp).to.gte(ethers.utils.parseUnits("22600000", 0));
     });
   });
 });
