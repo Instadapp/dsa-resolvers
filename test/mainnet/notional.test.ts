@@ -4,11 +4,23 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { parseEther, parseUnits } from "ethers/lib/utils";
 
+const NOTIONAL_CONTRACT_ADDRESS = "0x1344A36A1B56144C3Bc62E7757377D288fDE0369";
+const NOTIONAL_CONTRACT_ABI = [
+  "function updateAssetRate(uint16 currencyId, address rateOracle) external",
+  "function upgradeTo(address newImplementation) public",
+  "function owner() external view returns (address)",
+];
+const ETH_WHALE = "0x9acb5CE4878144a74eEeDEda54c675AA59E0D3D2";
+
 describe("Notional Resolvers", () => {
   let signer: SignerWithAddress;
   const testAccount = "0x8665d75ff2db29355428b590856505459bb675e3";
+  let notional: any;
+  let notionalOwner: any;
+  let ethWhale: any;
+  let resolver: InstaNotionalResolver;
 
-  before(async () => {
+  beforeEach(async () => {
     [signer] = await ethers.getSigners();
     await hre.network.provider.request({
       method: "hardhat_reset",
@@ -17,21 +29,43 @@ describe("Notional Resolvers", () => {
           forking: {
             //@ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 14656322,
+            blockNumber: 14907264,
           },
         },
       ],
     });
+
+    notional = new ethers.Contract(NOTIONAL_CONTRACT_ADDRESS, NOTIONAL_CONTRACT_ABI, ethers.provider);
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [ETH_WHALE],
+    });
+    ethWhale = await ethers.getSigner(ETH_WHALE);
+
+    await ethWhale.sendTransaction({
+      to: await notional.owner(),
+      value: ethers.BigNumber.from(10).pow(18).mul(10),
+    });
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [await notional.owner()],
+    });
+    notionalOwner = await ethers.getSigner(await notional.owner());
+
+    await notional.connect(notionalOwner).upgradeTo("0x16eD130F7A6dcAc7e3B0617A7bafa4b470189962");
+    await notional.connect(notionalOwner).updateAssetRate(1, "0xE329E81800219Aefeef79D74DB35f8877fE1abdE");
+    await notional.connect(notionalOwner).updateAssetRate(2, "0x719993E82974f5b5eA0c5ebA25c260CD5AF78E00");
+    await notional.connect(notionalOwner).updateAssetRate(3, "0x7b0cc121ABd20ACd77482b5aa95126db2e597987");
+    await notional.connect(notionalOwner).updateAssetRate(4, "0x39D9590721331B13C8e9A42941a2B961B513E69d");
+
+    const deployer = new InstaNotionalResolver__factory(signer);
+    resolver = await deployer.deploy();
+    await resolver.deployed();
   });
 
   describe("Notional Resolver", () => {
-    let resolver: InstaNotionalResolver;
-    before(async () => {
-      const deployer = new InstaNotionalResolver__factory(signer);
-      resolver = await deployer.deploy();
-      await resolver.deployed();
-    });
-
     it("test_getAccount", async () => {
       const [accountContext, accountBalances, portfolio] = await resolver.getAccount(testAccount);
       expect(accountContext.hasDebt).to.equal("0x01");
@@ -73,7 +107,7 @@ describe("Notional Resolvers", () => {
 
     it("test_calculateNTokensToMint", async () => {
       const amount = await resolver.calculateNTokensToMint(1, parseEther("2"));
-      expect(amount).to.gte(ethers.utils.parseUnits("1999170000000000000", 0));
+      expect(amount).to.gte(ethers.utils.parseUnits("1998890000000000000", 0));
     });
 
     it("test_getBorrowfCashAmount", async () => {
@@ -86,8 +120,8 @@ describe("Notional Resolvers", () => {
         markets[0].maturity,
         parseUnits("5", 6),
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("45007970000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("50074000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("44800000000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("43500000", 0));
     });
 
     it("test_getLendingfCashAmount", async () => {
@@ -100,8 +134,8 @@ describe("Notional Resolvers", () => {
         markets[0].maturity,
         parseUnits("5", 6),
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("44659570000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("50074000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("44500000000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("43500000", 0));
     });
   });
 });
