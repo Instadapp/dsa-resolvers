@@ -29,7 +29,7 @@ describe("Notional Resolvers", () => {
           forking: {
             //@ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 14907264,
+            blockNumber: 14915865,
           },
         },
       ],
@@ -55,9 +55,9 @@ describe("Notional Resolvers", () => {
     notionalOwner = await ethers.getSigner(await notional.owner());
 
     await notional.connect(notionalOwner).upgradeTo("0x16eD130F7A6dcAc7e3B0617A7bafa4b470189962");
-    await notional.connect(notionalOwner).updateAssetRate(1, "0xE329E81800219Aefeef79D74DB35f8877fE1abdE");
+    await notional.connect(notionalOwner).updateAssetRate(1, "0x8E3D447eBE244db6D28E2303bCa86Ef3033CFAd6");
     await notional.connect(notionalOwner).updateAssetRate(2, "0x719993E82974f5b5eA0c5ebA25c260CD5AF78E00");
-    await notional.connect(notionalOwner).updateAssetRate(3, "0x7b0cc121ABd20ACd77482b5aa95126db2e597987");
+    await notional.connect(notionalOwner).updateAssetRate(3, "0x612741825ACedC6F88D8709319fe65bCB015C693");
     await notional.connect(notionalOwner).updateAssetRate(4, "0x39D9590721331B13C8e9A42941a2B961B513E69d");
 
     const deployer = new InstaNotionalResolver__factory(signer);
@@ -107,7 +107,7 @@ describe("Notional Resolvers", () => {
 
     it("test_calculateNTokensToMint", async () => {
       const amount = await resolver.calculateNTokensToMint(1, parseEther("2"));
-      expect(amount).to.gte(ethers.utils.parseUnits("1998890000000000000", 0));
+      expect(amount).to.gte(ethers.utils.parseUnits("1998880000000000000", 0));
     });
 
     it("test_getfCashBorrowFromPrincipal", async () => {
@@ -120,7 +120,7 @@ describe("Notional Resolvers", () => {
         1654408809,
         true,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("100233000000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("100237000000", 0));
       expect(resp[1]).to.equal(1);
     });
 
@@ -134,7 +134,7 @@ describe("Notional Resolvers", () => {
         1654408809,
         true,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("100196000000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("100201000000", 0));
       expect(resp[1]).to.equal(1);
     });
 
@@ -147,8 +147,8 @@ describe("Notional Resolvers", () => {
         parseUnits("5", 6),
         1654408809,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("998000000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("4413890000000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("997990000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("4413570000000", 0));
       expect(resp[2]).to.equal(1);
     });
 
@@ -162,7 +162,7 @@ describe("Notional Resolvers", () => {
         1654408809,
       );
       expect(resp[0]).to.gte(ethers.utils.parseUnits("997000000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("4412290000000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("4411960000000", 0));
       expect(resp[2]).to.equal(1);
     });
 
@@ -173,7 +173,7 @@ describe("Notional Resolvers", () => {
 
     it("test_convertCashBalanceToExternal_underlying", async () => {
       const resp = await resolver.convertCashBalanceToExternal(3, parseUnits("1000", 8), true);
-      expect(resp).to.gte(ethers.utils.parseUnits("22600000", 0));
+      expect(resp).to.gte(ethers.utils.parseUnits("22610000", 0));
     });
   });
 });
