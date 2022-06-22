@@ -29,7 +29,7 @@ describe("Notional Resolvers", () => {
           forking: {
             //@ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 14915865,
+            blockNumber: 15007400,
           },
         },
       ],
@@ -54,7 +54,7 @@ describe("Notional Resolvers", () => {
     });
     notionalOwner = await ethers.getSigner(await notional.owner());
 
-    await notional.connect(notionalOwner).upgradeTo("0x16eD130F7A6dcAc7e3B0617A7bafa4b470189962");
+    await notional.connect(notionalOwner).upgradeTo("0x2C67B0C0493e358cF368073bc0B5fA6F01E981e0");
     await notional.connect(notionalOwner).updateAssetRate(1, "0x8E3D447eBE244db6D28E2303bCa86Ef3033CFAd6");
     await notional.connect(notionalOwner).updateAssetRate(2, "0x719993E82974f5b5eA0c5ebA25c260CD5AF78E00");
     await notional.connect(notionalOwner).updateAssetRate(3, "0x612741825ACedC6F88D8709319fe65bCB015C693");
@@ -107,7 +107,7 @@ describe("Notional Resolvers", () => {
 
     it("test_calculateNTokensToMint", async () => {
       const amount = await resolver.calculateNTokensToMint(1, parseEther("2"));
-      expect(amount).to.gte(ethers.utils.parseUnits("1998880000000000000", 0));
+      expect(amount).to.gte(ethers.utils.parseUnits("1998700000000000000", 0));
     });
 
     it("test_getfCashBorrowFromPrincipal", async () => {
@@ -120,7 +120,7 @@ describe("Notional Resolvers", () => {
         1654408809,
         true,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("100237000000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("100036000000", 0));
       expect(resp[1]).to.equal(1);
     });
 
@@ -129,13 +129,13 @@ describe("Notional Resolvers", () => {
       const resp = await resolver.getfCashLendFromDeposit(
         3,
         parseUnits("1000", 6),
-        markets[0].maturity,
+        markets[1].maturity,
         parseUnits("5", 6),
         1654408809,
         true,
       );
       expect(resp[0]).to.gte(ethers.utils.parseUnits("100201000000", 0));
-      expect(resp[1]).to.equal(1);
+      expect(resp[1]).to.equal(2);
     });
 
     it("test_getDepositFromfCashLend", async () => {
@@ -143,13 +143,13 @@ describe("Notional Resolvers", () => {
       const resp = await resolver.getDepositFromfCashLend(
         3,
         parseUnits("1000", 8),
-        markets[0].maturity,
+        markets[1].maturity,
         parseUnits("5", 6),
         1654408809,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("997990000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("4413570000000", 0));
-      expect(resp[2]).to.equal(1);
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("987800000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("4368040000000", 0));
+      expect(resp[2]).to.equal(2);
     });
 
     it("test_getPrincipalFromfCashBorrow", async () => {
