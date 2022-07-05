@@ -4,20 +4,9 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { parseEther, parseUnits } from "ethers/lib/utils";
 
-const NOTIONAL_CONTRACT_ADDRESS = "0x1344A36A1B56144C3Bc62E7757377D288fDE0369";
-const NOTIONAL_CONTRACT_ABI = [
-  "function updateAssetRate(uint16 currencyId, address rateOracle) external",
-  "function upgradeTo(address newImplementation) public",
-  "function owner() external view returns (address)",
-];
-const ETH_WHALE = "0x9acb5CE4878144a74eEeDEda54c675AA59E0D3D2";
-
 describe("Notional Resolvers", () => {
   let signer: SignerWithAddress;
   const testAccount = "0x8665d75ff2db29355428b590856505459bb675e3";
-  let notional: any;
-  let notionalOwner: any;
-  let ethWhale: any;
   let resolver: InstaNotionalResolver;
 
   beforeEach(async () => {
@@ -29,36 +18,11 @@ describe("Notional Resolvers", () => {
           forking: {
             //@ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 15007400,
+            blockNumber: 15083800,
           },
         },
       ],
     });
-
-    notional = new ethers.Contract(NOTIONAL_CONTRACT_ADDRESS, NOTIONAL_CONTRACT_ABI, ethers.provider);
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [ETH_WHALE],
-    });
-    ethWhale = await ethers.getSigner(ETH_WHALE);
-
-    await ethWhale.sendTransaction({
-      to: await notional.owner(),
-      value: ethers.BigNumber.from(10).pow(18).mul(10),
-    });
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [await notional.owner()],
-    });
-    notionalOwner = await ethers.getSigner(await notional.owner());
-
-    await notional.connect(notionalOwner).upgradeTo("0x2C67B0C0493e358cF368073bc0B5fA6F01E981e0");
-    await notional.connect(notionalOwner).updateAssetRate(1, "0x8E3D447eBE244db6D28E2303bCa86Ef3033CFAd6");
-    await notional.connect(notionalOwner).updateAssetRate(2, "0x719993E82974f5b5eA0c5ebA25c260CD5AF78E00");
-    await notional.connect(notionalOwner).updateAssetRate(3, "0x612741825ACedC6F88D8709319fe65bCB015C693");
-    await notional.connect(notionalOwner).updateAssetRate(4, "0x39D9590721331B13C8e9A42941a2B961B513E69d");
 
     const deployer = new InstaNotionalResolver__factory(signer);
     resolver = await deployer.deploy();
@@ -70,7 +34,7 @@ describe("Notional Resolvers", () => {
       const [accountContext, accountBalances, portfolio] = await resolver.getAccount(testAccount);
       expect(accountContext.hasDebt).to.equal("0x01");
       expect(accountBalances.length).to.equal(10);
-      expect(portfolio.length).to.equal(5);
+      expect(portfolio.length).to.equal(3);
     });
 
     it("test_getFreeCollateral", async () => {
@@ -107,17 +71,18 @@ describe("Notional Resolvers", () => {
 
     it("test_calculateNTokensToMint", async () => {
       const amount = await resolver.calculateNTokensToMint(1, parseEther("2"));
-      expect(amount).to.gte(ethers.utils.parseUnits("1998700000000000000", 0));
+      expect(amount).to.gte(ethers.utils.parseUnits("1998500000000000000", 0));
     });
 
     it("test_getfCashBorrowFromPrincipal", async () => {
       const markets = await resolver.getActiveMarkets(3);
+      const block = await hre.ethers.provider.getBlock("latest");
       const resp = await resolver.getfCashBorrowFromPrincipal(
         3,
         parseUnits("1000", 6),
         markets[0].maturity,
         parseUnits("5", 6),
-        1654408809,
+        block.timestamp,
         true,
       );
       expect(resp[0]).to.gte(ethers.utils.parseUnits("100036000000", 0));
@@ -126,12 +91,13 @@ describe("Notional Resolvers", () => {
 
     it("test_getfCashLendFromDeposit", async () => {
       const markets = await resolver.getActiveMarkets(3);
+      const block = await hre.ethers.provider.getBlock("latest");
       const resp = await resolver.getfCashLendFromDeposit(
         3,
         parseUnits("1000", 6),
         markets[1].maturity,
         parseUnits("5", 6),
-        1654408809,
+        block.timestamp,
         true,
       );
       expect(resp[0]).to.gte(ethers.utils.parseUnits("100201000000", 0));
@@ -140,12 +106,13 @@ describe("Notional Resolvers", () => {
 
     it("test_getDepositFromfCashLend", async () => {
       const markets = await resolver.getActiveMarkets(3);
+      const block = await hre.ethers.provider.getBlock("latest");
       const resp = await resolver.getDepositFromfCashLend(
         3,
         parseUnits("1000", 8),
         markets[1].maturity,
         parseUnits("5", 6),
-        1654408809,
+        block.timestamp,
       );
       expect(resp[0]).to.gte(ethers.utils.parseUnits("987800000", 0));
       expect(resp[1]).to.gte(ethers.utils.parseUnits("4368040000000", 0));
@@ -154,15 +121,16 @@ describe("Notional Resolvers", () => {
 
     it("test_getPrincipalFromfCashBorrow", async () => {
       const markets = await resolver.getActiveMarkets(3);
+      const block = await hre.ethers.provider.getBlock("latest");
       const resp = await resolver.getPrincipalFromfCashBorrow(
         3,
         parseUnits("1000", 8),
         markets[0].maturity,
         0,
-        1654408809,
+        block.timestamp,
       );
-      expect(resp[0]).to.gte(ethers.utils.parseUnits("997000000", 0));
-      expect(resp[1]).to.gte(ethers.utils.parseUnits("4411960000000", 0));
+      expect(resp[0]).to.gte(ethers.utils.parseUnits("991000000", 0));
+      expect(resp[1]).to.gte(ethers.utils.parseUnits("4380000000000", 0));
       expect(resp[2]).to.equal(1);
     });
 
