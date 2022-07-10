@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.6;
-import "./interface.sol";
 pragma abicoder v2;
+import "./interface.sol";
 
 contract EulerHelper {
     address internal constant ethAddr = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;

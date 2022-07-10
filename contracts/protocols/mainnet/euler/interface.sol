@@ -32,7 +32,6 @@ struct Query {
 // Response
 struct ResponseMarket {
     // Universal
-
     address underlying;
     string name;
     string symbol;
@@ -49,7 +48,6 @@ struct ResponseMarket {
     uint256 borrowAPY;
     uint256 supplyAPY;
     // Pricing
-
     uint256 twap;
     uint256 twapPeriod;
     uint256 currPrice;
@@ -57,7 +55,6 @@ struct ResponseMarket {
     uint32 pricingParameters;
     address pricingForwarded;
     // Account specific
-
     uint256 underlyingBalance;
     uint256 eulerAllowance;
     uint256 eTokenBalance;

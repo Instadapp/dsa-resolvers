@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.6;
+pragma abicoder v2;
 import "./helpers.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-pragma abicoder v2;
+import "hardhat/console.sol";
 
 /**
  *@title Euler Resolver
- *@dev get user position, user configuration & reserves list.
+ *@dev get user position, account status, entered market list, token details and prices.
  */
 contract EulerResolver is EulerHelper {
     function getPosition(address user, address[] memory tokens)
@@ -28,4 +29,8 @@ contract EulerResolver is EulerHelper {
         response = new Response[](256);
         response = eulerView.doQueryBatch(qs);
     }
+}
+
+contract InstaEulerResolver is EulerResolver {
+    string public constant name = "Euler-Resolver-v1.0";
 }
