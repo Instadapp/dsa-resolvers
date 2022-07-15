@@ -40,7 +40,7 @@ contract EulerHelper {
     function getActiveSubAccounts(
         address[] memory subAccounts,
         address[] memory tokens //0xab,0xvc,(weth,dai,usdc)
-    ) public view returns (bool[] memory activeSubAcc) {
+    ) public view returns (bool[] memory activeSubAcc, uint256 count) {
         uint256 accLength = subAccounts.length;
         uint256 tokenLength = tokens.length;
 
@@ -49,6 +49,7 @@ contract EulerHelper {
                 address eToken = markets.underlyingToEToken(tokens[i]);
                 if (IEToken(eToken).balanceOfUnderlying(subAccounts[j]) > 0) {
                     activeSubAcc[i] = true;
+                    count++;
                     break;
                 }
             }
