@@ -37,14 +37,19 @@ contract EulerHelper {
         return address(uint160(primary) ^ uint160(subAccountId));
     }
 
-    function getActiveSubaccounts(Response[] memory response) public pure returns (bool[] memory activeSubAcc) {
-        uint256 length = response.length;
-        activeSubAcc = new bool[](length);
+    function getActiveSubAccounts(
+        address[] memory subAccounts,
+        address[] memory tokens //0xab,0xvc,(weth,dai,usdc)
+    ) public view returns (bool[] memory activeSubAcc) {
+        uint256 accLength = subAccounts.length;
+        uint256 tokenLength = tokens.length;
 
-        for (uint256 i = 0; i < length; i++) {
-            for (uint256 j = 0; j < response[i].markets.length; j++) {
-                if (response[i].markets[j].liquidityStatus.collateralValue > 0) {
+        for (uint256 i = 0; i < accLength; i++) {
+            for (uint256 j = 0; j < tokenLength; j++) {
+                address eToken = markets.underlyingToEToken(tokens[i]);
+                if (IEToken(eToken).balanceOfUnderlying(subAccounts[j]) > 0) {
                     activeSubAcc[i] = true;
+                    break;
                 }
             }
         }
@@ -58,7 +63,6 @@ contract EulerHelper {
         uint8 decimals;
         address eTokenAddr;
         address dTokenAddr;
-        // AssetConfig config;
         uint32 collateralFactor;
         uint32 borrowFactor;
         uint24 twapWindow;
