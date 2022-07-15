@@ -3,31 +3,43 @@ pragma solidity ^0.7.6;
 pragma abicoder v2;
 import "./helpers.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "hardhat/console.sol";
 
-/**
- *@title Euler Resolver
- *@dev get user position, account status, entered market list, token details and prices.
- */
 contract EulerResolver is EulerHelper {
+    struct MarketsInfoAllSubAcc {
+        MarketsInfoSubacc[] marketsInfo;
+    }
+
     function getPosition(address user, address[] memory tokens)
         public
         view
-        returns (Response[] memory response, AccountStatus[] memory accStatus)
+        returns (AccountStatus[] memory accStatuses, MarketsInfoAllSubAcc[] memory marketsInfoAllSubAcc)
     {
-        Query[] memory qs = new Query[](256);
-        accStatus = new AccountStatus[](256);
+        uint256 length = 256;
+        Query[] memory qs = new Query[](length);
+        accStatuses = new AccountStatus[](length);
+        marketsInfoAllSubAcc = new MarketsInfoAllSubAcc[](length);
 
-        for (uint256 i = 0; i < 256; i++) {
+        address[] memory allSubAcc = new address[](length);
+
+        for (uint256 i = 0; i < length; i++) {
             address subAccount = getSubAccount(user, i);
-
+            allSubAcc[i] = subAccount;
             qs[i] = Query({ eulerContract: EULER_MAINNET, account: subAccount, markets: tokens });
-
-            accStatus[i] = getAccountStatus(subAccount);
         }
 
-        response = new Response[](256);
+        Response[] memory response = new Response[](length);
         response = eulerView.doQueryBatch(qs);
+
+        bool[] memory activeSubAcc = getActiveSubaccounts(response);
+
+        for (uint256 j = 0; j < length; j++) {
+            if (activeSubAcc[j]) {
+                (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accStatus) = getSubaccInfo(response[j]);
+
+                accStatuses[j] = accStatus;
+                marketsInfoAllSubAcc[j] = MarketsInfoAllSubAcc({ marketsInfo: marketsInfo });
+            }
+        }
     }
 }
 
