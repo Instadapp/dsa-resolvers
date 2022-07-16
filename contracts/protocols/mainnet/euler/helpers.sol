@@ -8,52 +8,23 @@ contract EulerHelper {
 
     IEulerMarkets internal constant markets = IEulerMarkets(0x3520d5a913427E6F0D6A83E07ccD4A4da316e4d3);
 
-    IEulerExecution internal constant eulerExec = IEulerExecution(0x14cBaC4eC5673DEFD3968693ebA994F07F8436D2);
-
     IEulerGeneralView internal constant eulerView = IEulerGeneralView(0xACC25c4d40651676FEEd43a3467F3169e3E68e42);
+
+    struct SubAccount {
+        uint256 id;
+        address subAccountAddress;
+    }
+
+    struct Position {
+        uint256 id;
+        address subAccountAddress;
+        AccountStatus accountStatus;
+        MarketsInfoSubacc[] marketsInfoSubAcc;
+    }
 
     struct AccountStatus {
         uint256 totalCollateral;
         uint256 totalBorrowed;
-    }
-
-    function getEnteredMarkets(address user) internal view returns (address[] memory enteredMarkets) {
-        enteredMarkets = markets.getEnteredMarkets(user);
-    }
-
-    function getAPY(address underlying) public view returns (uint256 borrowAPY, uint256 supplyAPY) {
-        uint256 borrowSPY = uint256(int256(markets.interestRate(underlying)));
-        (, uint256 totalBalances, uint256 totalBorrows, ) = eulerView.getTotalSupplyAndDebts(underlying);
-        (borrowAPY, supplyAPY) = eulerView.computeAPYs(
-            borrowSPY,
-            totalBorrows,
-            totalBalances,
-            markets.reserveFee(underlying)
-        );
-    }
-
-    function getSubAccount(address primary, uint256 subAccountId) public pure returns (address) {
-        require(subAccountId < 256, "sub-account-id-too-big");
-        return address(uint160(primary) ^ uint160(subAccountId));
-    }
-
-    function getActiveSubAccounts(
-        address[] memory subAccounts,
-        address[] memory tokens //0xab,0xvc,(weth,dai,usdc)
-    ) public view returns (bool[] memory activeSubAcc, uint256 count) {
-        uint256 accLength = subAccounts.length;
-        uint256 tokenLength = tokens.length;
-
-        for (uint256 i = 0; i < accLength; i++) {
-            for (uint256 j = 0; j < tokenLength; j++) {
-                address eToken = markets.underlyingToEToken(tokens[i]);
-                if (IEToken(eToken).balanceOfUnderlying(subAccounts[j]) > 0) {
-                    activeSubAcc[i] = true;
-                    count++;
-                    break;
-                }
-            }
-        }
     }
 
     struct MarketsInfoSubacc {
@@ -87,30 +58,60 @@ contract EulerHelper {
         uint256 numBorrows;
     }
 
-    function getSubaccInfo(Response memory response)
+    function getAllSubAccounts(address user) public pure returns (SubAccount[] memory subAccounts) {
+        uint256 length = 256;
+        subAccounts = new SubAccount[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            address subAccount = getSubAccountAddress(user, i);
+
+            subAccounts[i] = SubAccount({ id: i, subAccountAddress: subAccount });
+        }
+    }
+
+    function getSubAccountAddress(address primary, uint256 subAccountId) public pure returns (address) {
+        require(subAccountId < 256, "sub-account-id-too-big");
+        return address(uint160(primary) ^ uint160(subAccountId));
+    }
+
+    function getActiveSubAccounts(SubAccount[] memory subAccounts, address[] memory tokens)
+        public
+        view
+        returns (bool[] memory activeSubAcc, uint256 count)
+    {
+        uint256 accLength = subAccounts.length;
+        uint256 tokenLength = tokens.length;
+
+        for (uint256 i = 0; i < accLength; i++) {
+            for (uint256 j = 0; j < tokenLength; j++) {
+                address eToken = markets.underlyingToEToken(tokens[i]);
+                if (IEToken(eToken).balanceOfUnderlying(subAccounts[j].subAccountAddress) > 0) {
+                    activeSubAcc[i] = true;
+                    count++;
+                    break;
+                }
+            }
+        }
+    }
+
+    function getSubAccountInfo(Response memory response)
         public
         pure
-        returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accStatus)
+        returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus)
     {
-        // uint length = response.markets.length;
-
-        marketsInfo = new MarketsInfoSubacc[](response.markets.length);
-
-        uint256 totalLendToken;
-        uint256 totalBorrowToken;
         uint256 totalLendUSD;
         uint256 totalBorrowUSD;
+        uint256 length = response.markets.length;
 
-        for (uint256 i = 0; i < response.markets.length; i++) {
+        marketsInfo = new MarketsInfoSubacc[](length);
+
+        for (uint256 i = 0; i < length; i++) {
             (uint256 eTokenPriceUSD, uint256 dTokenPriceUSD) = getUSDBalance(
                 response.markets[i].eTokenBalanceUnderlying,
                 response.markets[i].dTokenBalance,
                 response.markets[i].twap,
                 response.markets[i].decimals
             );
-
-            totalLendToken = totalLendToken + response.markets[i].eTokenBalanceUnderlying;
-            totalBorrowToken = totalBorrowToken + response.markets[i].dTokenBalance;
 
             totalLendUSD = totalLendUSD + eTokenPriceUSD;
             totalBorrowUSD = totalBorrowUSD + dTokenPriceUSD;
@@ -151,7 +152,7 @@ contract EulerHelper {
             });
         }
 
-        accStatus = AccountStatus({ totalCollateral: totalLendUSD, totalBorrowed: totalBorrowUSD });
+        accountStatus = AccountStatus({ totalCollateral: totalLendUSD, totalBorrowed: totalBorrowUSD });
     }
 
     function getUSDBalance(

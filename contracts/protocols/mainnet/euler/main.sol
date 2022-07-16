@@ -5,107 +5,106 @@ import "./helpers.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract EulerResolver is EulerHelper {
-    struct MarketsInfoAllSubAcc {
-        MarketsInfoSubacc[] marketsInfo;
-    }
-
-    function getAllSubAccounts(address user)
-        public
-        pure
-        returns (address[] memory subAccounts, uint256[] memory subAccountIds)
-    {
-        uint256 length = 256;
-        subAccounts = new address[](length);
-        subAccountIds = new uint256[](length);
-
-        for (uint256 i = 0; i < length; i++) {
-            address subAccount = getSubAccount(user, i);
-            subAccounts[i] = subAccount;
-            subAccountIds[i] = i;
-        }
-    }
-
     function getAllActiveSubAccounts(address user, address[] memory tokens)
         public
         view
-        returns (uint256[] memory activeSubAccIds, address[] memory activeSubAcc)
+        returns (SubAccount[] memory activeSubAccounts)
     {
-        (address[] memory subAccounts, ) = getAllSubAccounts(user);
+        SubAccount[] memory subAccounts = getAllSubAccounts(user);
         (bool[] memory activeSubAccBool, uint256 count) = getActiveSubAccounts(subAccounts, tokens);
 
-        activeSubAccIds = new uint256[](count);
-        activeSubAcc = new address[](count);
+        activeSubAccounts = new SubAccount[](count);
         uint256 j = 0;
 
         for (uint256 i = 0; i < subAccounts.length; i++) {
             if (activeSubAccBool[i] == true) {
-                activeSubAccIds[j] = i;
-                activeSubAcc[j] = subAccounts[i];
+                activeSubAccounts[j].id = i;
+                activeSubAccounts[j].subAccountAddress = subAccounts[i].subAccountAddress;
                 j++;
             }
         }
     }
 
-    function getPositions(
+    function getPositionOfActiveSubAccounts(
         address user,
-        uint256[] memory subAccountIds,
-        address[] memory tokens //0xabc00,(0,1,2,4,6)
-    ) public view returns (AccountStatus[] memory accStatuses, MarketsInfoAllSubAcc[] memory marketsInfoAllSubAcc) {
-        uint256 length = subAccountIds.length;
+        uint256[] memory activeSubAccountIds,
+        address[] memory tokens
+    ) public view returns (Position[] memory positions) {
+        uint256 length = activeSubAccountIds.length;
+        address[] memory subAccountAddresses = new address[](length);
+
         Query[] memory qs = new Query[](length);
-        marketsInfoAllSubAcc = new MarketsInfoAllSubAcc[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            address subAccount = getSubAccount(user, i);
-            qs[i] = Query({ eulerContract: EULER_MAINNET, account: subAccount, markets: tokens });
+            subAccountAddresses[i] = getSubAccountAddress(user, activeSubAccountIds[i]);
+            qs[i] = Query({ eulerContract: EULER_MAINNET, account: subAccountAddresses[i], markets: tokens });
         }
 
         Response[] memory response = new Response[](length);
         response = eulerView.doQueryBatch(qs);
 
         for (uint256 j = 0; j < length; j++) {
-            (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accStatus) = getSubaccInfo(response[j]);
-            accStatuses[j] = accStatus;
-            marketsInfoAllSubAcc[j] = MarketsInfoAllSubAcc({ marketsInfo: marketsInfo });
+            (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+                response[j]
+            );
+
+            positions[j] = Position({
+                id: activeSubAccountIds[j],
+                subAccountAddress: subAccountAddresses[j],
+                accountStatus: accountStatus,
+                marketsInfoSubAcc: marketsInfo
+            });
         }
     }
 
-    function getPosition(address user, address[] memory tokens)
+    function getPositionsOfUser(address user, address[] memory tokens)
         public
         view
-        returns (
-            address[] memory subAccounts,
-            bool[] memory activeSubAcc,
-            AccountStatus[] memory accStatuses,
-            MarketsInfoAllSubAcc[] memory marketsInfoAllSubAcc
-        )
+        returns (Position[] memory activePositions)
     {
         uint256 length = 256;
-        uint256 count;
 
-        (subAccounts, ) = getAllSubAccounts(user);
-        (activeSubAcc, count) = getActiveSubAccounts(subAccounts, tokens);
+        SubAccount[] memory subAccounts = getAllSubAccounts(user);
+        (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(subAccounts, tokens);
 
         Query[] memory qs = new Query[](count);
-        accStatuses = new AccountStatus[](count);
-        marketsInfoAllSubAcc = new MarketsInfoAllSubAcc[](count);
         Response[] memory response = new Response[](count);
+
+        SubAccount[] memory activeSubAccounts = new SubAccount[](count);
+        uint256 k;
 
         for (uint256 i = 0; i < length; i++) {
             if (activeSubAcc[i]) {
-                qs[i] = Query({ eulerContract: EULER_MAINNET, account: subAccounts[i], markets: tokens });
+                qs[i] = Query({
+                    eulerContract: EULER_MAINNET,
+                    account: subAccounts[i].subAccountAddress,
+                    markets: tokens
+                });
+
+                activeSubAccounts[k] = SubAccount({
+                    id: subAccounts[i].id,
+                    subAccountAddress: subAccounts[i].subAccountAddress
+                });
+
+                k++;
             }
         }
 
         response = eulerView.doQueryBatch(qs);
 
-        for (uint256 j = 0; j < length; j++) {
-            if (activeSubAcc[j]) {
-                (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accStatus) = getSubaccInfo(response[j]);
+        activePositions = new Position[](count);
 
-                accStatuses[j] = accStatus;
-                marketsInfoAllSubAcc[j] = MarketsInfoAllSubAcc({ marketsInfo: marketsInfo });
-            }
+        for (uint256 j = 0; j < count; j++) {
+            (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+                response[j]
+            );
+
+            activePositions[j] = Position({
+                id: activeSubAccounts[j].id,
+                subAccountAddress: activeSubAccounts[j].subAccountAddress,
+                accountStatus: accountStatus,
+                marketsInfoSubAcc: marketsInfo
+            });
         }
     }
 }
