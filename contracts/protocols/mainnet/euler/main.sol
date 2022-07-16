@@ -11,7 +11,10 @@ contract EulerResolver is EulerHelper {
         returns (SubAccount[] memory activeSubAccounts)
     {
         SubAccount[] memory subAccounts = getAllSubAccounts(user);
-        (bool[] memory activeSubAccBool, uint256 count) = getActiveSubAccounts(subAccounts, tokens);
+
+        bool[] memory activeSubAccBool = new bool[](256);
+        uint256 count;
+        (activeSubAccBool, count) = getActiveSubAccounts(subAccounts, tokens);
 
         activeSubAccounts = new SubAccount[](count);
         uint256 j = 0;
@@ -32,6 +35,7 @@ contract EulerResolver is EulerHelper {
     ) public view returns (Position[] memory positions) {
         uint256 length = activeSubAccountIds.length;
         address[] memory subAccountAddresses = new address[](length);
+        positions = new Position[](length);
 
         Query[] memory qs = new Query[](length);
 
@@ -45,7 +49,8 @@ contract EulerResolver is EulerHelper {
 
         for (uint256 j = 0; j < length; j++) {
             (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
-                response[j]
+                response[j],
+                tokens
             );
 
             positions[j] = Position({
@@ -96,7 +101,8 @@ contract EulerResolver is EulerHelper {
 
         for (uint256 j = 0; j < count; j++) {
             (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
-                response[j]
+                response[j],
+                tokens
             );
 
             activePositions[j] = Position({

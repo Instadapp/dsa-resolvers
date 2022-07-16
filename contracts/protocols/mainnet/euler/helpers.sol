@@ -64,7 +64,6 @@ contract EulerHelper {
 
         for (uint256 i = 0; i < length; i++) {
             address subAccount = getSubAccountAddress(user, i);
-
             subAccounts[i] = SubAccount({ id: i, subAccountAddress: subAccount });
         }
     }
@@ -81,31 +80,36 @@ contract EulerHelper {
     {
         uint256 accLength = subAccounts.length;
         uint256 tokenLength = tokens.length;
+        activeSubAcc = new bool[](accLength);
 
         for (uint256 i = 0; i < accLength; i++) {
             for (uint256 j = 0; j < tokenLength; j++) {
-                address eToken = markets.underlyingToEToken(tokens[i]);
-                if (IEToken(eToken).balanceOfUnderlying(subAccounts[j].subAccountAddress) > 0) {
+                address eToken = markets.underlyingToEToken(tokens[j]);
+
+                if ((IEToken(eToken).balanceOfUnderlying(subAccounts[i].subAccountAddress)) > 0) {
                     activeSubAcc[i] = true;
                     count++;
                     break;
+                } else {
+                    continue;
                 }
             }
         }
     }
 
-    function getSubAccountInfo(Response memory response)
+    //response includes entered markets as well
+    function getSubAccountInfo(Response memory response, address[] memory tokens)
         public
         pure
         returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus)
     {
         uint256 totalLendUSD;
         uint256 totalBorrowUSD;
-        uint256 length = response.markets.length;
+        uint256 k;
 
-        marketsInfo = new MarketsInfoSubacc[](length);
+        marketsInfo = new MarketsInfoSubacc[](tokens.length);
 
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = response.enteredMarkets.length; i < response.markets.length; i++) {
             (uint256 eTokenPriceUSD, uint256 dTokenPriceUSD) = getUSDBalance(
                 response.markets[i].eTokenBalanceUnderlying,
                 response.markets[i].dTokenBalance,
@@ -123,7 +127,7 @@ contract EulerHelper {
                 response.markets[i].decimals
             );
 
-            marketsInfo[i] = MarketsInfoSubacc({
+            marketsInfo[k] = MarketsInfoSubacc({
                 underlying: response.markets[i].underlying,
                 name: response.markets[i].name,
                 symbol: response.markets[i].symbol,
@@ -150,6 +154,7 @@ contract EulerHelper {
                 riskAdjustedLiability: response.markets[i].liquidityStatus.liabilityValue,
                 numBorrows: response.markets[i].liquidityStatus.numBorrows
             });
+            k++;
         }
 
         accountStatus = AccountStatus({ totalCollateral: totalLendUSD, totalBorrowed: totalBorrowUSD });
@@ -161,8 +166,8 @@ contract EulerHelper {
         uint256 twap,
         uint256 decimals
     ) internal pure returns (uint256 eTokenPriceUSD, uint256 dTokenPriceUSD) {
-        eTokenPriceUSD = ((eTokenBalanceUnderlying * twap) / 10) ^ decimals;
-        dTokenPriceUSD = ((dTokenBalance * twap) / 10) ^ decimals;
+        eTokenPriceUSD = (eTokenBalanceUnderlying * twap) / (10 ^ decimals);
+        dTokenPriceUSD = (dTokenBalance * twap) / (10 ^ decimals);
     }
 
     function getUSDRiskAdjustedValues(
@@ -171,7 +176,7 @@ contract EulerHelper {
         uint256 twap,
         uint256 decimals
     ) internal pure returns (uint256 riskAdjusCol, uint256 riskAdjusDebt) {
-        riskAdjusCol = ((colValue * twap) / 10) ^ decimals;
-        riskAdjusDebt = ((debtValue * twap) / 10) ^ decimals;
+        riskAdjusCol = (colValue * twap) / (10 ^ decimals);
+        riskAdjusDebt = (debtValue * twap) / (10 ^ decimals);
     }
 }
