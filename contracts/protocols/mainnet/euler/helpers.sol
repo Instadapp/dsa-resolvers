@@ -58,6 +58,26 @@ contract EulerHelper {
         uint256 numBorrows;
     }
 
+    /**
+     * @dev Return ethereum address
+     */
+    function getEthAddr() internal pure returns (address) {
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // ETH Address
+    }
+
+    /**
+     * @dev Return Weth address
+     */
+    function getWethAddr() internal pure returns (address) {
+        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Mainnet WETH Address
+        // return 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // Kovan WETH Address
+    }
+
+    /**
+     * @dev Get all sub-accounts of a user.
+     * @notice Get all sub-accounts of a user.
+     * @param user Address of user
+     */
     function getAllSubAccounts(address user) public pure returns (SubAccount[] memory subAccounts) {
         uint256 length = 256;
         subAccounts = new SubAccount[](length);
@@ -68,11 +88,23 @@ contract EulerHelper {
         }
     }
 
+    /**
+     * @dev Get all sub-accounts of a user.
+     * @notice Get all sub-accounts of a user.
+     * @param primary Address of user
+     * @param subAccountId sub-account Id(0 for primary and 1 - 255 for sub-account)
+     */
     function getSubAccountAddress(address primary, uint256 subAccountId) public pure returns (address) {
         require(subAccountId < 256, "sub-account-id-too-big");
         return address(uint160(primary) ^ uint160(subAccountId));
     }
 
+    /**
+     * @dev Get active sub-accounts.
+     * @notice Get active sub-accounts.
+     * @param subAccounts Array of SubAccount struct(id and address)
+     * @param tokens Array of the tokens
+     */
     function getActiveSubAccounts(SubAccount[] memory subAccounts, address[] memory tokens)
         public
         view
@@ -97,7 +129,12 @@ contract EulerHelper {
         }
     }
 
-    //response includes entered markets as well
+    /**
+     * @dev Get active sub-accounts.
+     * @notice Get active sub-accounts.
+     * @param response Response of a sub-account. ResponseMarket include enteredMarkets followed by queried token response.
+     * @param tokens Array of the tokens(Use WETH address for ETH token)
+     */
     function getSubAccountInfo(Response memory response, address[] memory tokens)
         public
         pure
@@ -160,6 +197,14 @@ contract EulerHelper {
         accountStatus = AccountStatus({ totalCollateral: totalLendUSD, totalBorrowed: totalBorrowUSD });
     }
 
+    /**
+     * @dev Get lent and borrowed token amount in USD.
+     * @notice Get lent and borrowed token amount in USD.
+     * @param eTokenBalanceUnderlying Lent amount.
+     * @param dTokenBalance Borrowed amount.
+     * @param twap Uniswap twap price of token.
+     * @param decimals Token decimals.
+     */
     function getUSDBalance(
         uint256 eTokenBalanceUnderlying,
         uint256 dTokenBalance,
@@ -170,6 +215,14 @@ contract EulerHelper {
         dTokenPriceUSD = (dTokenBalance * twap) / (10 ^ decimals);
     }
 
+    /**
+     * @dev Get risk-adjusted lent and borrowed token amount in USD.
+     * @notice Get risk-adjusted lent and borrowed token amount in USD.
+     * @param colValue risk-adjusted collateral value.
+     * @param debtValue risk-adjusted borrowed value.
+     * @param twap Uniswap twap price of token.
+     * @param decimals Token decimals.
+     */
     function getUSDRiskAdjustedValues(
         uint256 colValue,
         uint256 debtValue,

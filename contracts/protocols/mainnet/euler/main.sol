@@ -5,34 +5,59 @@ import "./helpers.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract EulerResolver is EulerHelper {
+    /**
+     * @dev Get all active sub-account Ids and addresses of a user.
+     * @notice Get all sub-account of a user that has some token liquidity in it.
+     * @param user Address of user
+     * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+     */
     function getAllActiveSubAccounts(address user, address[] memory tokens)
         public
         view
         returns (SubAccount[] memory activeSubAccounts)
     {
+        address[] memory _tokens = new address[](tokens.length);
+
+        for (uint256 i = 0; i < tokens.length; i++) {
+            _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
+        }
+
         SubAccount[] memory subAccounts = getAllSubAccounts(user);
 
         bool[] memory activeSubAccBool = new bool[](256);
         uint256 count;
-        (activeSubAccBool, count) = getActiveSubAccounts(subAccounts, tokens);
+        (activeSubAccBool, count) = getActiveSubAccounts(subAccounts, _tokens);
 
         activeSubAccounts = new SubAccount[](count);
-        uint256 j = 0;
+        uint256 k = 0;
 
-        for (uint256 i = 0; i < subAccounts.length; i++) {
-            if (activeSubAccBool[i] == true) {
-                activeSubAccounts[j].id = i;
-                activeSubAccounts[j].subAccountAddress = subAccounts[i].subAccountAddress;
-                j++;
+        for (uint256 j = 0; j < subAccounts.length; j++) {
+            if (activeSubAccBool[j] == true) {
+                activeSubAccounts[k].id = j;
+                activeSubAccounts[k].subAccountAddress = subAccounts[j].subAccountAddress;
+                k++;
             }
         }
     }
 
+    /**
+     * @dev Get position details of all active sub-accounts.
+     * @notice Get position details of all active sub-accounts.
+     * @param user Address of user
+     * @param activeSubAccountIds Array of active sub-account Ids(0 for primary and 1 - 255 for sub-account)
+     * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+     */
     function getPositionOfActiveSubAccounts(
         address user,
         uint256[] memory activeSubAccountIds,
         address[] memory tokens
     ) public view returns (Position[] memory positions) {
+        address[] memory _tokens = new address[](tokens.length);
+
+        for (uint256 i = 0; i < tokens.length; i++) {
+            _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
+        }
+
         uint256 length = activeSubAccountIds.length;
         address[] memory subAccountAddresses = new address[](length);
         positions = new Position[](length);
@@ -41,7 +66,7 @@ contract EulerResolver is EulerHelper {
 
         for (uint256 i = 0; i < length; i++) {
             subAccountAddresses[i] = getSubAccountAddress(user, activeSubAccountIds[i]);
-            qs[i] = Query({ eulerContract: EULER_MAINNET, account: subAccountAddresses[i], markets: tokens });
+            qs[i] = Query({ eulerContract: EULER_MAINNET, account: subAccountAddresses[i], markets: _tokens });
         }
 
         Response[] memory response = new Response[](length);
@@ -50,7 +75,7 @@ contract EulerResolver is EulerHelper {
         for (uint256 j = 0; j < length; j++) {
             (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
                 response[j],
-                tokens
+                _tokens
             );
 
             positions[j] = Position({
@@ -62,15 +87,27 @@ contract EulerResolver is EulerHelper {
         }
     }
 
+    /**
+     * @dev Get position details of all active sub-accounts of a user.
+     * @notice Get position details of all active sub-accounts.
+     * @param user Address of user
+     * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+     */
     function getPositionsOfUser(address user, address[] memory tokens)
         public
         view
         returns (Position[] memory activePositions)
     {
+        address[] memory _tokens = new address[](tokens.length);
+
+        for (uint256 i = 0; i < tokens.length; i++) {
+            _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
+        }
+
         uint256 length = 256;
 
         SubAccount[] memory subAccounts = getAllSubAccounts(user);
-        (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(subAccounts, tokens);
+        (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(subAccounts, _tokens);
 
         Query[] memory qs = new Query[](count);
         Response[] memory response = new Response[](count);
@@ -83,7 +120,7 @@ contract EulerResolver is EulerHelper {
                 qs[i] = Query({
                     eulerContract: EULER_MAINNET,
                     account: subAccounts[i].subAccountAddress,
-                    markets: tokens
+                    markets: _tokens
                 });
 
                 activeSubAccounts[k] = SubAccount({
@@ -102,7 +139,7 @@ contract EulerResolver is EulerHelper {
         for (uint256 j = 0; j < count; j++) {
             (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
                 response[j],
-                tokens
+                _tokens
             );
 
             activePositions[j] = Position({
