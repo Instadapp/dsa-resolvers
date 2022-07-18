@@ -16,8 +16,7 @@ contract EulerHelper {
     }
 
     struct Position {
-        uint256 id;
-        address subAccountAddress;
+          SubAccount subAccountInfo;
         AccountStatus accountStatus;
         MarketsInfoSubacc[] marketsInfoSubAcc;
     }
