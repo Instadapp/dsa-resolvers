@@ -151,8 +151,8 @@ contract EulerHelper {
                 response.markets[i].decimals
             );
 
-            totalLendUSD = totalLendUSD + eTokenPriceUSD;
-            totalBorrowUSD = totalBorrowUSD + dTokenPriceUSD;
+            totalLendUSD += eTokenPriceUSD;
+            totalBorrowUSD += dTokenPriceUSD;
 
             (uint256 riskAdjusColUSD, uint256 riskAdjusDebtUSD) = getUSDRiskAdjustedValues(
                 response.markets[i].liquidityStatus.collateralValue,
