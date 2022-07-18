@@ -74,13 +74,13 @@ contract EulerResolver is EulerHelper {
 
         for (uint256 j = 0; j < length; j++) {
             (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+                subAccountAddresses[j],
                 response[j],
                 _tokens
             );
 
             positions[j] = Position({
-                id: activeSubAccountIds[j],
-                subAccountAddress: subAccountAddresses[j],
+                subAccountInfo: SubAccount({ id: activeSubAccountIds[j], subAccountAddress: subAccountAddresses[j] }),
                 accountStatus: accountStatus,
                 marketsInfoSubAcc: marketsInfo
             });
@@ -138,13 +138,16 @@ contract EulerResolver is EulerHelper {
 
         for (uint256 j = 0; j < count; j++) {
             (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+                activeSubAccounts[j].subAccountAddress,
                 response[j],
                 _tokens
             );
 
             activePositions[j] = Position({
-                id: activeSubAccounts[j].id,
-                subAccountAddress: activeSubAccounts[j].subAccountAddress,
+                subAccountInfo: SubAccount({
+                    id: activeSubAccounts[j].id,
+                    subAccountAddress: activeSubAccounts[j].subAccountAddress
+                }),
                 accountStatus: accountStatus,
                 marketsInfoSubAcc: marketsInfo
             });

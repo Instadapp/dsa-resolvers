@@ -78,3 +78,14 @@ interface IEulerGeneralView {
 
     function doQuery(Query memory q) external view returns (Response memory r);
 }
+
+interface IEulerSimpleView {
+    function getAccountStatus(address account)
+        external
+        view
+        returns (
+            uint256 collateralValue,
+            uint256 liabilityValue,
+            uint256 healthScore
+        );
+}

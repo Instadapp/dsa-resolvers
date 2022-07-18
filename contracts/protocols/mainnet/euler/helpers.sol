@@ -10,13 +10,15 @@ contract EulerHelper {
 
     IEulerGeneralView internal constant eulerView = IEulerGeneralView(0xACC25c4d40651676FEEd43a3467F3169e3E68e42);
 
+    IEulerSimpleView internal constant simpleView = IEulerSimpleView(0xc2d41d42939109CDCfa26C6965269D9C0220b38E);
+
     struct SubAccount {
         uint256 id;
         address subAccountAddress;
     }
 
     struct Position {
-          SubAccount subAccountInfo;
+        SubAccount subAccountInfo;
         AccountStatus accountStatus;
         MarketsInfoSubacc[] marketsInfoSubAcc;
     }
@@ -24,6 +26,15 @@ contract EulerHelper {
     struct AccountStatus {
         uint256 totalCollateral;
         uint256 totalBorrowed;
+        uint256 riskAdjustedTotalCollateral;
+        uint256 riskAdjustedTotalBorrow;
+        uint256 healthScore;
+    }
+
+    struct Helper {
+        uint256 collateralValue;
+        uint256 liabilityValue;
+        uint256 healthScore;
     }
 
     struct MarketsInfoSubacc {
@@ -121,22 +132,23 @@ contract EulerHelper {
                     activeSubAcc[i] = true;
                     count++;
                     break;
-                } 
+                }
             }
         }
     }
 
     /**
-     * @dev Get active sub-accounts.
-     * @notice Get active sub-accounts.
-     * @param response Response of a sub-account. ResponseMarket include enteredMarkets followed by queried token response.
+     * @dev Get detailed sub-account info.
+     * @notice Get detailed sub-account info.
+     * @param response Response of a sub-account. 
+        (ResponseMarket include enteredMarkets followed by queried token response).
      * @param tokens Array of the tokens(Use WETH address for ETH token)
      */
-    function getSubAccountInfo(Response memory response, address[] memory tokens)
-        public
-        pure
-        returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus)
-    {
+    function getSubAccountInfo(
+        address subAccount,
+        Response memory response,
+        address[] memory tokens
+    ) public view returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) {
         uint256 totalLendUSD;
         uint256 totalBorrowUSD;
         uint256 k;
@@ -191,7 +203,16 @@ contract EulerHelper {
             k++;
         }
 
-        accountStatus = AccountStatus({ totalCollateral: totalLendUSD, totalBorrowed: totalBorrowUSD });
+        Helper memory helper;
+        (helper.collateralValue, helper.liabilityValue, helper.healthScore) = simpleView.getAccountStatus(subAccount);
+
+        accountStatus = AccountStatus({
+            totalCollateral: totalLendUSD,
+            totalBorrowed: totalBorrowUSD,
+            riskAdjustedTotalCollateral: helper.collateralValue,
+            riskAdjustedTotalBorrow: helper.liabilityValue,
+            healthScore: helper.healthScore
+        });
     }
 
     /**
