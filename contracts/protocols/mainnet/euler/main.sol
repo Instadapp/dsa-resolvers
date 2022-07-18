@@ -32,7 +32,7 @@ contract EulerResolver is EulerHelper {
         uint256 k = 0;
 
         for (uint256 j = 0; j < subAccounts.length; j++) {
-            if (activeSubAccBool[j] == true) {
+            if (activeSubAccBool[j]) {
                 activeSubAccounts[k].id = j;
                 activeSubAccounts[k].subAccountAddress = subAccounts[j].subAccountAddress;
                 k++;

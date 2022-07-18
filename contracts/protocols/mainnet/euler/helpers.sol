@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.6;
 pragma abicoder v2;
+import { DSMath } from "../../../utils/dsmath.sol";
 import "./interface.sol";
 
-contract EulerHelper {
+contract EulerHelper is DSMath {
     address internal constant EULER_MAINNET = 0x27182842E098f60e3D576794A5bFFb0777E025d3;
 
     IEulerMarkets internal constant markets = IEulerMarkets(0x3520d5a913427E6F0D6A83E07ccD4A4da316e4d3);
@@ -24,6 +25,8 @@ contract EulerHelper {
     }
 
     struct AccountStatus {
+        uint256 totalCollateralUSD;
+        uint256 totalBorrowedUSD;
         uint256 totalCollateral;
         uint256 totalBorrowed;
         uint256 riskAdjustedTotalCollateral;
@@ -31,10 +34,17 @@ contract EulerHelper {
         uint256 healthScore;
     }
 
-    struct Helper {
+    struct AccountStatusHelper {
         uint256 collateralValue;
         uint256 liabilityValue;
         uint256 healthScore;
+    }
+
+    struct InternalHelper {
+        uint256 eTokenPriceUSD;
+        uint256 dTokenPriceUSD;
+        uint256 riskAdjustedColUSD;
+        uint256 riskAdjustedDebtUSD;
     }
 
     struct MarketsInfoSubacc {
@@ -61,10 +71,10 @@ contract EulerHelper {
         uint256 dTokenBalance;
         uint256 eTokenPriceUSD;
         uint256 dTokenPriceUSD;
-        uint256 riskAdjustedColValue;
-        uint256 riskAdjustedBorValue;
+        uint256 riskAdjustedColUSD;
+        uint256 riskAdjustedBorrowUSD;
         uint256 riskAdjustedCol;
-        uint256 riskAdjustedLiability;
+        uint256 riskAdjustedBorrow;
         uint256 numBorrows;
     }
 
@@ -81,6 +91,10 @@ contract EulerHelper {
     function getWethAddr() internal pure returns (address) {
         return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Mainnet WETH Address
         // return 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // Kovan WETH Address
+    }
+
+    function convertTo18(uint256 _dec, uint256 _amt) internal pure returns (uint256 amt) {
+        amt = mul(_amt, 10**(18 - _dec));
     }
 
     /**
@@ -151,27 +165,34 @@ contract EulerHelper {
     ) public view returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) {
         uint256 totalLendUSD;
         uint256 totalBorrowUSD;
+        uint256 totalLend;
+        uint256 totalBorrow;
         uint256 k;
 
         marketsInfo = new MarketsInfoSubacc[](tokens.length);
 
         for (uint256 i = response.enteredMarkets.length; i < response.markets.length; i++) {
-            (uint256 eTokenPriceUSD, uint256 dTokenPriceUSD) = getUSDBalance(
+            InternalHelper memory helper;
+
+            (helper.eTokenPriceUSD, helper.dTokenPriceUSD) = getUSDBalance(
                 response.markets[i].eTokenBalanceUnderlying,
                 response.markets[i].dTokenBalance,
                 response.markets[i].twap,
                 response.markets[i].decimals
             );
 
-            totalLendUSD += eTokenPriceUSD;
-            totalBorrowUSD += dTokenPriceUSD;
+            totalLendUSD += helper.eTokenPriceUSD;
+            totalBorrowUSD += helper.dTokenPriceUSD;
 
-            (uint256 riskAdjusColUSD, uint256 riskAdjusDebtUSD) = getUSDRiskAdjustedValues(
+            (helper.riskAdjustedColUSD, helper.riskAdjustedDebtUSD) = getUSDRiskAdjustedValues(
                 response.markets[i].liquidityStatus.collateralValue,
                 response.markets[i].liquidityStatus.liabilityValue,
                 response.markets[i].twap,
                 response.markets[i].decimals
             );
+
+            totalLend += convertTo18(response.markets[i].decimals, response.markets[i].eTokenBalanceUnderlying);
+            totalBorrow += convertTo18(response.markets[i].decimals, response.markets[i].dTokenBalance);
 
             marketsInfo[k] = MarketsInfoSubacc({
                 underlying: response.markets[i].underlying,
@@ -192,26 +213,32 @@ contract EulerHelper {
                 eTokenBalance: response.markets[i].eTokenBalance,
                 eTokenBalanceUnderlying: response.markets[i].eTokenBalanceUnderlying,
                 dTokenBalance: response.markets[i].dTokenBalance,
-                eTokenPriceUSD: eTokenPriceUSD,
-                dTokenPriceUSD: dTokenPriceUSD,
-                riskAdjustedColValue: riskAdjusColUSD,
-                riskAdjustedBorValue: riskAdjusDebtUSD,
+                eTokenPriceUSD: helper.eTokenPriceUSD,
+                dTokenPriceUSD: helper.dTokenPriceUSD,
+                riskAdjustedColUSD: helper.riskAdjustedColUSD,
+                riskAdjustedBorrowUSD: helper.riskAdjustedDebtUSD,
                 riskAdjustedCol: response.markets[i].liquidityStatus.collateralValue,
-                riskAdjustedLiability: response.markets[i].liquidityStatus.liabilityValue,
+                riskAdjustedBorrow: response.markets[i].liquidityStatus.liabilityValue,
                 numBorrows: response.markets[i].liquidityStatus.numBorrows
             });
+
             k++;
         }
 
-        Helper memory helper;
-        (helper.collateralValue, helper.liabilityValue, helper.healthScore) = simpleView.getAccountStatus(subAccount);
+        AccountStatusHelper memory accHelper;
+
+        (accHelper.collateralValue, accHelper.liabilityValue, accHelper.healthScore) = simpleView.getAccountStatus(
+            subAccount
+        );
 
         accountStatus = AccountStatus({
-            totalCollateral: totalLendUSD,
-            totalBorrowed: totalBorrowUSD,
-            riskAdjustedTotalCollateral: helper.collateralValue,
-            riskAdjustedTotalBorrow: helper.liabilityValue,
-            healthScore: helper.healthScore
+            totalCollateralUSD: totalLendUSD,
+            totalBorrowedUSD: totalBorrowUSD,
+            totalCollateral: totalLend,
+            totalBorrowed: totalBorrow,
+            riskAdjustedTotalCollateral: accHelper.collateralValue,
+            riskAdjustedTotalBorrow: accHelper.liabilityValue,
+            healthScore: accHelper.healthScore
         });
     }
 
