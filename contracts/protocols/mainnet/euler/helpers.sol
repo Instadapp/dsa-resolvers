@@ -121,9 +121,7 @@ contract EulerHelper {
                     activeSubAcc[i] = true;
                     count++;
                     break;
-                } else {
-                    continue;
-                }
+                } 
             }
         }
     }
