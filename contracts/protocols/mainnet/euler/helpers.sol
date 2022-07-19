@@ -55,6 +55,7 @@ contract EulerHelper is DSMath {
         uint8 decimals;
         address eTokenAddr;
         address dTokenAddr;
+        uint256 totalBorrows;
         uint32 collateralFactor;
         uint32 borrowFactor;
         uint24 twapWindow;
@@ -201,6 +202,7 @@ contract EulerHelper is DSMath {
                 decimals: response.markets[i].decimals,
                 eTokenAddr: response.markets[i].eTokenAddr,
                 dTokenAddr: response.markets[i].dTokenAddr,
+                totalBorrows: response.markets[i].totalBorrows,
                 collateralFactor: response.markets[i].config.collateralFactor,
                 borrowFactor: response.markets[i].config.borrowFactor,
                 twapWindow: response.markets[i].config.twapWindow,

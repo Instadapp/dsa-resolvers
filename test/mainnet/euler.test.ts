@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { EulerResolver, EulerResolver__factory } from "../../typechain";
-import { Tokens } from "../consts";
+// import { Tokens } from "../consts";
 import hre from "hardhat";
 
 describe("Euler Resolver", () => {
@@ -55,7 +55,7 @@ describe("Euler Resolver", () => {
     });
 
     it("Returns the positions of user", async () => {
-      const response = await resolver.getPositionsOfUser(user, [WETH, Tokens.DAI.addr]);
+      const response = await resolver.getAllPositionsOfUser(user, ["0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"]);
       console.log(JSON.stringify(response));
     });
   });
