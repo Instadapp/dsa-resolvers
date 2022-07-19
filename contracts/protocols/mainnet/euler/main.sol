@@ -93,7 +93,7 @@ contract EulerResolver is EulerHelper {
      * @param user Address of user
      * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      */
-    function getPositionsOfUser(address user, address[] memory tokens)
+    function getAllPositionsOfUser(address user, address[] memory tokens)
         public
         view
         returns (Position[] memory activePositions)
