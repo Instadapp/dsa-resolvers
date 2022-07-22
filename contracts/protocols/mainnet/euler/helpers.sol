@@ -11,7 +11,7 @@ contract EulerHelper is DSMath {
 
     IEulerGeneralView internal constant eulerView = IEulerGeneralView(0xACC25c4d40651676FEEd43a3467F3169e3E68e42);
 
-    IEulerSimpleView internal constant simpleView = IEulerSimpleView(0xc2d41d42939109CDCfa26C6965269D9C0220b38E);
+    IEulerExecute internal constant eulerExec = IEulerExecute(0x59828FdF7ee634AaaD3f58B19fDBa3b03E2D9d80);
 
     struct SubAccount {
         uint256 id;
@@ -25,8 +25,6 @@ contract EulerHelper is DSMath {
     }
 
     struct AccountStatus {
-        uint256 totalCollateralUSD;
-        uint256 totalBorrowedUSD;
         uint256 totalCollateral;
         uint256 totalBorrowed;
         uint256 riskAdjustedTotalCollateral;
@@ -38,13 +36,6 @@ contract EulerHelper is DSMath {
         uint256 collateralValue;
         uint256 liabilityValue;
         uint256 healthScore;
-    }
-
-    struct InternalHelper {
-        uint256 eTokenPriceUSD;
-        uint256 dTokenPriceUSD;
-        uint256 riskAdjustedColUSD;
-        uint256 riskAdjustedDebtUSD;
     }
 
     struct MarketsInfoSubacc {
@@ -70,13 +61,6 @@ contract EulerHelper is DSMath {
         uint256 eTokenBalance;
         uint256 eTokenBalanceUnderlying;
         uint256 dTokenBalance;
-        uint256 eTokenPriceUSD;
-        uint256 dTokenPriceUSD;
-        uint256 riskAdjustedColUSD;
-        uint256 riskAdjustedBorrowUSD;
-        uint256 riskAdjustedCol;
-        uint256 riskAdjustedBorrow;
-        uint256 numBorrows;
     }
 
     /**
@@ -164,8 +148,6 @@ contract EulerHelper is DSMath {
         Response memory response,
         address[] memory tokens
     ) public view returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) {
-        uint256 totalLendUSD;
-        uint256 totalBorrowUSD;
         uint256 totalLend;
         uint256 totalBorrow;
         uint256 k;
@@ -173,25 +155,6 @@ contract EulerHelper is DSMath {
         marketsInfo = new MarketsInfoSubacc[](tokens.length);
 
         for (uint256 i = response.enteredMarkets.length; i < response.markets.length; i++) {
-            InternalHelper memory helper;
-
-            (helper.eTokenPriceUSD, helper.dTokenPriceUSD) = getUSDBalance(
-                response.markets[i].eTokenBalanceUnderlying,
-                response.markets[i].dTokenBalance,
-                response.markets[i].twap,
-                response.markets[i].decimals
-            );
-
-            totalLendUSD += helper.eTokenPriceUSD;
-            totalBorrowUSD += helper.dTokenPriceUSD;
-
-            (helper.riskAdjustedColUSD, helper.riskAdjustedDebtUSD) = getUSDRiskAdjustedValues(
-                response.markets[i].liquidityStatus.collateralValue,
-                response.markets[i].liquidityStatus.liabilityValue,
-                response.markets[i].twap,
-                response.markets[i].decimals
-            );
-
             totalLend += convertTo18(response.markets[i].decimals, response.markets[i].eTokenBalanceUnderlying);
             totalBorrow += convertTo18(response.markets[i].decimals, response.markets[i].dTokenBalance);
 
@@ -214,14 +177,7 @@ contract EulerHelper is DSMath {
                 eulerAllowance: response.markets[i].eulerAllowance,
                 eTokenBalance: response.markets[i].eTokenBalance,
                 eTokenBalanceUnderlying: response.markets[i].eTokenBalanceUnderlying,
-                dTokenBalance: response.markets[i].dTokenBalance,
-                eTokenPriceUSD: helper.eTokenPriceUSD,
-                dTokenPriceUSD: helper.dTokenPriceUSD,
-                riskAdjustedColUSD: helper.riskAdjustedColUSD,
-                riskAdjustedBorrowUSD: helper.riskAdjustedDebtUSD,
-                riskAdjustedCol: response.markets[i].liquidityStatus.collateralValue,
-                riskAdjustedBorrow: response.markets[i].liquidityStatus.liabilityValue,
-                numBorrows: response.markets[i].liquidityStatus.numBorrows
+                dTokenBalance: response.markets[i].dTokenBalance
             });
 
             k++;
@@ -229,54 +185,35 @@ contract EulerHelper is DSMath {
 
         AccountStatusHelper memory accHelper;
 
-        (accHelper.collateralValue, accHelper.liabilityValue, accHelper.healthScore) = simpleView.getAccountStatus(
-            subAccount
-        );
+        (accHelper.collateralValue, accHelper.liabilityValue, accHelper.healthScore) = getAccountStatus(subAccount);
 
         accountStatus = AccountStatus({
-            totalCollateralUSD: totalLendUSD,
-            totalBorrowedUSD: totalBorrowUSD,
             totalCollateral: totalLend,
             totalBorrowed: totalBorrow,
             riskAdjustedTotalCollateral: accHelper.collateralValue,
             riskAdjustedTotalBorrow: accHelper.liabilityValue,
-            healthScore: accHelper.healthScore
+            healthScore: accHelper.healthScore //based on risk adjusted values
         });
     }
 
-    /**
-     * @dev Get lent and borrowed token amount in USD.
-     * @notice Get lent and borrowed token amount in USD.
-     * @param eTokenBalanceUnderlying Lent amount.
-     * @param dTokenBalance Borrowed amount.
-     * @param twap Uniswap twap price of token.
-     * @param decimals Token decimals.
-     */
-    function getUSDBalance(
-        uint256 eTokenBalanceUnderlying,
-        uint256 dTokenBalance,
-        uint256 twap,
-        uint256 decimals
-    ) internal pure returns (uint256 eTokenPriceUSD, uint256 dTokenPriceUSD) {
-        eTokenPriceUSD = (eTokenBalanceUnderlying * twap) / (10 ^ decimals);
-        dTokenPriceUSD = (dTokenBalance * twap) / (10 ^ decimals);
-    }
+    function getAccountStatus(address account)
+        public
+        view
+        returns (
+            uint256 collateralValue,
+            uint256 liabilityValue,
+            uint256 healthScore
+        )
+    {
+        LiquidityStatus memory status = eulerExec.liquidity(account);
 
-    /**
-     * @dev Get risk-adjusted lent and borrowed token amount in USD.
-     * @notice Get risk-adjusted lent and borrowed token amount in USD.
-     * @param colValue risk-adjusted collateral value.
-     * @param debtValue risk-adjusted borrowed value.
-     * @param twap Uniswap twap price of token.
-     * @param decimals Token decimals.
-     */
-    function getUSDRiskAdjustedValues(
-        uint256 colValue,
-        uint256 debtValue,
-        uint256 twap,
-        uint256 decimals
-    ) internal pure returns (uint256 riskAdjusCol, uint256 riskAdjusDebt) {
-        riskAdjusCol = (colValue * twap) / (10 ^ decimals);
-        riskAdjusDebt = (debtValue * twap) / (10 ^ decimals);
+        collateralValue = status.collateralValue;
+        liabilityValue = status.liabilityValue;
+
+        if (liabilityValue == 0) {
+            healthScore = type(uint256).max;
+        } else {
+            healthScore = (collateralValue * 1e18) / liabilityValue;
+        }
     }
 }
