@@ -51,7 +51,7 @@ contract EulerResolver is EulerHelper {
         address user,
         uint256[] memory activeSubAccountIds,
         address[] memory tokens
-    ) public view returns (Position[] memory positions) {
+    ) public view returns (uint256 claimedAmount, Position[] memory positions) {
         address[] memory _tokens = new address[](tokens.length);
 
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -71,6 +71,8 @@ contract EulerResolver is EulerHelper {
 
         Response[] memory response = new Response[](length);
         response = eulerView.doQueryBatch(qs);
+
+        claimedAmount = getClaimedAmount(user);
 
         for (uint256 j = 0; j < length; j++) {
             (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
@@ -96,7 +98,7 @@ contract EulerResolver is EulerHelper {
     function getAllPositionsOfUser(address user, address[] memory tokens)
         public
         view
-        returns (Position[] memory activePositions)
+        returns (uint256 claimedAmount, Position[] memory activePositions)
     {
         address[] memory _tokens = new address[](tokens.length);
 
@@ -133,6 +135,8 @@ contract EulerResolver is EulerHelper {
         }
 
         response = eulerView.doQueryBatch(qs);
+
+        claimedAmount = getClaimedAmount(user);
 
         activePositions = new Position[](count);
 

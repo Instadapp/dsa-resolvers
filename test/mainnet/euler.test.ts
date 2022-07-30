@@ -6,7 +6,7 @@ import hre from "hardhat";
 
 describe("Euler Resolver", () => {
   let signer: SignerWithAddress;
-  const user = "0x9F60699cE23f1Ab86Ec3e095b477Ff79d4f409AD";
+  const user = "0x7338afb07db145220849B04A45243956f20B14d9";
   const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
   const EUL = "0xd9Fcd98c322942075A5C3860693e9f4f03AAE07b";
   const agEUR = "0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8";
@@ -37,7 +37,7 @@ describe("Euler Resolver", () => {
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-              blockNumber: 15131933,
+              blockNumber: 15240589,
             },
           },
         ],

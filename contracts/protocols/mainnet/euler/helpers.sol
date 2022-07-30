@@ -5,6 +5,8 @@ import { DSMath } from "../../../utils/dsmath.sol";
 import "./interface.sol";
 
 contract EulerHelper is DSMath {
+    address internal constant EUL = 0xd9Fcd98c322942075A5C3860693e9f4f03AAE07b;
+
     address internal constant EULER_MAINNET = 0x27182842E098f60e3D576794A5bFFb0777E025d3;
 
     IEulerMarkets internal constant markets = IEulerMarkets(0x3520d5a913427E6F0D6A83E07ccD4A4da316e4d3);
@@ -12,6 +14,8 @@ contract EulerHelper is DSMath {
     IEulerGeneralView internal constant eulerView = IEulerGeneralView(0xACC25c4d40651676FEEd43a3467F3169e3E68e42);
 
     IEulerExecute internal constant eulerExec = IEulerExecute(0x59828FdF7ee634AaaD3f58B19fDBa3b03E2D9d80);
+
+    IEulerDistributor internal constant eulerDistribute = IEulerDistributor(0xd524E29E3BAF5BB085403Ca5665301E94387A7e2);
 
     struct SubAccount {
         uint256 id;
@@ -47,6 +51,7 @@ contract EulerHelper is DSMath {
         address eTokenAddr;
         address dTokenAddr;
         uint256 totalBorrows;
+        bool borrowIsolated;
         uint32 collateralFactor;
         uint32 borrowFactor;
         uint24 twapWindow;
@@ -166,6 +171,7 @@ contract EulerHelper is DSMath {
                 eTokenAddr: response.markets[i].eTokenAddr,
                 dTokenAddr: response.markets[i].dTokenAddr,
                 totalBorrows: response.markets[i].totalBorrows,
+                borrowIsolated: response.markets[i].config.borrowIsolated,
                 collateralFactor: response.markets[i].config.collateralFactor,
                 borrowFactor: response.markets[i].config.borrowFactor,
                 twapWindow: response.markets[i].config.twapWindow,
@@ -215,5 +221,9 @@ contract EulerHelper is DSMath {
         } else {
             healthScore = (collateralValue * 1e18) / liabilityValue;
         }
+    }
+
+    function getClaimedAmount(address user) public view returns (uint256 claimedAmount) {
+        claimedAmount = eulerDistribute.claimed(user, address(EUL));
     }
 }
