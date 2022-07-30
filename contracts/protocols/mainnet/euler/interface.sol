@@ -82,3 +82,7 @@ interface IEulerGeneralView {
 interface IEulerExecute {
     function liquidity(address account) external view returns (LiquidityStatus memory status);
 }
+
+interface IEulerDistributor {
+    function claimed(address user, address token) external view returns (uint256 claimedAmount);
+}
