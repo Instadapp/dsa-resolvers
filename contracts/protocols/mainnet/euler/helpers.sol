@@ -25,7 +25,7 @@ contract EulerHelper is DSMath {
     struct Position {
         SubAccount subAccountInfo;
         AccountStatus accountStatus;
-        MarketsInfoSubacc[] marketsInfoSubAcc;
+        ResponseMarket[] marketsInfoSubAcc;
     }
 
     struct AccountStatus {
@@ -40,32 +40,6 @@ contract EulerHelper is DSMath {
         uint256 collateralValue;
         uint256 liabilityValue;
         uint256 healthScore;
-    }
-
-    struct MarketsInfoSubacc {
-        // Universal
-        address underlying;
-        string name;
-        string symbol;
-        uint8 decimals;
-        address eTokenAddr;
-        address dTokenAddr;
-        uint256 totalBorrows;
-        bool borrowIsolated;
-        uint32 collateralFactor;
-        uint32 borrowFactor;
-        uint24 twapWindow;
-        uint256 borrowAPY;
-        uint256 supplyAPY;
-        // Pricing
-        uint256 twap;
-        uint256 currPrice;
-        // Account specific
-        uint256 underlyingBalance;
-        uint256 eulerAllowance;
-        uint256 eTokenBalance;
-        uint256 eTokenBalanceUnderlying;
-        uint256 dTokenBalance;
     }
 
     /**
@@ -152,40 +126,18 @@ contract EulerHelper is DSMath {
         address subAccount,
         Response memory response,
         address[] memory tokens
-    ) public view returns (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) {
+    ) public view returns (ResponseMarket[] memory marketsInfo, AccountStatus memory accountStatus) {
         uint256 totalLend;
         uint256 totalBorrow;
         uint256 k;
 
-        marketsInfo = new MarketsInfoSubacc[](tokens.length);
+        marketsInfo = new ResponseMarket[](tokens.length);
 
         for (uint256 i = response.enteredMarkets.length; i < response.markets.length; i++) {
             totalLend += convertTo18(response.markets[i].decimals, response.markets[i].eTokenBalanceUnderlying);
             totalBorrow += convertTo18(response.markets[i].decimals, response.markets[i].dTokenBalance);
 
-            marketsInfo[k] = MarketsInfoSubacc({
-                underlying: response.markets[i].underlying,
-                name: response.markets[i].name,
-                symbol: response.markets[i].symbol,
-                decimals: response.markets[i].decimals,
-                eTokenAddr: response.markets[i].eTokenAddr,
-                dTokenAddr: response.markets[i].dTokenAddr,
-                totalBorrows: response.markets[i].totalBorrows,
-                borrowIsolated: response.markets[i].config.borrowIsolated,
-                collateralFactor: response.markets[i].config.collateralFactor,
-                borrowFactor: response.markets[i].config.borrowFactor,
-                twapWindow: response.markets[i].config.twapWindow,
-                borrowAPY: response.markets[i].borrowAPY,
-                supplyAPY: response.markets[i].supplyAPY,
-                twap: response.markets[i].twap,
-                currPrice: response.markets[i].currPrice,
-                underlyingBalance: response.markets[i].underlyingBalance,
-                eulerAllowance: response.markets[i].eulerAllowance,
-                eTokenBalance: response.markets[i].eTokenBalance,
-                eTokenBalanceUnderlying: response.markets[i].eTokenBalanceUnderlying,
-                dTokenBalance: response.markets[i].dTokenBalance
-            });
-
+            marketsInfo[k] = response.markets[i];
             k++;
         }
 
