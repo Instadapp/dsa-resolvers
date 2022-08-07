@@ -75,7 +75,7 @@ contract EulerResolver is EulerHelper {
         claimedAmount = getClaimedAmount(user);
 
         for (uint256 j = 0; j < length; j++) {
-            (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+            (ResponseMarket[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
                 subAccountAddresses[j],
                 response[j],
                 _tokens
@@ -141,7 +141,7 @@ contract EulerResolver is EulerHelper {
         activePositions = new Position[](count);
 
         for (uint256 j = 0; j < count; j++) {
-            (MarketsInfoSubacc[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+            (ResponseMarket[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
                 activeSubAccounts[j].subAccountAddress,
                 response[j],
                 _tokens
