@@ -195,6 +195,6 @@ abstract contract SushipswapResolver is Helpers {
     }
 }
 
-contract InstaSushiSwapResolverPolygon is SushipswapResolver {
+contract InstaSushiSwapResolverAvalanche is SushipswapResolver {
     string public constant name = "Sushiswap-Resolver-v1.1";
 }
