@@ -44,7 +44,7 @@ contract Helpers is DSMath {
         uint8 offset;
         address token;
         string symbol;
-        uint256 decimals;
+        uint256 scale;
     }
     //
     struct AssetData {
@@ -103,7 +103,6 @@ contract Helpers is DSMath {
         uint64 interestAccrued;
         uint256 userNonce;
         int256 borrowableAmount;
-        uint256 rewardsAccrued;
         UserRewardsData rewards;
         AccountFlags flags;
     }
@@ -181,7 +180,7 @@ contract Helpers is DSMath {
             _token.offset = asset.offset;
             _token.token = asset.asset;
             _token.symbol = token.symbol();
-            _token.decimals = token.decimals();
+            _token.scale = asset.scale();
 
             _asset.token = _token;
             _asset.priceFeed = asset.priceFeed;
@@ -263,11 +262,45 @@ contract Helpers is DSMath {
         return amount_;
     }
 
-    //     uint256 rewardsAccrued;
-    //     UserRewardsData rewards;
-    //     UserCollateralData[] collaterals;
+    function getAccountFlags(address account, IComet _comet) internal view returns (AccountFlags memory flags) {
+        flags.isLiquidatable = _comet.isLiquidatable(account);
+        flags.isBorrowCollateralized = _comet.isBorrowCollateralized(account);
+    }
+
+    function getCollateralData(
+        address account,
+        address cometMarket,
+        IComet _comet
+    ) internal view returns (UserCollateralData[] memory _collaterals) {
+        uint16 _assetsIn = _comet.userBasic(account).assetsIn;
+        uint8 numAssets = _comet.numAssets();
+        Token memory _token;
+        uint8 _length = 0;
+
+        for (uint8 i = 0; i < numAssets; i++) {
+            if (isAssetIn(_assetsIn, i)) {
+                _length++;
+            }
+        }
+        _collaterals = UserCollateralData[](_length);
+
+        for (uint8 i = 0; i < numAssets; i++) {
+            if (isAssetIn(_assetsIn, i)) {
+                AssetInfo memory asset = _comet.getAssetInfo(i);
+                _token.token = asset.asset;
+                _token.symbol = TokenInterface(asset.asset).symbol();
+                _token.scale = asset.scale;
+                _token.offset = asset.offset;
+
+                uint256 suppliedAmt = uint256(_comet.userCollateral(account, asset.asset).balance);
+                _collaterals[i].token = _token;
+                _collaterals[i].suppliedBalance = suppliedAmt;
+            }
+        }
+    }
+
     //     AccountFlags flags;
-    function getUserData(address account, address competMarket) internal view returns (UserData memory userData) {
+    function getUserData(address account, address cometMarket) internal view returns (UserData memory userData) {
         IComet _comet = IComet(cometMarket);
         userData.baseBalance = _comet.baseBalanceOf(account);
         userData.suppliedBalance = _comet.balanceOf(account);
@@ -283,5 +316,15 @@ contract Helpers is DSMath {
             _comet,
             _comet.numAssets()
         );
+        UserRewardsData memory _rewards;
+        ICometRewards _cometRewards = ICometRewards(getCometRewardsAddress());
+        RewardOwed memory reward = _cometRewards.getRewardOwed(cometMarket, account);
+        _rewards.rewardsToken = reward.token;
+        _rewards.amountOwed = reward.owed;
+        _rewards.amountClaimed = _cometRewards.rewardsClaimed(cometMarket, account);
+        userData.rewards = _rewards;
+
+        userData.collaterals = getCollateralData(account, cometMarket, _comet);
+        userData.flags = getAccountFlags(account, _comet);
     }
 }
