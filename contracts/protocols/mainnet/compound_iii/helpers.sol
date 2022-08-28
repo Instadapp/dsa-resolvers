@@ -102,10 +102,9 @@ contract Helpers is DSMath {
         uint64 accountTrackingIndex;
         uint64 interestAccrued;
         uint256 userNonce;
-        uint256 borrowableAmount;
+        int256 borrowableAmount;
         uint256 rewardsAccrued;
         UserRewardsData rewards;
-        UserCollateralData[] collaterals;
         AccountFlags flags;
     }
     //
@@ -220,11 +219,50 @@ contract Helpers is DSMath {
         market.assets = getMarketAssets(_comet, market.assetCount);
     }
 
-    //     uint16 assetsIn;
-    //     uint64 accountTrackingIndex;
-    //     uint64 interestAccrued;
-    //     uint256 userNonce;
-    //     uint256 borrowableAmount;
+    function currentValue(
+        int104 principalValue,
+        uint64 baseSupplyIndex,
+        uint64 baseBorrowIndex
+    ) internal view returns (int104) {
+        if (principalValue >= 0) {
+            return int104((uint104(principalValue_) * baseSupplyIndex_) / uint64(BASE_INDEX_SCALE));
+        } else {
+            return -int104((uint104(principalValue_) * baseBorrowIndex_) / uint64(BASE_INDEX_SCALE));
+        }
+    }
+
+    function isAssetIn(uint16 assetsIn, uint8 assetOffset) internal pure returns (bool) {
+        return (assetsIn & (uint16(1) << assetOffset) != 0);
+    }
+
+    function getBorrowableAmount(
+        UserBasic memory _userBasic,
+        TotalsBasic memory _totalsBasic,
+        IComet _comet,
+        uint8 _numAssets
+    ) internal view returns (int256) {
+        uint16 _assetsIn = _userBasic.assetsIn;
+        uint64 supplyIndex = _totalsBasic().baseSupplyIndex;
+        uint64 borrowIndex = _totalsBasic().baseBorrowIndex;
+        address baseTokenPriceFeed = _comet.baseTokenPriceFeed();
+
+        int256 amount_ = int256(
+            (currentValue(_userBasic.principal, supplyIndex, borrowIndex) *
+                int256(_comet.getPrice(baseTokenPriceFeed))) / int256(1e8)
+        );
+
+        for (uint8 i = 0; i < numAssets; i++) {
+            if (isAssetIn(assetsIn, i)) {
+                AssetInfo memory asset = _comet.getAssetInfo(i);
+                uint256 newAmount = (uint256(_comet.userCollateral(account, asset.asset).balance) *
+                    _comet.getPrice(asset.priceFeed)) / 1e8;
+                amount_ += int256((newAmount * asset.borrowCollateralFactor) / 1e18);
+            }
+        }
+
+        return amount_;
+    }
+
     //     uint256 rewardsAccrued;
     //     UserRewardsData rewards;
     //     UserCollateralData[] collaterals;
@@ -235,5 +273,15 @@ contract Helpers is DSMath {
         userData.suppliedBalance = _comet.balanceOf(account);
         userData.borrowedBalance = _comet.borrowBalanceOf(account);
         UserBasic memory accountDataInBase = _comet.userBasic(account);
+        userData.assetsIn = accountDataInBase.assetsIn;
+        userData.accountTrackingIndex = accountDataInBase.baseTrackingIndex;
+        userData.interestAccrued = accountDataInBase.baseTrackingAccrued;
+        userData.userNonce = _comet.userNonce(account);
+        userData.borrowableAmount = getBorrowableAmount(
+            _comet.userBasic(account),
+            _comet.totalsBasic(),
+            _comet,
+            _comet.numAssets()
+        );
     }
 }
