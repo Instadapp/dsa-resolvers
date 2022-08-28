@@ -135,58 +135,57 @@ interface IComet {
 
     function initializeStorage() external;
 
-    function baseScale() external view returns (uint256);
+    function baseScale() external view returns (uint64);
 
     /// @dev uint64
-    function trackingIndexScale() external view returns (uint256);
+    function trackingIndexScale() external view returns (uint64);
 
     /// @dev uint64
-    function baseTrackingSupplySpeed() external view returns (uint256);
+    function baseTrackingSupplySpeed() external view returns (uint64);
 
     /// @dev uint64
-    function baseTrackingBorrowSpeed() external view returns (uint256);
+    function baseTrackingBorrowSpeed() external view returns (uint64);
 
     /// @dev uint104
-    function baseMinForRewards() external view returns (uint256);
+    function baseMinForRewards() external view returns (uint104);
 
     /// @dev uint104
-    function baseBorrowMin() external view returns (uint256);
+    function baseBorrowMin() external view returns (uint104);
 
     /// @dev uint64
-    function supplyKink() external view returns (uint256);
+    function supplyKink() external view returns (uint64);
 
     /// @dev uint64
-    function supplyPerSecondInterestRateSlopeLow() external view returns (uint256);
+    function supplyPerSecondInterestRateSlopeLow() external view returns (uint64);
 
     /// @dev uint64
-    function supplyPerSecondInterestRateSlopeHigh() external view returns (uint256);
+    function supplyPerSecondInterestRateSlopeHigh() external view returns (uint64);
 
     /// @dev uint64
-    function supplyPerSecondInterestRateBase() external view returns (uint256);
+    function supplyPerSecondInterestRateBase() external view returns (uint64);
 
     /// @dev uint64
-    function borrowKink() external view returns (uint256);
+    function borrowKink() external view returns (uint64);
 
     /// @dev uint64
-    function borrowPerSecondInterestRateSlopeLow() external view returns (uint256);
+    function borrowPerSecondInterestRateSlopeLow() external view returns (uint64);
 
     /// @dev uint64
-    function borrowPerSecondInterestRateSlopeHigh() external view returns (uint256);
+    function borrowPerSecondInterestRateSlopeHigh() external view returns (uint64);
 
     /// @dev uint64
-    function borrowPerSecondInterestRateBase() external view returns (uint256);
+    function borrowPerSecondInterestRateBase() external view returns (uint64);
 
     /// @dev uint64
-    function storeFrontPriceFactor() external view returns (uint256);
+    function storeFrontPriceFactor() external view returns (uint64);
 
     function baseToken() external view returns (address);
 
     function baseTokenPriceFeed() external view returns (address);
-}
 
-interface ICometExt {
     function collateralBalanceOf(address account, address asset) external view returns (uint128);
 
+    // total accrued base rewards for an account
     function baseTrackingAccrued(address account) external view returns (uint64);
 
     function baseAccrualScale() external view returns (uint64);
@@ -200,6 +199,14 @@ interface ICometExt {
     function maxAssets() external view returns (uint8);
 
     function totalsBasic() external view returns (TotalsBasic memory);
+
+    function totalsCollateral(address) external view returns (TotalsCollateral memory);
+
+    function userNonce(address) external returns (uint256);
+
+    function userBasic(address) external returns (UserBasic memory);
+
+    function userCollateral(address, address) external returns (UserCollateral memory);
 }
 
 interface TokenInterface {
@@ -210,16 +217,10 @@ interface TokenInterface {
 
 interface ICometRewards {
     function getRewardOwed(address comet, address account) external returns (RewardOwed memory);
-}
 
-interface ICometStorage {
-    function totalsCollateral(address) external view returns (TotalsCollateral memory);
+    function rewardConfig(address cometProxy) external view returns (RewardConfig memory);
 
-    function userNonce(address) external returns (uint256);
-
-    function userBasic(address) external returns (UserBasic memory);
-
-    function userCollateral(address, address) external returns (UserCollateral memory);
+    function rewardsClaimed(address cometProxy, address account) external view returns (uint256);
 }
 
 interface ICometConfig {
