@@ -7,7 +7,7 @@ import "./helpers.sol";
  *@title Compund III Resolver
  *@dev get user position, user configuration, market configuration.
  */
-contract CompoundIIIResolver is Helpers {
+contract CompoundIIIResolver is CompoundIIIHelpers {
     /**
      *@dev get position of the user for all collaterals.
      */
@@ -24,11 +24,9 @@ contract CompoundIIIResolver is Helpers {
         address user,
         address market,
         address token
-    ) public view returns (UserCollateralData[] memory) {
-        return getPosition(user, getList());
-    }
+    ) public view returns (UserCollateralData[] memory) {}
 
-    function getMarketConfig(address compet) public view returns (MarketConfig memory) {}
+    function getMarketConfiguration(address compet) public view returns (MarketConfig memory) {}
 
     /**
      *@dev get reserves list.
@@ -38,6 +36,6 @@ contract CompoundIIIResolver is Helpers {
     function getCollateralsList() public view returns (address[] memory data) {}
 }
 
-contract InstaAaveV3ResolverArbitrum is AaveV3Resolver {
+contract InstaCompoundIIIResolver is CompoundIIIResolver {
     string public constant name = "Compound-III-Resolver-v1.0";
 }

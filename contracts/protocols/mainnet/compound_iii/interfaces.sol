@@ -97,7 +97,7 @@ interface IComet {
 
     function getBorrowRate(uint256 utilization) external view returns (uint64);
 
-    function getUtilization() external view returns (uint256);
+    function getUtilization() external view returns (uint64);
 
     function getPrice(address priceFeed) external view returns (uint256);
 
@@ -119,15 +119,17 @@ interface IComet {
 
     function quoteCollateral(address asset, uint256 baseAmount) external view returns (uint256);
 
-    function totalSupply() external view returns (uint256);
+    function totalSupply() external view returns (uint104);
 
-    function totalBorrow() external view returns (uint256);
+    function totalBorrow() external view returns (uint104);
 
     function balanceOf(address account) external view returns (uint256);
 
+    function baseBalanceOf(address account) external view returns (int104);
+
     function borrowBalanceOf(address account) external view returns (uint256);
 
-    function targetReserves() external view returns (uint256);
+    function targetReserves() external view returns (uint104);
 
     function numAssets() external view returns (uint8);
 
