@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 import "./interfaces.sol";
+import "hardhat/console.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
 contract CompoundIIIHelpers is DSMath {
@@ -58,8 +59,6 @@ contract CompoundIIIHelpers is DSMath {
         address priceFeed;
         ///@dev answer as per latestRoundData from the priceFeed scaled by priceScale
         uint256 price;
-        ///@dev 10**decimals
-        uint64 scale;
         ///@dev The collateral factor(decides how much each collateral can increase borrowing capacity of user),
         //integer representing the decimal value scaled up by 10 ^ 18.
         uint64 borrowCollateralFactor;
@@ -100,7 +99,8 @@ contract CompoundIIIHelpers is DSMath {
         address token;
         uint64 rescaleFactor;
         bool shouldUpScale;
-        ///@dev The minimum amount of base principal wei for rewards to accrue. The minimum amount of base asset supplied to the protocol in order for accounts to accrue rewards.
+        ///@dev The minimum amount of base principal wei for rewards to accrue.
+        //The minimum amount of base asset supplied to the protocol in order for accounts to accrue rewards.
         uint104 baseMinForRewards;
     }
 
@@ -112,7 +112,6 @@ contract CompoundIIIHelpers is DSMath {
     }
 
     struct UserData {
-        int104 baseBalance;
         ///@dev the base balance of supplies with interest, 0 for borrowing case or no supplies
         uint256 suppliedBalanceInBase;
         ///@dev the borrow base balance including interest, for non-negative base asset balance value is 0
@@ -124,7 +123,7 @@ contract CompoundIIIHelpers is DSMath {
         uint256 userNonce;
         int256 borrowableAmount;
         uint256 healthFactor;
-        UserRewardsData rewards;
+        UserRewardsData[] rewards;
         AccountFlags flags;
     }
 
@@ -146,7 +145,7 @@ contract CompoundIIIHelpers is DSMath {
         uint256 utilization;
         BaseAssetInfo baseToken;
         Scales scales;
-        RewardsConfig rewardConfig;
+        RewardsConfig[] rewardConfig;
         AssetData[] assets;
     }
 
@@ -211,7 +210,6 @@ contract CompoundIIIHelpers is DSMath {
             _asset.token = _token;
             _asset.priceFeed = asset.priceFeed;
             _asset.price = _comet.getPrice(asset.priceFeed);
-            _asset.scale = asset.scale;
             _asset.borrowCollateralFactor = asset.borrowCollateralFactor;
             _asset.liquidateCollateralFactor = asset.liquidateCollateralFactor;
             _asset.liquidationFactor = asset.liquidationFactor;
@@ -224,11 +222,10 @@ contract CompoundIIIHelpers is DSMath {
 
     function getMarketConfig(address cometMarket) internal view returns (MarketConfig memory market) {
         IComet _comet = IComet(cometMarket);
-        uint64 utilization = _comet.getUtilization();
-        market.utilization = utilization;
+        market.utilization = _comet.getUtilization();
         market.assetCount = _comet.numAssets();
-        market.supplyRate = _comet.getSupplyRate(utilization);
-        market.borrowRate = _comet.getBorrowRate(utilization);
+        market.supplyRate = _comet.getSupplyRate(market.utilization);
+        market.borrowRate = _comet.getBorrowRate(market.utilization);
         market.baseTrackingSupplySpeed = _comet.baseTrackingSupplySpeed();
         market.baseTrackingBorrowSpeed = _comet.baseTrackingBorrowSpeed();
         market.reserves = _comet.getReserves();
@@ -240,7 +237,9 @@ contract CompoundIIIHelpers is DSMath {
 
         market.baseToken = getBaseTokenInfo(_comet);
         market.scales = getScales(_comet);
-        market.rewardConfig = getRewardsConfig(cometMarket);
+
+        market.rewardConfig = new RewardsConfig[](1);
+        market.rewardConfig[0] = getRewardsConfig(cometMarket);
         market.assets = getMarketAssets(_comet, market.assetCount);
     }
 
@@ -358,7 +357,6 @@ contract CompoundIIIHelpers is DSMath {
 
     function getUserData(address account, address cometMarket) internal returns (UserData memory userData) {
         IComet _comet = IComet(cometMarket);
-        userData.baseBalance = _comet.baseBalanceOf(account);
         userData.suppliedBalanceInBase = _comet.balanceOf(account);
         userData.borrowedBalanceInBase = _comet.borrowBalanceOf(account);
         UserBasic memory accountDataInBase = _comet.userBasic(account);
@@ -374,13 +372,14 @@ contract CompoundIIIHelpers is DSMath {
             _comet.numAssets()
         );
         UserRewardsData memory _rewards;
-        ICometRewards _cometRewards = ICometRewards(getCometRewardsAddress());
-        RewardOwed memory reward = _cometRewards.getRewardOwed(cometMarket, account);
+        RewardOwed memory reward = cometRewards.getRewardOwed(cometMarket, account);
         _rewards.rewardToken = reward.token;
         _rewards.rewardTokenDecimals = TokenInterface(reward.token).decimals();
         _rewards.amountOwed = reward.owed;
-        _rewards.amountClaimed = _cometRewards.rewardsClaimed(cometMarket, account);
-        userData.rewards = _rewards;
+        _rewards.amountClaimed = cometRewards.rewardsClaimed(cometMarket, account);
+
+        userData.rewards = new UserRewardsData[](1);
+        userData.rewards[0] = _rewards;
 
         userData.flags = getAccountFlags(account, _comet);
 
@@ -391,7 +390,10 @@ contract CompoundIIIHelpers is DSMath {
             offsets[i] = i;
         }
         (, , uint256 sumSupplyXFactor) = getCollateralData(account, _comet, offsets);
-        userData.healthFactor = (sumSupplyXFactor / userData.borrowedBalanceInBase);
+        console.log(userData.borrowedBalanceInBase);
+        if (userData.borrowedBalanceInBase != 0) {
+            userData.healthFactor = (sumSupplyXFactor / userData.borrowedBalanceInBase);
+        }
     }
 
     function getCollateralAll(address account, address cometMarket)
