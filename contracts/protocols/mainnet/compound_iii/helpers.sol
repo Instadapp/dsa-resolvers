@@ -93,6 +93,7 @@ contract CompoundIIIHelpers is DSMath {
         Token token;
         ///@dev current positive base balance of an account or zero
         uint256 suppliedBalanceInBase;
+        uint256 suppliedBalanceInAsset;
     }
 
     struct RewardsConfig {
@@ -334,9 +335,25 @@ contract CompoundIIIHelpers is DSMath {
                 _collaterals[i].token = _token;
                 collateralAssets[i] = _token.token;
                 _collaterals[i].suppliedBalanceInBase = suppliedAmt;
+                _collaterals[i].suppliedBalanceInAsset = getCollateralBalanceInAsset(
+                    suppliedAmt,
+                    _comet,
+                    asset.priceFeed
+                );
                 sumSupplyXFactor = add(sumSupplyXFactor, mul(suppliedAmt, asset.liquidateCollateralFactor));
             }
         }
+    }
+
+    function getCollateralBalanceInAsset(
+        uint256 balanceInBase,
+        IComet _comet,
+        address assetPriceFeed
+    ) internal view returns (uint256 suppliedBalanceInAsset) {
+        address basePriceFeed = _comet.baseTokenPriceFeed();
+        uint256 baseAssetprice = _comet.getPrice(basePriceFeed);
+        uint256 collateralPrice = _comet.getPrice(assetPriceFeed);
+        suppliedBalanceInAsset = mul(balanceInBase, baseAssetprice) / collateralPrice;
     }
 
     function getUserData(address account, address cometMarket) internal returns (UserData memory userData) {
