@@ -100,14 +100,14 @@ contract CompoundIIIHelpers is DSMath {
         bool shouldUpScale;
         ///@dev The minimum amount of base principal wei for rewards to accrue.
         //The minimum amount of base asset supplied to the protocol in order for accounts to accrue rewards.
-        uint104 baseMinForRewards;
+        uint104 baseMinForRewardsInBase;
     }
 
     struct UserRewardsData {
         address rewardToken;
         uint8 rewardTokenDecimals;
-        uint256 amountOwed;
-        uint256 amountClaimed;
+        uint256 amountOwedInWei;
+        uint256 amountClaimedInWei;
     }
 
     struct UserData {
@@ -115,10 +115,13 @@ contract CompoundIIIHelpers is DSMath {
         uint256 suppliedBalanceInBase;
         ///@dev the borrow base balance including interest, for non-negative base asset balance value is 0
         uint256 borrowedBalanceInBase;
-        ///@dev
+        ///@dev the assets which are supplied as collateral in packed form
         uint16 assetsIn;
+        ///@dev index tracking user's position
         uint64 accountTrackingIndex;
-        uint64 interestAccrued;
+        ///@dev amount of reward token accrued based on usage of the base asset within the protocol
+        //for the specified account, scaled up by 10 ^ 6.
+        uint64 interestAccruedInBase;
         uint256 userNonce;
         // int256 borrowableAmount;
         // uint256 healthFactor;
@@ -128,15 +131,20 @@ contract CompoundIIIHelpers is DSMath {
 
     struct MarketConfig {
         uint8 assetCount;
-        uint64 supplyRate;
-        uint64 borrowRate;
-        //for rewards APR calculation
+        ///@dev the per second supply rate as the decimal representation of a percentage scaled up by 10 ^ 18.
+        uint64 supplyRateInPercentWei;
+        uint64 borrowRateInPercentWei;
+        ///@dev for rewards APR calculation
+        //The speed at which supply rewards are tracked (in trackingIndexScale)
         uint64 baseTrackingSupplySpeed;
+        ///@dev  The speed at which borrow rewards are tracked (in trackingIndexScale)
         uint64 baseTrackingBorrowSpeed;
-        //total protocol reserves
-        int256 reserves;
+        ///@dev total protocol reserves
+        int256 reservesInBase;
+        ///@dev Fraction of the liquidation penalty that goes to buyers of collateral
         uint64 storeFrontPriceFactor;
-        uint104 baseBorrowMin;
+        ///@dev minimum borrow amount
+        uint104 baseBorrowMinInBase;
         //amount of reserves allowed before absorbed collateral is no longer sold by the protocol
         uint104 targetReserves;
         uint104 totalSupplyBase;
@@ -188,7 +196,7 @@ contract CompoundIIIHelpers is DSMath {
         rewards.token = _rewards.token;
         rewards.rescaleFactor = _rewards.rescaleFactor;
         rewards.shouldUpScale = _rewards.shouldUpscale;
-        rewards.baseMinForRewards = IComet(cometMarket).baseMinForRewards();
+        rewards.baseMinForRewardsInBase = IComet(cometMarket).baseMinForRewards();
     }
 
     function getMarketAssets(IComet _comet, uint8 length) internal view returns (AssetData[] memory assets) {
@@ -223,13 +231,13 @@ contract CompoundIIIHelpers is DSMath {
         IComet _comet = IComet(cometMarket);
         market.utilization = _comet.getUtilization();
         market.assetCount = _comet.numAssets();
-        market.supplyRate = _comet.getSupplyRate(market.utilization);
-        market.borrowRate = _comet.getBorrowRate(market.utilization);
+        market.supplyRateInPercentWei = _comet.getSupplyRate(market.utilization);
+        market.borrowRateInPercentWei = _comet.getBorrowRate(market.utilization);
         market.baseTrackingSupplySpeed = _comet.baseTrackingSupplySpeed();
         market.baseTrackingBorrowSpeed = _comet.baseTrackingBorrowSpeed();
-        market.reserves = _comet.getReserves();
+        market.reservesInBase = _comet.getReserves();
         market.storeFrontPriceFactor = _comet.storeFrontPriceFactor();
-        market.baseBorrowMin = _comet.baseBorrowMin();
+        market.baseBorrowMinInBase = _comet.baseBorrowMin();
         market.targetReserves = _comet.targetReserves();
         market.totalSupplyBase = _comet.totalSupply();
         market.totalBorrowBase = _comet.totalBorrow();
@@ -310,6 +318,7 @@ contract CompoundIIIHelpers is DSMath {
         }
         _collaterals = new UserCollateralData[](_length);
         collateralAssets = new address[](_length);
+        uint8 j = 0;
 
         for (uint8 i = 0; i < numAssets; i++) {
             if (isAssetIn(_assetsIn, offsets[i])) {
@@ -321,14 +330,15 @@ contract CompoundIIIHelpers is DSMath {
                 _token.offset = asset.offset;
 
                 uint256 suppliedAmt = uint256(_comet.userCollateral(account, asset.asset).balance);
-                _collaterals[i].token = _token;
-                collateralAssets[i] = _token.token;
-                _collaterals[i].suppliedBalanceInBase = suppliedAmt;
-                _collaterals[i].suppliedBalanceInAsset = getCollateralBalanceInAsset(
+                _collaterals[j].token = _token;
+                collateralAssets[j] = _token.token;
+                _collaterals[j].suppliedBalanceInBase = suppliedAmt;
+                _collaterals[j].suppliedBalanceInAsset = getCollateralBalanceInAsset(
                     suppliedAmt,
                     _comet,
                     asset.priceFeed
                 );
+                j++;
                 // sumSupplyXFactor = add(sumSupplyXFactor, mul(suppliedAmt, asset.liquidateCollateralFactor));
             }
         }
@@ -352,7 +362,7 @@ contract CompoundIIIHelpers is DSMath {
         UserBasic memory accountDataInBase = _comet.userBasic(account);
         userData.assetsIn = accountDataInBase.assetsIn;
         userData.accountTrackingIndex = accountDataInBase.baseTrackingIndex;
-        userData.interestAccrued = accountDataInBase.baseTrackingAccrued;
+        userData.interestAccruedInBase = accountDataInBase.baseTrackingAccrued;
         userData.userNonce = _comet.userNonce(account);
         // userData.borrowableAmount = getBorrowableAmount(
         //     account,
@@ -365,8 +375,8 @@ contract CompoundIIIHelpers is DSMath {
         RewardOwed memory reward = cometRewards.getRewardOwed(cometMarket, account);
         _rewards.rewardToken = reward.token;
         _rewards.rewardTokenDecimals = TokenInterface(reward.token).decimals();
-        _rewards.amountOwed = reward.owed;
-        _rewards.amountClaimed = cometRewards.rewardsClaimed(cometMarket, account);
+        _rewards.amountOwedInWei = reward.owed;
+        _rewards.amountClaimedInWei = cometRewards.rewardsClaimed(cometMarket, account);
 
         userData.rewards = new UserRewardsData[](1);
         userData.rewards[0] = _rewards;

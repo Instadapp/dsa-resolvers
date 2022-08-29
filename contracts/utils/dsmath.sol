@@ -16,7 +16,7 @@ contract DSMath {
 
     function div(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (y == 0) return type(uint256).max;
-        require((z = x / y) * y == x, "math-not-safe");
+        z = x / y;
     }
 
     function sqrt(uint256 y) internal pure returns (uint256 z) {

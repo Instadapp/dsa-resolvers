@@ -7,7 +7,7 @@ import { InstaCompoundIIIResolver, InstaCompoundIIIResolver__factory } from "../
 
 describe("Compound Resolvers", () => {
   let signer: SignerWithAddress;
-  const user = "0xde6CcCa84010b3f450eC7B95501c4CBE98aC84E9";
+  const user = "0x0a904e5e342d853952ad8159502dc1a29f9b084e";
   const markets = ["0xc3d688B66703497DAA19211EEdff47f25384cdc3"];
 
   before(async () => {
@@ -27,15 +27,15 @@ describe("Compound Resolvers", () => {
       for (const market of marketConfig) {
         console.log(`Number of supported assets: ${market.assetCount}`);
         console.log(`Market base asset utilization: ${market.utilization}`);
-        console.log(`Market supply rate: ${market.supplyRate}`);
-        console.log(`Market borrow rate: ${market.borrowRate}`);
+        console.log(`Market supply rate: ${market.supplyRateInPercentWei}`);
+        console.log(`Market borrow rate: ${market.borrowRateInPercentWei}`);
         console.log(`Supply index tracking speed: ${market.baseTrackingSupplySpeed}`);
         console.log(`Borrow index tracking speed: ${market.baseTrackingBorrowSpeed}`);
-        console.log(`Market reserves: ${market.reserves}`);
+        console.log(`Market reserves: ${market.reservesInBase}`);
         console.log(
           `Fraction of the liquidation penalty that goes to buyers of collateral: ${market.storeFrontPriceFactor}`,
         );
-        console.log(`Minimum borrow amount: ${market.baseBorrowMin}`);
+        console.log(`Minimum borrow amount: ${market.baseBorrowMinInBase}`);
         console.log(`Max base asset balance of market until which collateral can be sold: ${market.targetReserves}`);
         console.log(`TotalSupply in base: ${market.totalSupplyBase}`);
         console.log(`TotalBorrow in base: ${market.totalBorrowBase}`);
@@ -59,7 +59,7 @@ describe("Compound Resolvers", () => {
         console.log(`Reward token: ${market.rewardConfig[0].token}`);
         console.log(`Reward token rescale factor: ${market.rewardConfig[0].rescaleFactor}`);
         console.log(
-          `Min base balance of the market for rewards to be accrued: ${market.rewardConfig[0].baseMinForRewards}`,
+          `Min base balance of the market for rewards to be accrued: ${market.rewardConfig[0].baseMinForRewardsInBase}`,
         );
 
         console.log(`**Supported assets configuration:** \n`);
@@ -94,7 +94,7 @@ describe("Compound Resolvers", () => {
         console.log(`Borrowed balance: ${userData.borrowedBalanceInBase}`);
         console.log(`Collateral assets: ${userData.assetsIn}`);
         console.log(`Account tracking index: ${userData.accountTrackingIndex}`);
-        console.log(`Interest accrued: ${userData.interestAccrued}`);
+        console.log(`Interest accrued: ${userData.interestAccruedInBase}`);
         console.log(`Use Nonce: ${userData.userNonce}`);
         console.log(`Borrowable Amount: ${await resolver.callStatic.getBorrowableAmount(user, markets[0])}`);
         console.log(`Health factor: ${await resolver.callStatic.getHealthFactor(user, markets[0])}`);
@@ -104,8 +104,8 @@ describe("Compound Resolvers", () => {
         console.log(`**Rewards data:**`);
         console.log(`Reward token: ${userData.rewards[0].rewardToken}`);
         console.log(`Reward token decimals: ${userData.rewards[0].rewardTokenDecimals}`);
-        console.log(`Reward owed: ${userData.rewards[0].amountOwed}`);
-        console.log(`Reward claimed: ${userData.rewards[0].amountClaimed}`);
+        console.log(`Reward owed: ${userData.rewards[0].amountOwedInWei}`);
+        console.log(`Reward claimed: ${userData.rewards[0].amountClaimedInWei}`);
 
         for (const collateral of collateralData) {
           console.log(`**User Collateral Data:**`);
