@@ -19,7 +19,6 @@ contract CompoundIIIHelpers is DSMath {
         return 0xcFC1fA6b7ca982176529899D99af6473aD80DF4F;
     }
 
-    //
     struct BaseAssetInfo {
         address token;
         address priceFeed;
@@ -30,7 +29,7 @@ contract CompoundIIIHelpers is DSMath {
         uint64 trackingSupplyIndex;
         uint64 trackingBorrowIndex;
     }
-    //
+
     struct Scales {
         //liquidation factor, borrow factor scale
         uint64 factorScale;
@@ -39,14 +38,14 @@ contract CompoundIIIHelpers is DSMath {
         //scale for rewards APR
         uint64 trackingIndexScale;
     }
-    //
+
     struct Token {
         uint8 offset;
         address token;
         string symbol;
         uint256 scale;
     }
-    //
+
     struct AssetData {
         Token token;
         address priceFeed;
@@ -64,7 +63,6 @@ contract CompoundIIIHelpers is DSMath {
         bool isBorrowCollateralized;
     }
 
-    //
     struct MarketFlags {
         bool isAbsorbPaused;
         bool isBuyPaused;
@@ -77,7 +75,7 @@ contract CompoundIIIHelpers is DSMath {
         Token token;
         uint256 suppliedBalance;
     }
-    //
+
     struct RewardsConfig {
         address token;
         uint64 rescaleFactor;
@@ -105,7 +103,7 @@ contract CompoundIIIHelpers is DSMath {
         UserRewardsData rewards;
         AccountFlags flags;
     }
-    //
+
     struct MarketConfig {
         uint8 assetCount;
         uint64 supplyRate;
