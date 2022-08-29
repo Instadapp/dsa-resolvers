@@ -14,17 +14,20 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
      *@param user Address of the user whose position details are needed.
      *@param markets Array of addresses of the market for which the user's position details are needed
      *@return positionData Array of overall position details of the user - balances, rewards, collaterals and flags.
+     *@return marketConfig Array of the market configuration details.
      */
     function getPositionAll(address user, address[] calldata markets)
         public
-        returns (PositionData[] memory positionData)
+        returns (PositionData[] memory positionData, MarketConfig[] memory marketConfig)
     {
         uint256 length = markets.length;
         positionData = new PositionData[](length);
+        marketConfig = new MarketConfig[](length);
 
         for (uint256 i = 0; i < length; i++) {
             positionData[i].userData = getUserData(user, markets[i]);
             positionData[i].collateralData = getCollateralAll(user, markets[i]);
+            marketConfig[i] = getMarketConfig(markets[i]);
         }
     }
 
@@ -35,18 +38,21 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
      *@param markets Array of addresses of the market for which the user's position details are needed
      *@param tokenIDs IDs or offsets of the token as per comet market whose collateral details are needed.
      *@return positionData Array of overall position details of the user - balances, rewards, collaterals and flags.
+     *@return marketConfig Array of the market configuration details.
      */
     function getPosition(
         address user,
         address[] calldata markets,
         uint8[] calldata tokenIDs
-    ) public returns (PositionData[] memory positionData) {
+    ) public returns (PositionData[] memory positionData, MarketConfig[] memory marketConfig) {
         uint256 length = markets.length;
         positionData = new PositionData[](length);
+        marketConfig = new MarketConfig[](length);
 
         for (uint256 i = 0; i < length; i++) {
             positionData[i].userData = getUserData(user, markets[i]);
             positionData[i].collateralData = getAssetCollaterals(user, markets[i], tokenIDs);
+            marketConfig[i] = getMarketConfig(markets[i]);
         }
     }
 

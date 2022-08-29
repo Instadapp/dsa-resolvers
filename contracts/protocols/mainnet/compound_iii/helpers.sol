@@ -45,6 +45,7 @@ contract CompoundIIIHelpers is DSMath {
 
     struct Token {
         uint8 offset;
+        uint8 decimals;
         address token;
         string symbol;
         ///@dev 10**decimals
@@ -74,7 +75,9 @@ contract CompoundIIIHelpers is DSMath {
     }
 
     struct AccountFlags {
+        ///@dev flag indicating whether the user's position is liquidatable
         bool isLiquidatable;
+        ///@dev flag indicating whether an account has enough collateral to borrow
         bool isBorrowCollateralized;
     }
 
@@ -88,28 +91,32 @@ contract CompoundIIIHelpers is DSMath {
 
     struct UserCollateralData {
         Token token;
-        uint256 suppliedBalance;
+        ///@dev current positive base balance of an account or zero
+        uint256 suppliedBalanceInBase;
     }
 
     struct RewardsConfig {
         address token;
         uint64 rescaleFactor;
         bool shouldUpScale;
+        ///@dev The minimum amount of base principal wei for rewards to accrue. The minimum amount of base asset supplied to the protocol in order for accounts to accrue rewards.
         uint104 baseMinForRewards;
     }
 
     struct UserRewardsData {
         address rewardToken;
+        uint8 rewardTokenDecimals;
         uint256 amountOwed;
         uint256 amountClaimed;
     }
 
     struct UserData {
         int104 baseBalance;
-        //the base balance of supplies with interest, 0 for borrowing case or no supplies
-        uint256 suppliedBalance;
-        //the borrow base balance including interest, for non-negative base asset balance value is 0
-        uint256 borrowedBalance;
+        ///@dev the base balance of supplies with interest, 0 for borrowing case or no supplies
+        uint256 suppliedBalanceInBase;
+        ///@dev the borrow base balance including interest, for non-negative base asset balance value is 0
+        uint256 borrowedBalanceInBase;
+        ///@dev
         uint16 assetsIn;
         uint64 accountTrackingIndex;
         uint64 interestAccrued;
@@ -196,6 +203,7 @@ contract CompoundIIIHelpers is DSMath {
             _token.offset = asset.offset;
             _token.token = asset.asset;
             _token.symbol = token.symbol();
+            _token.decimals = token.decimals();
             _token.scale = asset.scale;
 
             _asset.token = _token;
@@ -309,13 +317,14 @@ contract CompoundIIIHelpers is DSMath {
                 AssetInfo memory asset = _comet.getAssetInfo(offsets[i]);
                 _token.token = asset.asset;
                 _token.symbol = TokenInterface(asset.asset).symbol();
+                _token.decimals = TokenInterface(asset.asset).decimals();
                 _token.scale = asset.scale;
                 _token.offset = asset.offset;
 
                 uint256 suppliedAmt = uint256(_comet.userCollateral(account, asset.asset).balance);
                 _collaterals[i].token = _token;
                 collateralAssets[i] = _token.token;
-                _collaterals[i].suppliedBalance = suppliedAmt;
+                _collaterals[i].suppliedBalanceInBase = suppliedAmt;
             }
         }
     }
@@ -323,8 +332,8 @@ contract CompoundIIIHelpers is DSMath {
     function getUserData(address account, address cometMarket) internal returns (UserData memory userData) {
         IComet _comet = IComet(cometMarket);
         userData.baseBalance = _comet.baseBalanceOf(account);
-        userData.suppliedBalance = _comet.balanceOf(account);
-        userData.borrowedBalance = _comet.borrowBalanceOf(account);
+        userData.suppliedBalanceInBase = _comet.balanceOf(account);
+        userData.borrowedBalanceInBase = _comet.borrowBalanceOf(account);
         UserBasic memory accountDataInBase = _comet.userBasic(account);
         userData.assetsIn = accountDataInBase.assetsIn;
         userData.accountTrackingIndex = accountDataInBase.baseTrackingIndex;
@@ -341,6 +350,7 @@ contract CompoundIIIHelpers is DSMath {
         ICometRewards _cometRewards = ICometRewards(getCometRewardsAddress());
         RewardOwed memory reward = _cometRewards.getRewardOwed(cometMarket, account);
         _rewards.rewardToken = reward.token;
+        _rewards.rewardTokenDecimals = TokenInterface(reward.token).decimals();
         _rewards.amountOwed = reward.owed;
         _rewards.amountClaimed = _cometRewards.rewardsClaimed(cometMarket, account);
         userData.rewards = _rewards;

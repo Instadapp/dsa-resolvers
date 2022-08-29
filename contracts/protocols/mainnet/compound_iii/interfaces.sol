@@ -215,6 +215,8 @@ interface TokenInterface {
     function name() external view returns (string memory);
 
     function symbol() external view returns (string memory);
+
+    function decimals() external view returns (uint8);
 }
 
 interface ICometRewards {
