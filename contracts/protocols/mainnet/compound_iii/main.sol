@@ -13,20 +13,18 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
      *@notice get position details of the user in a market including overall position data, collaterals, rewards etc.
      *@param user Address of the user whose position details are needed.
      *@param markets Array of addresses of the market for which the user's position details are needed
-     *@return userDatas Array of overall position details of the user including balances, nonce, rewards and flags.
-     *@return collateralDatas Array of datas related to the assets input for which user's collateral details are needed.
+     *@return positionData Array of overall position details of the user - balances, rewards, collaterals and flags.
      */
     function getPositionAll(address user, address[] calldata markets)
         public
-        returns (UserData[] memory userDatas, UserCollateralData[][] memory collateralDatas)
+        returns (PositionData[] memory positionData)
     {
         uint256 length = markets.length;
-        userDatas = new UserData[](length);
-        collateralDatas = new UserCollateralData[][](length);
+        positionData = new PositionData[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            userDatas[i] = getUserData(user, markets[i]);
-            collateralDatas[i] = getCollateralAll(user, markets[i]);
+            positionData[i].userData = getUserData(user, markets[i]);
+            positionData[i].collateralData = getCollateralAll(user, markets[i]);
         }
     }
 
@@ -36,21 +34,19 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
      *@param user Address of the user whose position details are needed.
      *@param markets Array of addresses of the market for which the user's position details are needed
      *@param tokenIDs IDs or offsets of the token as per comet market whose collateral details are needed.
-     *@return userDatas Array of overall position details of the user including balances, nonce, rewards and flags.
-     *@return collateralDatas Array of datas related to the assets input for which user's collateral details are needed.
+     *@return positionData Array of overall position details of the user - balances, rewards, collaterals and flags.
      */
     function getPosition(
         address user,
         address[] calldata markets,
         uint8[] calldata tokenIDs
-    ) public returns (UserData[] memory userDatas, UserCollateralData[][] memory collateralDatas) {
+    ) public returns (PositionData[] memory positionData) {
         uint256 length = markets.length;
-        userDatas = new UserData[](length);
-        collateralDatas = new UserCollateralData[][](length);
+        positionData = new PositionData[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            userDatas[i] = getUserData(user, markets[i]);
-            collateralDatas[i] = getAssetCollaterals(user, markets[i], tokenIDs);
+            positionData[i].userData = getUserData(user, markets[i]);
+            positionData[i].collateralData = getAssetCollaterals(user, markets[i], tokenIDs);
         }
     }
 

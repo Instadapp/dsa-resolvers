@@ -20,23 +20,26 @@ contract CompoundIIIHelpers is DSMath {
     }
 
     struct BaseAssetInfo {
-        //
         address token;
         address priceFeed;
         uint256 price;
         uint8 decimals;
+        ///@dev scale for base asset i.e. (10 ** decimals)
         uint64 mantissa;
+        ///@dev The scale for base index (depends on time/rate scales, not base token) -> 1e15
         uint64 indexScale;
+        ///@dev An index for tracking participation of accounts that supply the base asset.
         uint64 trackingSupplyIndex;
+        ///@dev An index for tracking participation of accounts that borrow the base asset.
         uint64 trackingBorrowIndex;
     }
 
     struct Scales {
-        //liquidation factor, borrow factor scale
+        ///@dev liquidation factor, borrow factor scale
         uint64 factorScale;
-        //scale for USD prices
+        ///@dev scale for USD prices
         uint64 priceScale;
-        //scale for rewards APR
+        ///@dev The scale for the index tracking protocol rewards, useful in calculating rewards APR
         uint64 trackingIndexScale;
     }
 
@@ -44,18 +47,29 @@ contract CompoundIIIHelpers is DSMath {
         uint8 offset;
         address token;
         string symbol;
+        ///@dev 10**decimals
         uint256 scale;
     }
 
     struct AssetData {
         Token token;
+        ///@dev token's priceFeed
         address priceFeed;
+        ///@dev answer as per latestRoundData from the priceFeed scaled by priceScale
         uint256 price;
+        ///@dev 10**decimals
         uint64 scale;
+        ///@dev The collateral factor(decides how much each collateral can increase borrowing capacity of user),
+        //integer representing the decimal value scaled up by 10 ^ 18.
         uint64 borrowCollateralFactor;
+        ///@dev sets the limits for account's borrow balance,
+        //integer representing the decimal value scaled up by 10 ^ 18.
         uint64 liquidateCollateralFactor;
+        ///@dev liquidation penalty deducted from account's balance upon absorption
         uint64 liquidationFactor;
+        ///@dev integer scaled up by 10 ^ decimals
         uint128 supplyCap;
+        ///@dev  current amount of collateral that all accounts have supplied
         uint128 totalCollateral;
     }
 
@@ -125,6 +139,11 @@ contract CompoundIIIHelpers is DSMath {
         Scales scales;
         RewardsConfig rewardConfig;
         AssetData[] assets;
+    }
+
+    struct PositionData {
+        UserData userData;
+        UserCollateralData[] collateralData;
     }
 
     ICometRewards internal cometRewards = ICometRewards(getCometRewardsAddress());
