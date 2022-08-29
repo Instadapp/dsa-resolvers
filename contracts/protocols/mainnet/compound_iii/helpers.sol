@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 import "./interfaces.sol";
-import "hardhat/console.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
 contract CompoundIIIHelpers is DSMath {
@@ -121,8 +120,8 @@ contract CompoundIIIHelpers is DSMath {
         uint64 accountTrackingIndex;
         uint64 interestAccrued;
         uint256 userNonce;
-        int256 borrowableAmount;
-        uint256 healthFactor;
+        // int256 borrowableAmount;
+        // uint256 healthFactor;
         UserRewardsData[] rewards;
         AccountFlags flags;
     }
@@ -260,25 +259,24 @@ contract CompoundIIIHelpers is DSMath {
         return (assetsIn & (uint16(1) << assetOffset) != 0);
     }
 
-    function getBorrowableAmount(
-        address account,
-        UserBasic memory _userBasic,
-        TotalsBasic memory _totalsBasic,
-        IComet _comet,
-        uint8 _numAssets
-    ) internal returns (int256) {
-        uint16 _assetsIn = _userBasic.assetsIn;
-        uint64 supplyIndex = _totalsBasic.baseSupplyIndex;
-        uint64 borrowIndex = _totalsBasic.baseBorrowIndex;
+    function getBorrowableAmount(address account, address cometAddress) public returns (int256) {
+        IComet _comet = IComet(cometAddress);
+        UserBasic memory _userBasic = _comet.userBasic(account);
+        TotalsBasic memory _totalsBasic = _comet.totalsBasic();
+        uint8 _numAssets = _comet.numAssets();
         address baseTokenPriceFeed = _comet.baseTokenPriceFeed();
 
         int256 amount_ = int256(
-            (currentValue(_userBasic.principal, supplyIndex, borrowIndex, _comet.baseIndexScale()) *
-                int256(_comet.getPrice(baseTokenPriceFeed))) / int256(1e8)
+            (currentValue(
+                _userBasic.principal,
+                _totalsBasic.baseSupplyIndex,
+                _totalsBasic.baseBorrowIndex,
+                _comet.baseIndexScale()
+            ) * int256(_comet.getPrice(baseTokenPriceFeed))) / int256(1e8)
         );
 
         for (uint8 i = 0; i < _numAssets; i++) {
-            if (isAssetIn(_assetsIn, i)) {
+            if (isAssetIn(_userBasic.assetsIn, i)) {
                 AssetInfo memory asset = _comet.getAssetInfo(i);
                 UserCollateral memory coll = _comet.userCollateral(account, asset.asset);
                 uint256 newAmount = (uint256(coll.balance) * _comet.getPrice(asset.priceFeed)) / 1e8;
@@ -298,14 +296,7 @@ contract CompoundIIIHelpers is DSMath {
         address account,
         IComet _comet,
         uint8[] memory offsets
-    )
-        internal
-        returns (
-            UserCollateralData[] memory _collaterals,
-            address[] memory collateralAssets,
-            uint256 sumSupplyXFactor
-        )
-    {
+    ) internal returns (UserCollateralData[] memory _collaterals, address[] memory collateralAssets) {
         UserBasic memory _userBasic = _comet.userBasic(account);
         uint16 _assetsIn = _userBasic.assetsIn;
         uint8 numAssets = uint8(offsets.length);
@@ -319,7 +310,6 @@ contract CompoundIIIHelpers is DSMath {
         }
         _collaterals = new UserCollateralData[](_length);
         collateralAssets = new address[](_length);
-        sumSupplyXFactor = 0;
 
         for (uint8 i = 0; i < numAssets; i++) {
             if (isAssetIn(_assetsIn, offsets[i])) {
@@ -339,7 +329,7 @@ contract CompoundIIIHelpers is DSMath {
                     _comet,
                     asset.priceFeed
                 );
-                sumSupplyXFactor = add(sumSupplyXFactor, mul(suppliedAmt, asset.liquidateCollateralFactor));
+                // sumSupplyXFactor = add(sumSupplyXFactor, mul(suppliedAmt, asset.liquidateCollateralFactor));
             }
         }
     }
@@ -364,13 +354,13 @@ contract CompoundIIIHelpers is DSMath {
         userData.accountTrackingIndex = accountDataInBase.baseTrackingIndex;
         userData.interestAccrued = accountDataInBase.baseTrackingAccrued;
         userData.userNonce = _comet.userNonce(account);
-        userData.borrowableAmount = getBorrowableAmount(
-            account,
-            _comet.userBasic(account),
-            _comet.totalsBasic(),
-            _comet,
-            _comet.numAssets()
-        );
+        // userData.borrowableAmount = getBorrowableAmount(
+        //     account,
+        //     _comet.userBasic(account),
+        //     _comet.totalsBasic(),
+        //     _comet,
+        //     _comet.numAssets()
+        // );
         UserRewardsData memory _rewards;
         RewardOwed memory reward = cometRewards.getRewardOwed(cometMarket, account);
         _rewards.rewardToken = reward.token;
@@ -389,9 +379,27 @@ contract CompoundIIIHelpers is DSMath {
         for (uint8 i = 0; i < length; i++) {
             offsets[i] = i;
         }
-        (, , uint256 sumSupplyXFactor) = getCollateralData(account, _comet, offsets);
-        console.log(userData.borrowedBalanceInBase);
-        userData.healthFactor = div(sumSupplyXFactor, userData.borrowedBalanceInBase);
+        // (, , uint256 sumSupplyXFactor) = getCollateralData(account, _comet, offsets);
+        // console.log(userData.borrowedBalanceInBase);
+        // userData.healthFactor = div(sumSupplyXFactor, userData.borrowedBalanceInBase);
+    }
+
+    function getHealthFactor(address account, address cometMarket) public returns (uint256 healthFactor) {
+        IComet _comet = IComet(cometMarket);
+        UserBasic memory _userBasic = _comet.userBasic(account);
+        uint16 _assetsIn = _userBasic.assetsIn;
+        uint8 numAssets = _comet.numAssets();
+        uint256 sumSupplyXFactor = 0;
+
+        for (uint8 i = 0; i < numAssets; i++) {
+            if (isAssetIn(_assetsIn, i)) {
+                AssetInfo memory asset = _comet.getAssetInfo(i);
+                uint256 suppliedAmt = uint256(_comet.userCollateral(account, asset.asset).balance);
+                sumSupplyXFactor = add(sumSupplyXFactor, mul(suppliedAmt, asset.liquidateCollateralFactor));
+            }
+        }
+
+        healthFactor = div(sumSupplyXFactor, _comet.borrowBalanceOf(account));
     }
 
     function getCollateralAll(address account, address cometMarket)
@@ -405,7 +413,7 @@ contract CompoundIIIHelpers is DSMath {
         for (uint8 i = 0; i < length; i++) {
             offsets[i] = i;
         }
-        (collaterals, , ) = getCollateralData(account, _comet, offsets);
+        (collaterals, ) = getCollateralData(account, _comet, offsets);
     }
 
     function getAssetCollaterals(
@@ -414,7 +422,7 @@ contract CompoundIIIHelpers is DSMath {
         uint8[] memory offsets
     ) internal returns (UserCollateralData[] memory collaterals) {
         IComet _comet = IComet(cometMarket);
-        (collaterals, , ) = getCollateralData(account, _comet, offsets);
+        (collaterals, ) = getCollateralData(account, _comet, offsets);
     }
 
     function getUserPosition(address account, address cometMarket) internal returns (UserData memory userData) {
@@ -428,6 +436,6 @@ contract CompoundIIIHelpers is DSMath {
         for (uint8 i = 0; i < length; i++) {
             offsets[i] = i;
         }
-        (, assets, ) = getCollateralData(account, IComet(cometMarket), offsets);
+        (, assets) = getCollateralData(account, IComet(cometMarket), offsets);
     }
 }

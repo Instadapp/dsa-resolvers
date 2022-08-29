@@ -96,8 +96,8 @@ describe("Compound Resolvers", () => {
         console.log(`Account tracking index: ${userData.accountTrackingIndex}`);
         console.log(`Interest accrued: ${userData.interestAccrued}`);
         console.log(`Use Nonce: ${userData.userNonce}`);
-        console.log(`Borrowable Amount: ${userData.borrowableAmount}`);
-        console.log(`Health factor: ${userData.healthFactor}`);
+        console.log(`Borrowable Amount: ${await resolver.callStatic.getBorrowableAmount(user, markets[0])}`);
+        console.log(`Health factor: ${await resolver.callStatic.getHealthFactor(user, markets[0])}`);
         console.log(`Position is liquidatable: ${userData.flags.isLiquidatable}`);
         console.log(`Position can borrow: ${userData.flags.isBorrowCollateralized}`);
 
