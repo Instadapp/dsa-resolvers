@@ -36,9 +36,11 @@ describe("Compound Resolvers", () => {
           `Fraction of the liquidation penalty that goes to buyers of collateral: ${market.storeFrontPriceFactor}`,
         );
         console.log(`Minimum borrow amount: ${market.baseBorrowMinInBase}`);
-        console.log(`Max base asset balance of market until which collateral can be sold: ${market.targetReserves}`);
-        console.log(`TotalSupply in base: ${market.totalSupplyBase}`);
-        console.log(`TotalBorrow in base: ${market.totalBorrowBase}`);
+        console.log(
+          `Max base asset balance of market until which collateral can be sold: ${market.targetReservesInBase}`,
+        );
+        console.log(`TotalSupply in base: ${market.totalSupplyInBase}`);
+        console.log(`TotalBorrow in base: ${market.totalBorrowInBase}`);
 
         console.log(`**Base asset info:** \n`);
         console.log(`Base token: ${market.baseToken.token}`);

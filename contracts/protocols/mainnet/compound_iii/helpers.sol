@@ -146,9 +146,9 @@ contract CompoundIIIHelpers is DSMath {
         ///@dev minimum borrow amount
         uint104 baseBorrowMinInBase;
         //amount of reserves allowed before absorbed collateral is no longer sold by the protocol
-        uint104 targetReserves;
-        uint104 totalSupplyBase;
-        uint104 totalBorrowBase;
+        uint104 targetReservesInBase;
+        uint104 totalSupplyInBase;
+        uint104 totalBorrowInBase;
         uint256 utilization;
         BaseAssetInfo baseToken;
         Scales scales;
@@ -238,9 +238,9 @@ contract CompoundIIIHelpers is DSMath {
         market.reservesInBase = _comet.getReserves();
         market.storeFrontPriceFactor = _comet.storeFrontPriceFactor();
         market.baseBorrowMinInBase = _comet.baseBorrowMin();
-        market.targetReserves = _comet.targetReserves();
-        market.totalSupplyBase = _comet.totalSupply();
-        market.totalBorrowBase = _comet.totalBorrow();
+        market.targetReservesInBase = _comet.targetReserves();
+        market.totalSupplyInBase = _comet.totalSupply();
+        market.totalBorrowInBase = _comet.totalBorrow();
 
         market.baseToken = getBaseTokenInfo(_comet);
         market.scales = getScales(_comet);
@@ -339,7 +339,6 @@ contract CompoundIIIHelpers is DSMath {
                     asset.priceFeed
                 );
                 j++;
-                // sumSupplyXFactor = add(sumSupplyXFactor, mul(suppliedAmt, asset.liquidateCollateralFactor));
             }
         }
     }
@@ -364,13 +363,6 @@ contract CompoundIIIHelpers is DSMath {
         userData.accountTrackingIndex = accountDataInBase.baseTrackingIndex;
         userData.interestAccruedInBase = accountDataInBase.baseTrackingAccrued;
         userData.userNonce = _comet.userNonce(account);
-        // userData.borrowableAmount = getBorrowableAmount(
-        //     account,
-        //     _comet.userBasic(account),
-        //     _comet.totalsBasic(),
-        //     _comet,
-        //     _comet.numAssets()
-        // );
         UserRewardsData memory _rewards;
         RewardOwed memory reward = cometRewards.getRewardOwed(cometMarket, account);
         _rewards.rewardToken = reward.token;
@@ -389,9 +381,6 @@ contract CompoundIIIHelpers is DSMath {
         for (uint8 i = 0; i < length; i++) {
             offsets[i] = i;
         }
-        // (, , uint256 sumSupplyXFactor) = getCollateralData(account, _comet, offsets);
-        // console.log(userData.borrowedBalanceInBase);
-        // userData.healthFactor = div(sumSupplyXFactor, userData.borrowedBalanceInBase);
     }
 
     function getHealthFactor(address account, address cometMarket) public returns (uint256 healthFactor) {
