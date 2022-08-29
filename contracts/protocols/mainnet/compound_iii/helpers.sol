@@ -67,9 +67,9 @@ contract CompoundIIIHelpers is DSMath {
         ///@dev liquidation penalty deducted from account's balance upon absorption
         uint64 liquidationFactor;
         ///@dev integer scaled up by 10 ^ decimals
-        uint128 supplyCap;
+        uint128 supplyCapInWei;
         ///@dev  current amount of collateral that all accounts have supplied
-        uint128 totalCollateral;
+        uint128 totalCollateralInWei;
     }
 
     struct AccountFlags {
@@ -111,6 +111,9 @@ contract CompoundIIIHelpers is DSMath {
     }
 
     struct UserData {
+        ///@dev principal value the amount of base asset that the account has supplied (greater than zero)
+        //or owes (less than zero) to the protocol.
+        int104 principalInBase;
         ///@dev the base balance of supplies with interest, 0 for borrowing case or no supplies
         uint256 suppliedBalanceInBase;
         ///@dev the borrow base balance including interest, for non-negative base asset balance value is 0
@@ -220,8 +223,8 @@ contract CompoundIIIHelpers is DSMath {
             _asset.borrowCollateralFactor = asset.borrowCollateralFactor;
             _asset.liquidateCollateralFactor = asset.liquidateCollateralFactor;
             _asset.liquidationFactor = asset.liquidationFactor;
-            _asset.supplyCap = asset.supplyCap;
-            _asset.totalCollateral = _comet.totalsCollateral(asset.asset).totalSupplyAsset;
+            _asset.supplyCapInWei = asset.supplyCap;
+            _asset.totalCollateralInWei = _comet.totalsCollateral(asset.asset).totalSupplyAsset;
 
             assets[i] = _asset;
         }
@@ -316,28 +319,24 @@ contract CompoundIIIHelpers is DSMath {
                 _length++;
             }
         }
-        _collaterals = new UserCollateralData[](_length);
+        _collaterals = new UserCollateralData[](numAssets);
         collateralAssets = new address[](_length);
         uint8 j = 0;
 
         for (uint8 i = 0; i < numAssets; i++) {
-            if (isAssetIn(_assetsIn, offsets[i])) {
-                AssetInfo memory asset = _comet.getAssetInfo(offsets[i]);
-                _token.token = asset.asset;
-                _token.symbol = TokenInterface(asset.asset).symbol();
-                _token.decimals = TokenInterface(asset.asset).decimals();
-                _token.scale = asset.scale;
-                _token.offset = asset.offset;
+            AssetInfo memory asset = _comet.getAssetInfo(offsets[i]);
+            _token.token = asset.asset;
+            _token.symbol = TokenInterface(asset.asset).symbol();
+            _token.decimals = TokenInterface(asset.asset).decimals();
+            _token.scale = asset.scale;
+            _token.offset = asset.offset;
+            uint256 suppliedAmt = uint256(_comet.userCollateral(account, asset.asset).balance);
+            _collaterals[i].token = _token;
+            _collaterals[i].suppliedBalanceInAsset = suppliedAmt;
+            _collaterals[i].suppliedBalanceInBase = getCollateralBalanceInBase(suppliedAmt, _comet, asset.priceFeed);
 
-                uint256 suppliedAmt = uint256(_comet.userCollateral(account, asset.asset).balance);
-                _collaterals[j].token = _token;
+            if (isAssetIn(_assetsIn, offsets[i])) {
                 collateralAssets[j] = _token.token;
-                _collaterals[j].suppliedBalanceInAsset = suppliedAmt;
-                _collaterals[j].suppliedBalanceInBase = getCollateralBalanceInBase(
-                    suppliedAmt,
-                    _comet,
-                    asset.priceFeed
-                );
                 j++;
             }
         }
@@ -359,6 +358,7 @@ contract CompoundIIIHelpers is DSMath {
         userData.suppliedBalanceInBase = _comet.balanceOf(account);
         userData.borrowedBalanceInBase = _comet.borrowBalanceOf(account);
         UserBasic memory accountDataInBase = _comet.userBasic(account);
+        userData.principalInBase = accountDataInBase.principal;
         userData.assetsIn = accountDataInBase.assetsIn;
         userData.accountTrackingIndex = accountDataInBase.baseTrackingIndex;
         userData.interestAccruedInBase = accountDataInBase.baseTrackingAccrued;

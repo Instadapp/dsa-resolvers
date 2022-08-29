@@ -78,8 +78,8 @@ describe("Compound Resolvers", () => {
           console.log(`Asset borrow collateral factor: ${asset.borrowCollateralFactor}`);
           console.log(`Asset liquidate collateral factor: ${asset.liquidateCollateralFactor}`);
           console.log(`Asset liquidation factor: ${asset.liquidationFactor}`);
-          console.log(`Asset supply cap: ${asset.supplyCap}`);
-          console.log(`Asset totalCollateral: ${asset.totalCollateral}`);
+          console.log(`Asset supply cap: ${asset.supplyCapInWei}`);
+          console.log(`Asset totalCollateral: ${asset.totalCollateralInWei}`);
         }
       }
     });
@@ -92,6 +92,7 @@ describe("Compound Resolvers", () => {
         const collateralData = position.collateralData;
 
         console.log(`**User Position Data:**`);
+        console.log(`Supplied balance: ${userData.principalInBase}`);
         console.log(`Supplied balance: ${userData.suppliedBalanceInBase}`);
         console.log(`Borrowed balance: ${userData.borrowedBalanceInBase}`);
         console.log(`Collateral assets: ${userData.assetsIn}`);
