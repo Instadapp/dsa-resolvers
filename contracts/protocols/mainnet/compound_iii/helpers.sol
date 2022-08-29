@@ -428,7 +428,7 @@ contract CompoundIIIHelpers is DSMath {
         userData = getUserData(account, cometMarket);
     }
 
-    function getList(address account, address cometMarket) internal returns (address[] memory assets) {
+    function getUsedCollateralList(address account, address cometMarket) internal returns (address[] memory assets) {
         uint8 length = IComet(cometMarket).numAssets();
         uint8[] memory offsets = new uint8[](length);
 

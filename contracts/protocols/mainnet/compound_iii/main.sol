@@ -77,18 +77,21 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
     }
 
     /**
-     *@dev get collaterals list where user has positiom.
+     *@dev get list of collaterals user has supplied..
      *@notice get list of all collaterals in the market.
      *@param user Address of the user whose collateral details are needed.
      *@param markets Array of addresses of the comet market for which the user's collateral details are needed.
      *@return datas array of token addresses supported in the market.
      */
-    function getCollateralsList(address user, address[] calldata markets) public returns (address[][] memory datas) {
+    function getUsedCollateralsList(address user, address[] calldata markets)
+        public
+        returns (address[][] memory datas)
+    {
         uint256 length = markets.length;
         datas = new address[][](length);
 
         for (uint256 i = 0; i < length; i++) {
-            datas[i] = getList(user, markets[i]);
+            datas[i] = getUsedCollateralList(user, markets[i]);
         }
     }
 }

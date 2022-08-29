@@ -120,7 +120,7 @@ describe("Compound Resolvers", () => {
     });
 
     it("Returns user's collateral details", async () => {
-      const collaterals = await resolver.callStatic.getCollateralsList(user, markets);
+      const collaterals = await resolver.callStatic.getUsedCollateralsList(user, markets);
       for (const collateral of collaterals) {
         for (const asset of collateral) {
           console.log(asset);
