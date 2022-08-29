@@ -12,52 +12,82 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
      *@dev get position of the user for all collaterals.
      *@notice get position details of the user in a market including overall position data, collaterals, rewards etc.
      *@param user Address of the user whose position details are needed.
-     *@param market Address of the market for which the user's position details are needed.
-     *@return UserData Overall position details of the user including balances, nonce, rewards and flags.
-     *@return UserCollateralData Data related to the collateral assets for which user has the position.
+     *@param markets Array of addresses of the market for which the user's position details are needed
+     *@return userDatas Array of overall position details of the user including balances, nonce, rewards and flags.
+     *@return collateralDatas Array of datas related to the assets input for which user's collateral details are needed.
      */
-    function getPositionAll(address user, address market)
+    function getPositionAll(address user, address[] calldata markets)
         public
-        returns (UserData memory, UserCollateralData[] memory)
+        returns (UserData[] memory userDatas, UserCollateralData[][] memory collateralDatas)
     {
-        return (getUserData(user, market), getCollateralAll(user, market));
+        uint256 length = markets.length;
+        userDatas = new UserData[](length);
+        collateralDatas = new UserCollateralData[][](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            userDatas[i] = getUserData(user, markets[i]);
+            collateralDatas[i] = getCollateralAll(user, markets[i]);
+        }
     }
 
     /**
      *@dev get position of the user for given collateral.
      *@notice get position details of the user in a market including overall position data, collaterals, rewards etc.
      *@param user Address of the user whose position details are needed.
-     *@param market Address of the market for which the user's position details are needed
-     *@param tokens IDs or offsets of the token as per comet market whose collateral details are needed.
-     *@return UserData Overall position details of the user including balances, nonce, rewards and flags.
-     *@return UserCollateralData Data related to the assets input for which user's collateral details are needed.
+     *@param markets Array of addresses of the market for which the user's position details are needed
+     *@param tokenIDs IDs or offsets of the token as per comet market whose collateral details are needed.
+     *@return userDatas Array of overall position details of the user including balances, nonce, rewards and flags.
+     *@return collateralDatas Array of datas related to the assets input for which user's collateral details are needed.
      */
     function getPosition(
         address user,
-        address market,
-        uint8[] calldata tokens
-    ) public returns (UserData memory, UserCollateralData[] memory) {
-        return (getUserData(user, market), getAssetCollaterals(user, market, tokens));
+        address[] calldata markets,
+        uint8[] calldata tokenIDs
+    ) public returns (UserData[] memory userDatas, UserCollateralData[][] memory collateralDatas) {
+        uint256 length = markets.length;
+        userDatas = new UserData[](length);
+        collateralDatas = new UserCollateralData[][](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            userDatas[i] = getUserData(user, markets[i]);
+            collateralDatas[i] = getAssetCollaterals(user, markets[i], tokenIDs);
+        }
     }
 
     /**
      *@dev get market configuration.
      *@notice returns the market stats including market supplies, balances, rates, flags for market operations,
      *collaterals or assets active, base asset info etc.
-     *@param comet Address of the comet market for which the user's position details are needed.
-     *@return MarketCofig Struct containing data related to the market and the assets.
+     *@param markets Array of addresses of the comet market for which the user's position details are needed.
+     *@return marketConfigs Array of struct containing data related to the market and the assets.
      */
-    function getMarketConfiguration(address comet) public returns (MarketConfig memory) {
-        return getMarketConfiguration(comet);
+    function getMarketConfiguration(address[] calldata markets)
+        public
+        view
+        returns (MarketConfig[] memory marketConfigs)
+    {
+        uint256 length = markets.length;
+        marketConfigs = new MarketConfig[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            marketConfigs[i] = getMarketConfig(markets[i]);
+        }
     }
 
     /**
      *@dev get collaterals list where user has positiom.
      *@notice get list of all collaterals in the market.
-     *@return data array of token addresses supported in the market.
+     *@param user Address of the user whose collateral details are needed.
+     *@param markets Array of addresses of the comet market for which the user's collateral details are needed.
+     *@return datas array of token addresses supported in the market.
      */
-    function getCollateralsList(address user, address cometMarket) public returns (address[] memory data) {
-        return getList(user, cometMarket);
+    function getCollateralsList(address user, address[] calldata markets) public returns (address[][] memory datas) {
+        uint256 length = markets.length;
+        datas = new address[][](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            datas[i] = getList(user, markets[i]);
+        }
     }
 }
 

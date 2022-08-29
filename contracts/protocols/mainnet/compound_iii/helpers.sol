@@ -20,6 +20,7 @@ contract CompoundIIIHelpers is DSMath {
     }
 
     struct BaseAssetInfo {
+        //
         address token;
         address priceFeed;
         uint256 price;
@@ -157,8 +158,7 @@ contract CompoundIIIHelpers is DSMath {
     }
 
     function getRewardsConfig(address cometMarket) internal view returns (RewardsConfig memory rewards) {
-        ICometRewards _cometRewards = ICometRewards(getCometRewardsAddress());
-        RewardConfig memory _rewards = _cometRewards.rewardConfig(cometMarket);
+        RewardConfig memory _rewards = cometRewards.rewardConfig(cometMarket);
         rewards.token = _rewards.token;
         rewards.rescaleFactor = _rewards.rescaleFactor;
         rewards.shouldUpScale = _rewards.shouldUpscale;
@@ -268,7 +268,6 @@ contract CompoundIIIHelpers is DSMath {
 
     function getCollateralData(
         address account,
-        address cometMarket,
         IComet _comet,
         uint8[] memory offsets
     ) internal returns (UserCollateralData[] memory _collaterals, address[] memory collateralAssets) {
@@ -341,7 +340,7 @@ contract CompoundIIIHelpers is DSMath {
         for (uint8 i = 0; i < length; i++) {
             offsets[i] = i;
         }
-        (collaterals, ) = getCollateralData(account, cometMarket, _comet, offsets);
+        (collaterals, ) = getCollateralData(account, _comet, offsets);
     }
 
     function getAssetCollaterals(
@@ -350,7 +349,7 @@ contract CompoundIIIHelpers is DSMath {
         uint8[] memory offsets
     ) internal returns (UserCollateralData[] memory collaterals) {
         IComet _comet = IComet(cometMarket);
-        (collaterals, ) = getCollateralData(account, cometMarket, _comet, offsets);
+        (collaterals, ) = getCollateralData(account, _comet, offsets);
     }
 
     function getUserPosition(address account, address cometMarket) internal returns (UserData memory userData) {
@@ -364,6 +363,6 @@ contract CompoundIIIHelpers is DSMath {
         for (uint8 i = 0; i < length; i++) {
             offsets[i] = i;
         }
-        (, assets) = getCollateralData(account, cometMarket, IComet(cometMarket), offsets);
+        (, assets) = getCollateralData(account, IComet(cometMarket), offsets);
     }
 }
