@@ -194,10 +194,10 @@ contract CompoundIIIHelpers is DSMath {
 
     function getMarketAssets(IComet _comet, uint8 length) internal view returns (AssetData[] memory assets) {
         assets = new AssetData[](length);
-        AssetInfo memory asset;
-        AssetData memory _asset;
-        Token memory _token;
         for (uint8 i = 0; i < length; i++) {
+            AssetInfo memory asset;
+            Token memory _token;
+            AssetData memory _asset;
             asset = _comet.getAssetInfo(i);
 
             TokenInterface token = TokenInterface(asset.asset);
@@ -352,7 +352,7 @@ contract CompoundIIIHelpers is DSMath {
         address basePriceFeed = _comet.baseTokenPriceFeed();
         uint256 baseAssetprice = _comet.getPrice(basePriceFeed);
         uint256 collateralPrice = _comet.getPrice(assetPriceFeed);
-        suppliedBalanceInAsset = mul(balanceInBase, baseAssetprice) / collateralPrice;
+        suppliedBalanceInAsset = div(mul(balanceInBase, baseAssetprice), collateralPrice);
     }
 
     function getUserData(address account, address cometMarket) internal returns (UserData memory userData) {
@@ -391,9 +391,7 @@ contract CompoundIIIHelpers is DSMath {
         }
         (, , uint256 sumSupplyXFactor) = getCollateralData(account, _comet, offsets);
         console.log(userData.borrowedBalanceInBase);
-        if (userData.borrowedBalanceInBase != 0) {
-            userData.healthFactor = (sumSupplyXFactor / userData.borrowedBalanceInBase);
-        }
+        userData.healthFactor = div(sumSupplyXFactor, userData.borrowedBalanceInBase);
     }
 
     function getCollateralAll(address account, address cometMarket)

@@ -16,7 +16,7 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
      *@return positionData Array of overall position details of the user - balances, rewards, collaterals and flags.
      *@return marketConfig Array of the market configuration details.
      */
-    function getPositionAll(address user, address[] calldata markets)
+    function getPositionForMarkets(address user, address[] calldata markets)
         public
         returns (PositionData[] memory positionData, MarketConfig[] memory marketConfig)
     {
@@ -40,7 +40,7 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
      *@return positionData Array of overall position details of the user - balances, rewards, collaterals and flags.
      *@return marketConfig Array of the market configuration details.
      */
-    function getPosition(
+    function getPositionForTokenIds(
         address user,
         address[] calldata markets,
         uint8[] calldata tokenIDs
