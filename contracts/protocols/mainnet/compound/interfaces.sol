@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
+pragma experimental ABIEncoderV2;
 
 interface CTokenInterface {
     function exchangeRateStored() external view returns (uint256);
@@ -27,6 +28,8 @@ interface TokenInterface {
 
 interface OrcaleComp {
     function getUnderlyingPrice(address) external view returns (uint256);
+
+    function price(string calldata symbol) external view returns (uint256);
 }
 
 interface ComptrollerLensInterface {
@@ -59,10 +62,10 @@ interface ComptrollerLensInterface {
     function oracle() external view returns (address);
 
     function compSpeeds(address) external view returns (uint256);
-    
-    function compSupplySpeeds(address) external view returns (uint);
-    
-    function compBorrowSpeeds(address) external view returns (uint);
+
+    function compSupplySpeeds(address) external view returns (uint256);
+
+    function compBorrowSpeeds(address) external view returns (uint256);
 }
 
 interface CompReadInterface {
