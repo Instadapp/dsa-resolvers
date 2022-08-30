@@ -6,8 +6,10 @@ import "./helpers.sol";
 contract Resolver is Helpers {
     function getPriceInEth(CTokenInterface cToken) public view returns (uint256 priceInETH, uint256 priceInUSD) {
         uint256 decimals = getCETHAddress() == address(cToken) ? 18 : TokenInterface(cToken.underlying()).decimals();
-        uint256 price = OrcaleComp(getOracleAddress()).getUnderlyingPrice(address(cToken));
-        uint256 ethPrice = OrcaleComp(getOracleAddress()).getUnderlyingPrice(getCETHAddress());
+        uint256 ethPrice = OrcaleComp(getOracleAddress()).price("ETH");
+        uint256 price = address(cToken) == getCETHAddress()
+            ? ethPrice
+            : OrcaleComp(getOracleAddress()).getUnderlyingPrice(address(cToken));
         priceInUSD = price / 10**(18 - decimals);
         priceInETH = wdiv(priceInUSD, ethPrice);
     }
@@ -55,5 +57,5 @@ contract Resolver is Helpers {
 }
 
 contract InstaCompoundResolver is Resolver {
-    string public constant name = "Compound-Resolver-v1.4";
+    string public constant name = "Compound-Resolver-v1.6";
 }
