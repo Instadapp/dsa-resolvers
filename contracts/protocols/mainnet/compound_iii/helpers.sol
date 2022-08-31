@@ -3,8 +3,6 @@ pragma solidity >=0.8.0;
 import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
-import "hardhat/console.sol";
-
 contract CompoundIIIHelpers is DSMath {
     /**
      *@dev Returns ethereum address
@@ -329,8 +327,6 @@ contract CompoundIIIHelpers is DSMath {
             AssetInfo memory asset = _comet.getAssetInfo(offsets[i]);
             _token.token = asset.asset;
             _token.symbol = TokenInterface(asset.asset).symbol();
-            console.log(_token.token);
-            console.log(_token.symbol);
             _token.decimals = TokenInterface(asset.asset).decimals();
             _token.scale = asset.scale;
             _token.offset = asset.offset;
