@@ -4,13 +4,11 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 contract Resolver is Helpers {
-    function getPriceInEth(CTokenInterface cToken) public view returns (uint256 priceInETH, uint256 priceInUSD) {
-        uint256 decimals = getCETHAddress() == address(cToken) ? 18 : TokenInterface(cToken.underlying()).decimals();
-        uint256 ethPrice = OrcaleComp(getOracleAddress()).price("ETH");
-        uint256 price = address(cToken) == getCETHAddress()
-            ? ethPrice
-            : OrcaleComp(getOracleAddress()).getUnderlyingPrice(address(cToken));
-        priceInUSD = price / 10**(18 - decimals);
+    function getPriceInEth(CTokenInterface cToken) public view returns (uint priceInETH, uint priceInUSD) {
+        uint decimals = getCETHAddress() == address(cToken) ? 18 : TokenInterface(cToken.underlying()).decimals();
+        uint ethPrice = OrcaleComp(getOracleAddress()).price("ETH") * 1e12;
+        uint price = address(cToken) == getCETHAddress() ? ethPrice : OrcaleComp(getOracleAddress()).getUnderlyingPrice(address(cToken));
+        priceInUSD = price / 10 ** (18 - decimals);
         priceInETH = wdiv(priceInUSD, ethPrice);
     }
 
