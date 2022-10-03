@@ -239,7 +239,7 @@ contract MorphoHelpers is DSMath {
     ) internal view returns (UserMarketData memory userMarketData_) {
         ILens lens_ = pool == Underlying.AAVEV2 ? ILens(getAaveLens()) : ILens(getCompoundLens());
         userMarketData_.marketData = getMarketData(pool, poolTokenAddress);
-        if (pool == Underlying.COMPOUNDV2) {
+        if (pool == Underlying.AAVEV2) {
             (userMarketData_.poolBorrows, userMarketData_.p2pBorrows, userMarketData_.totalBorrows) = aavelens
                 .getCurrentBorrowBalanceInOf(poolTokenAddress, user);
             (userMarketData_.poolSupplies, userMarketData_.p2pSupplies, userMarketData_.totalSupplies) = aavelens
