@@ -69,7 +69,6 @@ contract MorphoHelpers is DSMath {
         uint256 totalPoolBorrows;
         uint256 poolSupplyIndex; //exchange rate of cTokens for compound
         uint256 poolBorrowIndex;
-        uint256 totalSupply;
         uint256 p2pSupplyDelta; //The total amount of underlying ERC20 tokens supplied through Morpho,
         //stored as matched peer-to-peer but supplied on the underlying pool
         uint256 p2pBorrowDelta; //The total amount of underlying ERC20 tokens borrow through Morpho,
@@ -116,33 +115,48 @@ contract MorphoHelpers is DSMath {
     IMorpho internal aaveMorpho = IMorpho(getAaveMorpho());
     IMorpho internal compMorpho = IMorpho(getCompMorpho());
 
+    function getLiquidatyData(MarketDetail memory marketData_, address poolTokenAddress_)
+        internal
+        view
+        returns (MarketDetail memory)
+    {
+        (
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            marketData_.liquidationData.ltv,
+            marketData_.liquidationData.liquidationThreshold,
+            marketData_.liquidationData.liquidationBonus,
+
+        ) = aavelens.getMarketConfiguration(poolTokenAddress_);
+        return marketData_;
+    }
+
     function getAaveMarketData(MarketDetail memory marketData_, address poolTokenAddress_)
         internal
         view
         returns (MarketDetail memory)
     {
-        TokenConfig memory tokenData_;
-        AaveMarketDetail memory aaveData_;
-        Flags memory flags_;
-
-        tokenData_.poolTokenAddress = poolTokenAddress_;
+        marketData_.config.poolTokenAddress = poolTokenAddress_;
         (
-            tokenData_.underlyingToken,
+            marketData_.config.underlyingToken,
             ,
-            flags_.isP2PDisabled,
-            flags_.isPaused,
-            flags_.isPartiallyPaused,
+            marketData_.flags.isP2PDisabled,
+            marketData_.flags.isPaused,
+            marketData_.flags.isPartiallyPaused,
             marketData_.reserveFactor,
             ,
-            aaveData_.ltv,
-            aaveData_.liquidationThreshold,
-            aaveData_.liquidationBonus,
-            tokenData_.decimals
+            ,
+            ,
+            ,
+            marketData_.config.decimals
         ) = aavelens.getMarketConfiguration(poolTokenAddress_);
 
-        marketData_.config = tokenData_;
-        marketData_.liquidationData = aaveData_;
-        marketData_.flags = flags_;
+        marketData_ = getLiquidatyData(marketData_, poolTokenAddress_);
 
         return marketData_;
     }
