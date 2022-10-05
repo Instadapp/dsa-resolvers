@@ -4,7 +4,7 @@ import { InstaMorphoResolver, InstaMorphoResolver__factory } from "../../typecha
 
 describe("Morpho Resolvers", () => {
   let signer: SignerWithAddress;
-  const user = "0x47b023DB19b34519Aa34C39134b508CAc2C1efcB";
+  const user = "0x49e96e255ba418d08e66c35b588e2f2f3766e1d0";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -41,9 +41,13 @@ describe("Morpho Resolvers", () => {
         console.log(`p2p supply delta: ${aaveMarket.p2pSupplyDelta}`);
         console.log(`p2p borrow delta: ${aaveMarket.p2pBorrowDelta}`);
         console.log(`reserve Factor: ${aaveMarket.reserveFactor}`);
-        console.log(`ltv: ${aaveMarket.liquidationData.ltv}`);
-        console.log(`liquidation threshold: ${aaveMarket.liquidationData.liquidationThreshold}`);
-        console.log(`liquidation bonus: ${aaveMarket.liquidationData.liquidationBonus}`);
+        console.log(`ltv: ${aaveMarket.aaveData.ltv}`);
+        console.log(`liquidation threshold: ${aaveMarket.aaveData.liquidationThreshold}`);
+        console.log(`liquidation bonus: ${aaveMarket.aaveData.liquidationBonus}`);
+        console.log(`aToken emission per second: ${aaveMarket.aaveData.aEmissionPerSecond}`);
+        console.log(`vToken emission per second: ${aaveMarket.aaveData.vEmissionPerSecond}`);
+        console.log(`available liquidity: ${aaveMarket.aaveData.availableLiquidity}`);
+        console.log(`liquidity rate: ${aaveMarket.aaveData.liquidityRate}`);
         console.log(`isPaused: ${aaveMarket.flags.isPaused}`);
         console.log(`isPartiallyPaused: ${aaveMarket.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${aaveMarket.flags.isP2PDisabled}\n`);
@@ -70,7 +74,10 @@ describe("Morpho Resolvers", () => {
         console.log(`p2p supply delta: ${compMarket.p2pSupplyDelta}`);
         console.log(`p2p borrow delta: ${compMarket.p2pBorrowDelta}`);
         console.log(`reserve Factor: ${compMarket.reserveFactor}`);
-        console.log(`collateral: ${compMarket.collateralFactor.collateralFactor}`);
+        console.log(`collateral: ${compMarket.compData.collateralFactor}`);
+        console.log(`comp speed: ${compMarket.compData.compSpeed}`);
+        console.log(`comp supply speed: ${compMarket.compData.compSupplySpeed}`);
+        console.log(`comp borrow speed: ${compMarket.compData.compBorrowSpeed}`);
         console.log(`isPaused: ${compMarket.flags.isPaused}`);
         console.log(`isPartiallyPaused: ${compMarket.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${compMarket.flags.isP2PDisabled}\n`);
@@ -90,6 +97,9 @@ describe("Morpho Resolvers", () => {
       console.log(`\n\t**Entered markets data**`);
 
       for (const market of userData.marketData) {
+        console.log(`cToken: ${market.marketData.config.poolTokenAddress}`);
+        console.log(`underlying token: ${market.marketData.config.underlyingToken}`);
+        console.log(`decimals: ${market.marketData.config.decimals}`);
         console.log(`borrow rate: ${market.borrowRate}`);
         console.log(`supply rate: ${market.supplyRate}`);
         console.log(`total supplies: ${market.totalSupplies}`);
@@ -100,9 +110,6 @@ describe("Morpho Resolvers", () => {
         console.log(`pool borrows: ${market.poolBorrows}`);
         console.log(`max withdrawble: ${market.maxWithdrawable}`);
         console.log(`max borrowable: ${market.maxBorrowable}`);
-        console.log(`cToken: ${market.marketData.config.poolTokenAddress}`);
-        console.log(`underlying token: ${market.marketData.config.underlyingToken}`);
-        console.log(`decimals: ${market.marketData.config.decimals}`);
         console.log(`supply rate experienced on average by user in market: ${market.marketData.avgSupplyRate}`);
         console.log(`borrow rate experienced on average by user in market: ${market.marketData.avgBorrowRate}`);
         console.log(`p2p borrow rate: ${market.marketData.p2pBorrowRate}`);
@@ -118,7 +125,10 @@ describe("Morpho Resolvers", () => {
         console.log(`p2p supply delta: ${market.marketData.p2pSupplyDelta}`);
         console.log(`p2p borrow delta: ${market.marketData.p2pBorrowDelta}`);
         console.log(`reserve Factor: ${market.marketData.reserveFactor}`);
-        console.log(`collateral: ${market.marketData.collateralFactor.collateralFactor}`);
+        console.log(`collateral factor: ${market.marketData.compData.collateralFactor}`);
+        console.log(`comp speed: ${market.marketData.compData.compSpeed}`);
+        console.log(`comp supply speed: ${market.marketData.compData.compSupplySpeed}`);
+        console.log(`comp borrow speed: ${market.marketData.compData.compBorrowSpeed}`);
         console.log(`isPaused: ${market.marketData.flags.isPaused}`);
         console.log(`isPartiallyPaused: ${market.marketData.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${market.marketData.flags.isP2PDisabled}\n`);
@@ -137,6 +147,9 @@ describe("Morpho Resolvers", () => {
       console.log(`\n\t**Entered markets data**`);
 
       for (const market of userData.marketData) {
+        console.log(`aToken: ${market.marketData.config.poolTokenAddress}`);
+        console.log(`underlying token: ${market.marketData.config.underlyingToken}`);
+        console.log(`decimals: ${market.marketData.config.decimals}`);
         console.log(`borrow rate: ${market.borrowRate}`);
         console.log(`supply rate: ${market.supplyRate}`);
         console.log(`total supplies: ${market.totalSupplies}`);
@@ -147,9 +160,6 @@ describe("Morpho Resolvers", () => {
         console.log(`pool borrows: ${market.poolBorrows}`);
         console.log(`max withdrawble: ${market.maxWithdrawable}`);
         console.log(`max borrowable: ${market.maxBorrowable}`);
-        console.log(`aToken: ${market.marketData.config.poolTokenAddress}`);
-        console.log(`underlying token: ${market.marketData.config.underlyingToken}`);
-        console.log(`decimals: ${market.marketData.config.decimals}`);
         console.log(`supply rate experienced on average by user in market: ${market.marketData.avgSupplyRate}`);
         console.log(`borrow rate experienced on average by user in market: ${market.marketData.avgBorrowRate}`);
         console.log(`p2p borrow rate: ${market.marketData.p2pBorrowRate}`);
@@ -165,9 +175,13 @@ describe("Morpho Resolvers", () => {
         console.log(`p2p supply delta: ${market.marketData.p2pSupplyDelta}`);
         console.log(`p2p borrow delta: ${market.marketData.p2pBorrowDelta}`);
         console.log(`reserve Factor: ${market.marketData.reserveFactor}`);
-        console.log(`ltv: ${market.marketData.liquidationData.ltv}`);
-        console.log(`liquidation threshold: ${market.marketData.liquidationData.liquidationThreshold}`);
-        console.log(`liquidation bonus: ${market.marketData.liquidationData.liquidationBonus}`);
+        console.log(`ltv: ${market.marketData.aaveData.ltv}`);
+        console.log(`liquidation threshold: ${market.marketData.aaveData.liquidationThreshold}`);
+        console.log(`liquidation bonus: ${market.marketData.aaveData.liquidationBonus}`);
+        console.log(`aToken emission per second: ${market.marketData.aaveData.aEmissionPerSecond}`);
+        console.log(`vToken emission per second: ${market.marketData.aaveData.vEmissionPerSecond}`);
+        console.log(`available liquidity: ${market.marketData.aaveData.availableLiquidity}`);
+        console.log(`liquidity rate: ${market.marketData.aaveData.liquidityRate}`);
         console.log(`isPaused: ${market.marketData.flags.isPaused}`);
         console.log(`isPartiallyPaused: ${market.marketData.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${market.marketData.flags.isP2PDisabled}\n`);

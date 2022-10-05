@@ -27,6 +27,18 @@ contract MorphoHelpers is DSMath {
         return 0x777777c9898D384F785Ee44Acfe945efDFf5f3E0;
     }
 
+    function getAaveProtocolDataProvider() internal pure returns (address) {
+        return 0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d;
+    }
+
+    function getAaveIncentivesController() internal pure returns (address) {
+        return 0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5;
+    }
+
+    function getComptroller() internal pure returns (address) {
+        return 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B;
+    }
+
     enum Underlying {
         AAVEV2,
         COMPOUNDV2
@@ -46,12 +58,19 @@ contract MorphoHelpers is DSMath {
     }
 
     struct AaveMarketDetail {
+        uint256 aEmissionPerSecond;
+        uint256 vEmissionPerSecond;
+        uint256 availableLiquidity;
+        uint256 liquidityRate;
         uint256 ltv;
         uint256 liquidationThreshold;
         uint256 liquidationBonus;
     }
 
     struct CompoundMarketDetail {
+        uint256 compSpeed;
+        uint256 compSupplySpeed;
+        uint256 compBorrowSpeed;
         uint256 collateralFactor;
     }
 
@@ -74,8 +93,8 @@ contract MorphoHelpers is DSMath {
         uint256 p2pBorrowDelta; //The total amount of underlying ERC20 tokens borrow through Morpho,
         //stored as matched peer-to-peer but borrowed from the underlying pool
         uint256 reserveFactor;
-        AaveMarketDetail liquidationData;
-        CompoundMarketDetail collateralFactor;
+        AaveMarketDetail aaveData;
+        CompoundMarketDetail compData;
         Flags flags;
     }
 
@@ -114,12 +133,15 @@ contract MorphoHelpers is DSMath {
     ICompoundLens internal compLens = ICompoundLens(getCompoundLens());
     IMorpho internal aaveMorpho = IMorpho(getAaveMorpho());
     IMorpho internal compMorpho = IMorpho(getCompMorpho());
+    IAave internal protocolData = IAave(getAaveProtocolDataProvider());
+    IAave internal incentiveData = IAave(getAaveIncentivesController());
+    IComp internal comptroller = IComp(getComptroller());
 
-    function getLiquidatyData(MarketDetail memory marketData_, address poolTokenAddress_)
-        internal
-        view
-        returns (MarketDetail memory)
-    {
+    function getLiquidatyData(
+        MarketDetail memory marketData_,
+        address poolTokenAddress_,
+        address asset
+    ) internal view returns (MarketDetail memory) {
         (
             ,
             ,
@@ -128,11 +150,18 @@ contract MorphoHelpers is DSMath {
             ,
             ,
             ,
-            marketData_.liquidationData.ltv,
-            marketData_.liquidationData.liquidationThreshold,
-            marketData_.liquidationData.liquidationBonus,
+            marketData_.aaveData.ltv,
+            marketData_.aaveData.liquidationThreshold,
+            marketData_.aaveData.liquidationBonus,
 
         ) = aavelens.getMarketConfiguration(poolTokenAddress_);
+
+        (, , address vToken_) = protocolData.getReserveTokensAddresses(asset);
+
+        (, marketData_.aaveData.aEmissionPerSecond, ) = incentiveData.getAssetData(asset);
+        (, marketData_.aaveData.vEmissionPerSecond, ) = incentiveData.getAssetData(vToken_);
+        (marketData_.aaveData.availableLiquidity, , , marketData_.aaveData.liquidityRate, , , , , , ) = protocolData
+            .getReserveData(asset);
         return marketData_;
     }
 
@@ -156,9 +185,20 @@ contract MorphoHelpers is DSMath {
             marketData_.config.decimals
         ) = aavelens.getMarketConfiguration(poolTokenAddress_);
 
-        marketData_ = getLiquidatyData(marketData_, poolTokenAddress_);
+        marketData_ = getLiquidatyData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
 
         return marketData_;
+    }
+
+    function getCompSpeeds(CompoundMarketDetail memory cf_, address poolTokenAddress_)
+        internal
+        view
+        returns (CompoundMarketDetail memory)
+    {
+        cf_.compSpeed = comptroller.compSpeeds(poolTokenAddress_);
+        cf_.compSupplySpeed = comptroller.compSupplySpeeds(poolTokenAddress_);
+        cf_.compBorrowSpeed = comptroller.compBorrowSpeeds(poolTokenAddress_);
+        return cf_;
     }
 
     function getCompMarketData(MarketDetail memory marketData_, address poolTokenAddress_)
@@ -183,8 +223,10 @@ contract MorphoHelpers is DSMath {
             cf_.collateralFactor
         ) = compLens.getMarketConfiguration(poolTokenAddress_);
 
+        cf_ = getCompSpeeds(cf_, poolTokenAddress_);
+
         marketData_.config = tokenData_;
-        marketData_.collateralFactor = cf_;
+        marketData_.compData = cf_;
         marketData_.flags = flags_;
 
         return marketData_;

@@ -534,3 +534,47 @@ interface ICompoundLens is ILens {
 
     function getUserHealthFactor(address _user, address[] calldata _updatedMarkets) external view returns (uint256);
 }
+
+interface IAave {
+    function getReserveData(address asset)
+        external
+        view
+        returns (
+            uint256 availableLiquidity,
+            uint256 totalStableDebt,
+            uint256 totalVariableDebt,
+            uint256 liquidityRate,
+            uint256 variableBorrowRate,
+            uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate,
+            uint256 liquidityIndex,
+            uint256 variableBorrowIndex,
+            uint40 lastUpdateTimestamp
+        );
+
+    function getAssetData(address asset)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        );
+
+    function getReserveTokensAddresses(address asset)
+        external
+        view
+        returns (
+            address aTokenAddress,
+            address stableDebtTokenAddress,
+            address variableDebtTokenAddress
+        );
+}
+
+interface IComp {
+    function compSpeeds(address) external view returns (uint256);
+
+    function compSupplySpeeds(address) external view returns (uint256);
+
+    function compBorrowSpeeds(address) external view returns (uint256);
+}
