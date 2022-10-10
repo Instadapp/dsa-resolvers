@@ -44,6 +44,6 @@ contract MorphoResolver is MorphoHelpers {
     }
 }
 
-contract InstaMorphoResolver is MorphoResolver {
+contract InstaAaveV2MorphoResolver is MorphoResolver {
     string public constant name = "Morpho-Aave-Resolver-v1.0";
 }

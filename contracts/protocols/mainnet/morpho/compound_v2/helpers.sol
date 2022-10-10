@@ -128,6 +128,7 @@ contract MorphoHelpers {
             marketData_.p2pIndexCursor,
             marketData_.compData.collateralFactor
         ) = compLens.getMarketConfiguration(poolTokenAddress_);
+        return marketData_;
     }
 
     function getCompMarketData(MarketDetail memory marketData_, address poolTokenAddress_)
