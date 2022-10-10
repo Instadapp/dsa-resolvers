@@ -13,6 +13,12 @@ contract MorphoHelpers {
     struct MorphoData {
         MarketDetail[] compMarketsCreated;
         bool isClaimRewardsPausedComp;
+        uint256 p2pSupplyAmount;
+        uint256 p2pBorrowAmount;
+        uint256 poolSupplyAmount;
+        uint256 poolBorrowAmount;
+        uint256 totalSupplyAmount;
+        uint256 totalBorrowAmount;
     }
 
     struct TokenConfig {
@@ -31,8 +37,8 @@ contract MorphoHelpers {
 
     struct MarketDetail {
         TokenConfig config;
-        uint256 avgSupplyRate; //in wad
-        uint256 avgBorrowRate; //in wad
+        uint256 avgSupplyRatePerBlock; //in wad
+        uint256 avgBorrowRatePerBlock; //in wad
         uint256 p2pSupplyRate;
         uint256 p2pBorrowRate;
         uint256 poolSupplyRate;
@@ -41,18 +47,28 @@ contract MorphoHelpers {
         uint256 totalPoolSupply;
         uint256 totalP2PBorrows;
         uint256 totalPoolBorrows;
+        uint256 p2pSupplyIndex;
+        uint256 p2pBorrowIndex;
         uint256 poolSupplyIndex; //exchange rate of cTokens for compound
         uint256 poolBorrowIndex;
+        uint256 updatedP2PSupplyIndex;
+        uint256 updatedP2PBorrowIndex;
+        uint256 updatedPoolSupplyIndex; //exchange rate of cTokens for compound
+        uint256 updatedPoolBorrowIndex;
+        uint256 lastUpdateBlockNumber;
         uint256 p2pSupplyDelta; //The total amount of underlying ERC20 tokens supplied through Morpho,
         //stored as matched peer-to-peer but supplied on the underlying pool
         uint256 p2pBorrowDelta; //The total amount of underlying ERC20 tokens borrow through Morpho,
         //stored as matched peer-to-peer but borrowed from the underlying pool
         uint256 reserveFactor;
+        uint256 p2pIndexCursor; //p2p rate position b/w supply and borrow rate, in bps,
+        // 0% = supply rate, 100% = borrow rate
         CompoundMarketDetail compData;
         Flags flags;
     }
 
     struct Flags {
+        bool isCreated;
         bool isPaused;
         bool isPartiallyPaused;
         bool isP2PDisabled;
@@ -60,8 +76,8 @@ contract MorphoHelpers {
 
     struct UserMarketData {
         MarketDetail marketData;
-        uint256 borrowRate;
-        uint256 supplyRate;
+        uint256 borrowRatePerBlock;
+        uint256 supplyRatePerBlock;
         uint256 totalSupplies;
         uint256 totalBorrows;
         uint256 p2pBorrows;
@@ -110,12 +126,12 @@ contract MorphoHelpers {
         tokenData_.decimals = TokenInterface(poolTokenAddress_).decimals();
         (
             tokenData_.underlyingToken,
-            ,
+            flags_.isCreated,
             flags_.isP2PDisabled,
             flags_.isPaused,
             flags_.isPartiallyPaused,
             marketData_.reserveFactor,
-            ,
+            marketData_.p2pIndexCursor,
             cf_.collateralFactor
         ) = compLens.getMarketConfiguration(poolTokenAddress_);
 
@@ -134,8 +150,8 @@ contract MorphoHelpers {
         marketData_ = getCompMarketData(marketData_, poolTokenAddress);
 
         (
-            marketData_.avgSupplyRate,
-            marketData_.avgBorrowRate,
+            marketData_.avgSupplyRatePerBlock,
+            marketData_.avgBorrowRatePerBlock,
             marketData_.totalP2PSupply,
             marketData_.totalP2PBorrows,
             marketData_.totalPoolSupply,
@@ -150,14 +166,21 @@ contract MorphoHelpers {
         ) = compLens.getRatesPerBlock(poolTokenAddress);
 
         (
-            ,
-            ,
+            marketData_.p2pSupplyIndex,
+            marketData_.p2pBorrowIndex,
             marketData_.poolSupplyIndex,
             marketData_.poolBorrowIndex,
-            ,
+            marketData_.lastUpdateBlockNumber,
             marketData_.p2pSupplyDelta,
             marketData_.p2pBorrowDelta
         ) = compLens.getAdvancedMarketData(poolTokenAddress);
+
+        (
+            marketData_.updatedP2PSupplyIndex,
+            marketData_.updatedP2PBorrowIndex,
+            marketData_.updatedPoolSupplyIndex,
+            marketData_.updatedPoolBorrowIndex
+        ) = compLens.getIndexes(poolTokenAddress, true);
     }
 
     function getUserMarketData(address user, address poolTokenAddress)
@@ -171,8 +194,8 @@ contract MorphoHelpers {
             .getCurrentBorrowBalanceInOf(poolTokenAddress, user);
         (userMarketData_.p2pSupplies, userMarketData_.poolSupplies, userMarketData_.totalSupplies) = compLens
             .getCurrentSupplyBalanceInOf(poolTokenAddress, user);
-        userMarketData_.borrowRate = compLens.getCurrentUserBorrowRatePerBlock(poolTokenAddress, user);
-        userMarketData_.supplyRate = compLens.getCurrentUserSupplyRatePerBlock(poolTokenAddress, user);
+        userMarketData_.borrowRatePerBlock = compLens.getCurrentUserBorrowRatePerBlock(poolTokenAddress, user);
+        userMarketData_.supplyRatePerBlock = compLens.getCurrentUserSupplyRatePerBlock(poolTokenAddress, user);
 
         (userMarketData_.maxWithdrawable, userMarketData_.maxBorrowable) = compLens.getUserMaxCapacitiesForAsset(
             user,
@@ -219,5 +242,9 @@ contract MorphoHelpers {
 
         morphoData_.compMarketsCreated = compMarket_;
         morphoData_.isClaimRewardsPausedComp = compMorpho.isClaimRewardsPaused();
+        (morphoData_.p2pSupplyAmount, morphoData_.poolSupplyAmount, morphoData_.totalSupplyAmount) = compMorpho
+            .getTotalSupply();
+        (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = compMorpho
+            .getTotalBorrow();
     }
 }
