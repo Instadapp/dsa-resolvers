@@ -21,6 +21,12 @@ contract MorphoHelpers {
     struct MorphoData {
         MarketDetail[] aaveMarketsCreated;
         bool isClaimRewardsPausedAave;
+        uint256 p2pSupplyAmount;
+        uint256 p2pBorrowAmount;
+        uint256 poolSupplyAmount;
+        uint256 poolBorrowAmount;
+        uint256 totalSupplyAmount;
+        uint256 totalBorrowAmount;
     }
 
     struct TokenConfig {
@@ -41,8 +47,8 @@ contract MorphoHelpers {
 
     struct MarketDetail {
         TokenConfig config;
-        uint256 avgSupplyRate; //in wad
-        uint256 avgBorrowRate; //in wad
+        uint256 avgSupplyRatePerYear; //in wad
+        uint256 avgBorrowRatePerYear; //in wad
         uint256 p2pSupplyRate;
         uint256 p2pBorrowRate;
         uint256 poolSupplyRate;
@@ -51,18 +57,28 @@ contract MorphoHelpers {
         uint256 totalPoolSupply;
         uint256 totalP2PBorrows;
         uint256 totalPoolBorrows;
+        uint256 p2pSupplyIndex;
+        uint256 p2pBorrowIndex;
         uint256 poolSupplyIndex; //exchange rate of cTokens for compound
         uint256 poolBorrowIndex;
+        uint256 updatedP2PSupplyIndex;
+        uint256 updatedP2PBorrowIndex;
+        uint256 updatedPoolSupplyIndex; //exchange rate of cTokens for compound
+        uint256 updatedPoolBorrowIndex;
+        uint256 lastUpdateTimestamp;
         uint256 p2pSupplyDelta; //The total amount of underlying ERC20 tokens supplied through Morpho,
         //stored as matched peer-to-peer but supplied on the underlying pool
         uint256 p2pBorrowDelta; //The total amount of underlying ERC20 tokens borrow through Morpho,
         //stored as matched peer-to-peer but borrowed from the underlying pool
         uint256 reserveFactor;
+        uint256 p2pIndexCursor; //p2p rate position b/w supply and borrow rate, in bps,
+        // 0% = supply rate, 100% = borrow rate
         AaveMarketDetail aaveData;
         Flags flags;
     }
 
     struct Flags {
+        bool isCreated;
         bool isPaused;
         bool isPartiallyPaused;
         bool isP2PDisabled;
@@ -70,8 +86,8 @@ contract MorphoHelpers {
 
     struct UserMarketData {
         MarketDetail marketData;
-        uint256 borrowRate;
-        uint256 supplyRate;
+        uint256 borrowRatePerYear;
+        uint256 supplyRatePerYear;
         uint256 totalSupplies;
         uint256 totalBorrows;
         uint256 p2pBorrows;
@@ -108,8 +124,8 @@ contract MorphoHelpers {
             ,
             ,
             ,
-            ,
-            ,
+            marketData_.reserveFactor,
+            marketData_.p2pIndexCursor,
             marketData_.aaveData.ltv,
             marketData_.aaveData.liquidationThreshold,
             marketData_.aaveData.liquidationBonus,
@@ -133,11 +149,11 @@ contract MorphoHelpers {
         marketData_.config.poolTokenAddress = poolTokenAddress_;
         (
             marketData_.config.underlyingToken,
-            ,
+            marketData_.flags.isCreated,
             marketData_.flags.isP2PDisabled,
             marketData_.flags.isPaused,
             marketData_.flags.isPartiallyPaused,
-            marketData_.reserveFactor,
+            ,
             ,
             ,
             ,
@@ -154,8 +170,8 @@ contract MorphoHelpers {
         marketData_ = getAaveMarketData(marketData_, poolTokenAddress);
 
         (
-            marketData_.avgSupplyRate,
-            marketData_.avgBorrowRate,
+            marketData_.avgSupplyRatePerYear,
+            marketData_.avgBorrowRatePerYear,
             marketData_.totalP2PSupply,
             marketData_.totalP2PBorrows,
             marketData_.totalPoolSupply,
@@ -170,14 +186,21 @@ contract MorphoHelpers {
         ) = aavelens.getRatesPerYear(poolTokenAddress);
 
         (
-            ,
-            ,
+            marketData_.p2pSupplyIndex,
+            marketData_.p2pBorrowIndex,
             marketData_.poolSupplyIndex,
             marketData_.poolBorrowIndex,
-            ,
+            marketData_.lastUpdateTimestamp,
             marketData_.p2pSupplyDelta,
             marketData_.p2pBorrowDelta
         ) = aavelens.getAdvancedMarketData(poolTokenAddress);
+
+        (
+            marketData_.updatedP2PSupplyIndex,
+            marketData_.updatedP2PBorrowIndex,
+            marketData_.updatedPoolSupplyIndex,
+            marketData_.updatedPoolBorrowIndex
+        ) = aavelens.getIndexes(poolTokenAddress, true);
     }
 
     function getUserMarketData(address user, address poolTokenAddress)
@@ -190,8 +213,8 @@ contract MorphoHelpers {
             .getCurrentBorrowBalanceInOf(poolTokenAddress, user);
         (userMarketData_.poolSupplies, userMarketData_.p2pSupplies, userMarketData_.totalSupplies) = aavelens
             .getCurrentSupplyBalanceInOf(poolTokenAddress, user);
-        userMarketData_.borrowRate = aavelens.getCurrentUserBorrowRatePerYear(poolTokenAddress, user);
-        userMarketData_.supplyRate = aavelens.getCurrentUserSupplyRatePerYear(poolTokenAddress, user);
+        userMarketData_.borrowRatePerYear = aavelens.getCurrentUserBorrowRatePerYear(poolTokenAddress, user);
+        userMarketData_.supplyRatePerYear = aavelens.getCurrentUserSupplyRatePerYear(poolTokenAddress, user);
 
         (userMarketData_.maxWithdrawable, userMarketData_.maxBorrowable) = aavelens.getUserMaxCapacitiesForAsset(
             user,
@@ -240,5 +263,10 @@ contract MorphoHelpers {
         morphoData_.aaveMarketsCreated = aaveMarket_;
 
         morphoData_.isClaimRewardsPausedAave = aaveMorpho.isClaimRewardsPaused();
+
+        (morphoData_.p2pSupplyAmount, morphoData_.poolSupplyAmount, morphoData_.totalSupplyAmount) = aavelens
+            .getTotalSupply();
+        (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = aavelens
+            .getTotalBorrow();
     }
 }

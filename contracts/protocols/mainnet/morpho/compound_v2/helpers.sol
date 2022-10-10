@@ -113,6 +113,23 @@ contract MorphoHelpers {
         return cf_;
     }
 
+    function getCompMarketDataHelper(MarketDetail memory marketData_, address poolTokenAddress_)
+        internal
+        view
+        returns (MarketDetail memory)
+    {
+        (
+            ,
+            ,
+            ,
+            ,
+            ,
+            marketData_.reserveFactor,
+            marketData_.p2pIndexCursor,
+            marketData_.compData.collateralFactor
+        ) = compLens.getMarketConfiguration(poolTokenAddress_);
+    }
+
     function getCompMarketData(MarketDetail memory marketData_, address poolTokenAddress_)
         internal
         view
@@ -130,9 +147,9 @@ contract MorphoHelpers {
             flags_.isP2PDisabled,
             flags_.isPaused,
             flags_.isPartiallyPaused,
-            marketData_.reserveFactor,
-            marketData_.p2pIndexCursor,
-            cf_.collateralFactor
+            ,
+            ,
+
         ) = compLens.getMarketConfiguration(poolTokenAddress_);
 
         cf_.marketBorrowCap = comptroller.borrowCaps(poolTokenAddress_);
@@ -142,6 +159,8 @@ contract MorphoHelpers {
         marketData_.config = tokenData_;
         marketData_.compData = cf_;
         marketData_.flags = flags_;
+
+        marketData_ = getCompMarketDataHelper(marketData_, poolTokenAddress_);
 
         return marketData_;
     }
@@ -242,9 +261,9 @@ contract MorphoHelpers {
 
         morphoData_.compMarketsCreated = compMarket_;
         morphoData_.isClaimRewardsPausedComp = compMorpho.isClaimRewardsPaused();
-        (morphoData_.p2pSupplyAmount, morphoData_.poolSupplyAmount, morphoData_.totalSupplyAmount) = compMorpho
+        (morphoData_.p2pSupplyAmount, morphoData_.poolSupplyAmount, morphoData_.totalSupplyAmount) = compLens
             .getTotalSupply();
-        (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = compMorpho
+        (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = compLens
             .getTotalBorrow();
     }
 }
