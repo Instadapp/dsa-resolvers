@@ -37,6 +37,7 @@ contract MorphoHelpers {
 
     struct AaveMarketDetail {
         uint256 aEmissionPerSecond;
+        uint256 sEmissionPerSecond;
         uint256 vEmissionPerSecond;
         uint256 availableLiquidity;
         uint256 liquidityRate;
@@ -132,9 +133,10 @@ contract MorphoHelpers {
 
         ) = aavelens.getMarketConfiguration(poolTokenAddress_);
 
-        (, , address vToken_) = protocolData.getReserveTokensAddresses(asset);
+        (, address sToken_, address vToken_) = protocolData.getReserveTokensAddresses(asset);
 
         (, marketData_.aaveData.aEmissionPerSecond, ) = incentiveData.getAssetData(asset);
+        (, marketData_.aaveData.sEmissionPerSecond, ) = incentiveData.getAssetData(sToken_);
         (, marketData_.aaveData.vEmissionPerSecond, ) = incentiveData.getAssetData(vToken_);
         (marketData_.aaveData.availableLiquidity, , , marketData_.aaveData.liquidityRate, , , , , , ) = protocolData
             .getReserveData(asset);
