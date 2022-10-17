@@ -296,3 +296,7 @@ interface ChainLinkInterface {
 
     function decimals() external view returns (uint256);
 }
+
+interface IAToken {
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+}

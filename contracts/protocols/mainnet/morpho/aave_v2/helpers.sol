@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
+import "hardhat/console.sol";
 import "./interfaces.sol";
 import { DSMath } from "../../../../utils/dsmath.sol";
 
@@ -269,9 +270,10 @@ contract MorphoHelpers is DSMath {
         returns (UserData memory userData_)
     {
         uint256 length_ = poolTokenAddresses.length;
+        address[] memory tokens_ = getUnderlyingAssets(poolTokenAddresses);
 
         UserMarketData[] memory marketData_ = new UserMarketData[](length_);
-        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, poolTokenAddresses);
+        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, tokens_);
 
         for (uint256 i = 0; i < length_; i++) {
             marketData_[i] = getUserMarketData(
@@ -296,13 +298,24 @@ contract MorphoHelpers is DSMath {
         userData_.ethPriceInUsd = ethPrice;
     }
 
+    function getUnderlyingAssets(address[] memory atokens_) internal view returns (address[] memory tokens_) {
+        uint256 length_ = atokens_.length;
+        tokens_ = new address[](length_);
+
+        for (uint256 i = 0; i < length_; i++) {
+            tokens_[i] = IAToken(atokens_[i]).UNDERLYING_ASSET_ADDRESS();
+        }
+    }
+
     function getMorphoData() internal view returns (MorphoData memory morphoData_) {
         address[] memory aaveMarkets_ = aavelens.getAllMarkets();
+        address[] memory tokens_ = getUnderlyingAssets(aaveMarkets_);
+
         MarketDetail[] memory aaveMarket_ = new MarketDetail[](aaveMarkets_.length);
         uint256 length_ = aaveMarkets_.length;
 
-        UserMarketData[] memory marketData_ = new UserMarketData[](length_);
-        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, aaveMarkets_);
+        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, tokens_);
+
         for (uint256 i = 0; i < length_; i++) {
             aaveMarket_[i] = getMarketData(aaveMarkets_[i], tokenPrices[i].priceInEth, tokenPrices[i].priceInUsd);
         }

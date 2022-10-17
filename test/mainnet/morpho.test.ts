@@ -44,6 +44,8 @@ describe("Morpho Resolvers", () => {
         console.log(`aToken: ${aaveMarket.config.poolTokenAddress}`);
         console.log(`underlying token: ${aaveMarket.config.underlyingToken}`);
         console.log(`decimals: ${aaveMarket.config.decimals}`);
+        console.log(`eth price: ${aaveMarket.config.tokenPriceInEth}`);
+        console.log(`usd price: ${aaveMarket.config.tokenPriceInUsd}`);
         console.log(`supply rate experienced on average by user in market: ${aaveMarket.avgSupplyRatePerYear}`);
         console.log(`borrow rate experienced on average by user in market: ${aaveMarket.avgBorrowRatePerYear}`);
         console.log(`p2p borrow rate: ${aaveMarket.p2pBorrowRate}`);
