@@ -31,7 +31,12 @@ contract MorphoResolver is MorphoHelpers {
         view
         returns (UserData memory positionData_)
     {
-        positionData_ = getUserData(user, userMarkets);
+        uint256 length = userMarkets.length;
+        address[] memory _tokens = new address[](length);
+        for (uint256 i = 0; i < length; i++) {
+            _tokens[i] = userMarkets[i] == getEthAddr() ? getAWethAddr() : userMarkets[i];
+        }
+        positionData_ = getUserData(user, _tokens);
     }
 
     /**

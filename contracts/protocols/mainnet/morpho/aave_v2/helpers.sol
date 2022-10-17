@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 import "./interfaces.sol";
+import { DSMath } from "../../../../utils/dsmath.sol";
 
-contract MorphoHelpers {
+contract MorphoHelpers is DSMath {
     /**
      *@dev Returns ethereum address
      */
     function getEthAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    }
+
+    function getAWethAddr() internal pure returns (address) {
+        return 0x030bA81f1c18d280636F32af80b9AAd02Cf0854e;
+    }
+
+    function getChainlinkEthFeed() internal pure returns (address) {
+        return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     }
 
     function getAaveProtocolDataProvider() internal pure returns (address) {
@@ -33,6 +42,8 @@ contract MorphoHelpers {
         address poolTokenAddress;
         address underlyingToken;
         uint256 decimals;
+        uint256 tokenPriceInEth;
+        uint256 tokenPriceInUsd;
     }
 
     struct AaveMarketDetail {
@@ -62,10 +73,6 @@ contract MorphoHelpers {
         uint256 p2pBorrowIndex;
         uint256 poolSupplyIndex; //exchange rate of cTokens for compound
         uint256 poolBorrowIndex;
-        uint256 updatedP2PSupplyIndex;
-        uint256 updatedP2PBorrowIndex;
-        uint256 updatedPoolSupplyIndex; //exchange rate of cTokens for compound
-        uint256 updatedPoolBorrowIndex;
         uint256 lastUpdateTimestamp;
         uint256 p2pSupplyDelta; //The total amount of underlying ERC20 tokens supplied through Morpho,
         //stored as matched peer-to-peer but supplied on the underlying pool
@@ -107,12 +114,32 @@ contract MorphoHelpers {
         bool isLiquidatable;
         uint256 liquidationThreshold;
         UserMarketData[] marketData;
+        uint256 ethPriceInUsd;
+    }
+
+    struct TokenPrice {
+        uint256 priceInEth;
+        uint256 priceInUsd;
     }
 
     IAaveLens internal aavelens = IAaveLens(0x507fA343d0A90786d86C7cd885f5C49263A91FF4);
     IMorpho internal aaveMorpho = IMorpho(0x777777c9898D384F785Ee44Acfe945efDFf5f3E0);
+    AaveAddressProvider addrProvider = AaveAddressProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
     IAave internal protocolData = IAave(getAaveProtocolDataProvider());
     IAave internal incentiveData = IAave(getAaveIncentivesController());
+
+    function getTokensPrices(AaveAddressProvider aaveAddressProvider, address[] memory tokens)
+        internal
+        view
+        returns (TokenPrice[] memory tokenPrices, uint256 ethPrice)
+    {
+        uint256[] memory _tokenPrices = AavePriceOracle(aaveAddressProvider.getPriceOracle()).getAssetsPrices(tokens);
+        ethPrice = uint256(ChainLinkInterface(getChainlinkEthFeed()).latestAnswer());
+        tokenPrices = new TokenPrice[](_tokenPrices.length);
+        for (uint256 i = 0; i < _tokenPrices.length; i++) {
+            tokenPrices[i] = TokenPrice(_tokenPrices[i], wmul(_tokenPrices[i], uint256(ethPrice) * 10**10));
+        }
+    }
 
     function getLiquidatyData(
         MarketDetail memory marketData_,
@@ -143,12 +170,15 @@ contract MorphoHelpers {
         return marketData_;
     }
 
-    function getAaveMarketData(MarketDetail memory marketData_, address poolTokenAddress_)
-        internal
-        view
-        returns (MarketDetail memory)
-    {
+    function getAaveMarketData(
+        MarketDetail memory marketData_,
+        address poolTokenAddress_,
+        uint256 priceInEth,
+        uint256 priceInUsd
+    ) internal view returns (MarketDetail memory) {
         marketData_.config.poolTokenAddress = poolTokenAddress_;
+        marketData_.config.tokenPriceInEth = priceInEth;
+        marketData_.config.tokenPriceInUsd = priceInUsd;
         (
             marketData_.config.underlyingToken,
             marketData_.flags.isCreated,
@@ -168,8 +198,12 @@ contract MorphoHelpers {
         return marketData_;
     }
 
-    function getMarketData(address poolTokenAddress) internal view returns (MarketDetail memory marketData_) {
-        marketData_ = getAaveMarketData(marketData_, poolTokenAddress);
+    function getMarketData(
+        address poolTokenAddress,
+        uint256 priceInEth,
+        uint256 priceInUsd
+    ) internal view returns (MarketDetail memory marketData_) {
+        marketData_ = getAaveMarketData(marketData_, poolTokenAddress, priceInEth, priceInUsd);
 
         (
             marketData_.avgSupplyRatePerYear,
@@ -197,20 +231,21 @@ contract MorphoHelpers {
             marketData_.p2pBorrowDelta
         ) = aavelens.getAdvancedMarketData(poolTokenAddress);
 
-        (
-            marketData_.updatedP2PSupplyIndex,
-            marketData_.updatedP2PBorrowIndex,
-            marketData_.updatedPoolSupplyIndex,
-            marketData_.updatedPoolBorrowIndex
-        ) = aavelens.getIndexes(poolTokenAddress, true);
+        // (
+        //     marketData_.updatedP2PSupplyIndex,
+        //     marketData_.updatedP2PBorrowIndex,
+        //     marketData_.updatedPoolSupplyIndex,
+        //     marketData_.updatedPoolBorrowIndex
+        // ) = aavelens.getIndexes(poolTokenAddress);
     }
 
-    function getUserMarketData(address user, address poolTokenAddress)
-        internal
-        view
-        returns (UserMarketData memory userMarketData_)
-    {
-        userMarketData_.marketData = getMarketData(poolTokenAddress);
+    function getUserMarketData(
+        address user,
+        address poolTokenAddress,
+        uint256 priceInEth,
+        uint256 priceInUsd
+    ) internal view returns (UserMarketData memory userMarketData_) {
+        userMarketData_.marketData = getMarketData(poolTokenAddress, priceInEth, priceInUsd);
         (userMarketData_.poolBorrows, userMarketData_.p2pBorrows, userMarketData_.totalBorrows) = aavelens
             .getCurrentBorrowBalanceInOf(poolTokenAddress, user);
         (userMarketData_.poolSupplies, userMarketData_.p2pSupplies, userMarketData_.totalSupplies) = aavelens
@@ -236,8 +271,15 @@ contract MorphoHelpers {
         uint256 length_ = poolTokenAddresses.length;
 
         UserMarketData[] memory marketData_ = new UserMarketData[](length_);
+        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, poolTokenAddresses);
+
         for (uint256 i = 0; i < length_; i++) {
-            marketData_[i] = getUserMarketData(user, poolTokenAddresses[i]);
+            marketData_[i] = getUserMarketData(
+                user,
+                poolTokenAddresses[i],
+                tokenPrices[i].priceInEth,
+                tokenPrices[i].priceInUsd
+            );
         }
 
         userData_.marketData = marketData_;
@@ -251,15 +293,18 @@ contract MorphoHelpers {
             userData_.debtValue
         ) = aavelens.getUserBalanceStates(user);
         userData_.isLiquidatable = aavelens.isLiquidatable(user);
+        userData_.ethPriceInUsd = ethPrice;
     }
 
     function getMorphoData() internal view returns (MorphoData memory morphoData_) {
         address[] memory aaveMarkets_ = aavelens.getAllMarkets();
         MarketDetail[] memory aaveMarket_ = new MarketDetail[](aaveMarkets_.length);
-
         uint256 length_ = aaveMarkets_.length;
+
+        UserMarketData[] memory marketData_ = new UserMarketData[](length_);
+        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, aaveMarkets_);
         for (uint256 i = 0; i < length_; i++) {
-            aaveMarket_[i] = getMarketData(aaveMarkets_[i]);
+            aaveMarket_[i] = getMarketData(aaveMarkets_[i], tokenPrices[i].priceInEth, tokenPrices[i].priceInUsd);
         }
 
         morphoData_.aaveMarketsCreated = aaveMarket_;

@@ -99,7 +99,7 @@ interface IAaveLens {
         view
         returns (uint256 currentPoolSupplyIndex, uint256 currentPoolBorrowIndex);
 
-    function getIndexes(address _poolToken, bool _computeUpdatedIndexes)
+    function getIndexes(address _poolToken)
         external
         view
         returns (
@@ -273,4 +273,26 @@ interface IAave {
             address stableDebtTokenAddress,
             address variableDebtTokenAddress
         );
+}
+
+interface AaveAddressProvider {
+    function getLendingPool() external view returns (address);
+
+    function getPriceOracle() external view returns (address);
+}
+
+interface AavePriceOracle {
+    function getAssetPrice(address _asset) external view returns (uint256);
+
+    function getAssetsPrices(address[] calldata _assets) external view returns (uint256[] memory);
+
+    function getSourceOfAsset(address _asset) external view returns (uint256);
+
+    function getFallbackOracle() external view returns (uint256);
+}
+
+interface ChainLinkInterface {
+    function latestAnswer() external view returns (int256);
+
+    function decimals() external view returns (uint256);
 }
