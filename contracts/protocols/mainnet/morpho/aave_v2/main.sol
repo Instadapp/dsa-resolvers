@@ -4,7 +4,7 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 /**
- *@title Morpho Resolver
+ *@title Morpho-Aave Resolver
  *@dev get user position details and market details.
  */
 contract MorphoResolver is MorphoHelpers {
