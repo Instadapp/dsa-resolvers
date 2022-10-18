@@ -247,9 +247,9 @@ contract MorphoHelpers is DSMath {
         uint256 priceInUsd
     ) internal view returns (UserMarketData memory userMarketData_) {
         userMarketData_.marketData = getMarketData(poolTokenAddress, priceInEth, priceInUsd);
-        (userMarketData_.poolBorrows, userMarketData_.p2pBorrows, userMarketData_.totalBorrows) = aavelens
+        (userMarketData_.p2pBorrows, userMarketData_.poolBorrows, userMarketData_.totalBorrows) = aavelens
             .getCurrentBorrowBalanceInOf(poolTokenAddress, user);
-        (userMarketData_.poolSupplies, userMarketData_.p2pSupplies, userMarketData_.totalSupplies) = aavelens
+        (userMarketData_.p2pSupplies, userMarketData_.poolSupplies, userMarketData_.totalSupplies) = aavelens
             .getCurrentSupplyBalanceInOf(poolTokenAddress, user);
         userMarketData_.borrowRatePerYear = aavelens.getCurrentUserBorrowRatePerYear(poolTokenAddress, user);
         userMarketData_.supplyRatePerYear = aavelens.getCurrentUserSupplyRatePerYear(poolTokenAddress, user);

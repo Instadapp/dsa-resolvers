@@ -210,9 +210,9 @@ contract MorphoHelpers {
     {
         userMarketData_.marketData = getMarketData(poolTokenAddress);
 
-        (userMarketData_.p2pBorrows, userMarketData_.poolBorrows, userMarketData_.totalBorrows) = compLens
+        (userMarketData_.poolBorrows, userMarketData_.p2pBorrows, userMarketData_.totalBorrows) = compLens
             .getCurrentBorrowBalanceInOf(poolTokenAddress, user);
-        (userMarketData_.p2pSupplies, userMarketData_.poolSupplies, userMarketData_.totalSupplies) = compLens
+        (userMarketData_.poolSupplies, userMarketData_.p2pSupplies, userMarketData_.totalSupplies) = compLens
             .getCurrentSupplyBalanceInOf(poolTokenAddress, user);
         userMarketData_.borrowRatePerBlock = compLens.getCurrentUserBorrowRatePerBlock(poolTokenAddress, user);
         userMarketData_.supplyRatePerBlock = compLens.getCurrentUserSupplyRatePerBlock(poolTokenAddress, user);
