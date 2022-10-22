@@ -9,13 +9,16 @@ contract EulerResolver is EulerHelper {
      * @dev Get all active sub-account Ids and addresses of a user.
      * @notice Get all sub-account of a user that has some token liquidity in it.
      * @param user Address of user
+     * @param start start id for subaccounts.
+     * @param end end id for subaccounts.
      * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      */
-    function getAllActiveSubAccounts(address user, address[] memory tokens)
-        public
-        view
-        returns (SubAccount[] memory activeSubAccounts)
-    {
+    function getAllActiveSubAccounts(
+        address user,
+        uint256 start,
+        uint256 end,
+        address[] memory tokens
+    ) public view returns (SubAccount[] memory activeSubAccounts) {
         address[] memory _tokens = new address[](tokens.length);
 
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -31,7 +34,7 @@ contract EulerResolver is EulerHelper {
         activeSubAccounts = new SubAccount[](count);
         uint256 k = 0;
 
-        for (uint256 j = 0; j < subAccounts.length; j++) {
+        for (uint256 j = start; j < end; j++) {
             if (activeSubAccBool[j]) {
                 activeSubAccounts[k].id = j;
                 activeSubAccounts[k].subAccountAddress = subAccounts[j].subAccountAddress;
@@ -160,5 +163,5 @@ contract EulerResolver is EulerHelper {
 }
 
 contract InstaEulerResolver is EulerResolver {
-    string public constant name = "Euler-Resolver-v1.0";
+    string public constant name = "Euler-Resolver-v1.1";
 }
