@@ -90,19 +90,22 @@ contract EulerHelper is DSMath {
     /**
      * @dev Get active sub-accounts.
      * @notice Get active sub-accounts.
+     * @param start start id for subaccounts.
+     * @param end end id for subaccounts.
      * @param subAccounts Array of SubAccount struct(id and address)
      * @param tokens Array of the tokens
      */
-    function getActiveSubAccounts(SubAccount[] memory subAccounts, address[] memory tokens)
-        public
-        view
-        returns (bool[] memory activeSubAcc, uint256 count)
-    {
+    function getActiveSubAccounts(
+        uint256 start,
+        uint256 end,
+        SubAccount[] memory subAccounts,
+        address[] memory tokens
+    ) public view returns (bool[] memory activeSubAcc, uint256 count) {
         uint256 accLength = subAccounts.length;
         uint256 tokenLength = tokens.length;
         activeSubAcc = new bool[](accLength);
 
-        for (uint256 i = 0; i < accLength; i++) {
+        for (uint256 i = start; i < end; i++) {
             for (uint256 j = 0; j < tokenLength; j++) {
                 address eToken = markets.underlyingToEToken(tokens[j]);
 

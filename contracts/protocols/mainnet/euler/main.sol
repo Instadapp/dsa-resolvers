@@ -9,8 +9,6 @@ contract EulerResolver is EulerHelper {
      * @dev Get all active sub-account Ids and addresses of a user.
      * @notice Get all sub-account of a user that has some token liquidity in it.
      * @param user Address of user
-     * @param start start id for subaccounts.
-     * @param end end id for subaccounts.
      * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      */
     function getAllActiveSubAccounts(
@@ -29,17 +27,21 @@ contract EulerResolver is EulerHelper {
 
         bool[] memory activeSubAccBool = new bool[](256);
         uint256 count;
-        (activeSubAccBool, count) = getActiveSubAccounts(subAccounts, _tokens);
 
-        activeSubAccounts = new SubAccount[](count);
-        uint256 k = 0;
+        for (uint256 i = 0; i < subAccounts.length; ) {
+            (activeSubAccBool, count) = getActiveSubAccounts(i, i + 10, subAccounts, _tokens);
 
-        for (uint256 j = start; j < end; j++) {
-            if (activeSubAccBool[j]) {
-                activeSubAccounts[k].id = j;
-                activeSubAccounts[k].subAccountAddress = subAccounts[j].subAccountAddress;
-                k++;
+            activeSubAccounts = new SubAccount[](count);
+            uint256 k = 0;
+
+            for (uint256 j = 0; j < subAccounts.length; j++) {
+                if (activeSubAccBool[j]) {
+                    activeSubAccounts[k].id = j;
+                    activeSubAccounts[k].subAccountAddress = subAccounts[j].subAccountAddress;
+                    k++;
+                }
             }
+            i += 10;
         }
     }
 
@@ -112,52 +114,56 @@ contract EulerResolver is EulerHelper {
         uint256 length = 256;
 
         SubAccount[] memory subAccounts = getAllSubAccounts(user);
-        (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(subAccounts, _tokens);
 
-        Query[] memory qs = new Query[](count);
-        Response[] memory response = new Response[](count);
+        for (uint256 id = 0; id < subAccounts.length; ) {
+            (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(id, id + 10, subAccounts, _tokens);
 
-        SubAccount[] memory activeSubAccounts = new SubAccount[](count);
-        uint256 k;
+            Query[] memory qs = new Query[](count);
+            Response[] memory response = new Response[](count);
 
-        for (uint256 i = 0; i < length; i++) {
-            if (activeSubAcc[i]) {
-                qs[i] = Query({
-                    eulerContract: EULER_MAINNET,
-                    account: subAccounts[i].subAccountAddress,
-                    markets: _tokens
-                });
+            SubAccount[] memory activeSubAccounts = new SubAccount[](count);
+            uint256 k;
 
-                activeSubAccounts[k] = SubAccount({
-                    id: subAccounts[i].id,
-                    subAccountAddress: subAccounts[i].subAccountAddress
-                });
+            for (uint256 i = 0; i < length; i++) {
+                if (activeSubAcc[i]) {
+                    qs[i] = Query({
+                        eulerContract: EULER_MAINNET,
+                        account: subAccounts[i].subAccountAddress,
+                        markets: _tokens
+                    });
 
-                k++;
+                    activeSubAccounts[k] = SubAccount({
+                        id: subAccounts[i].id,
+                        subAccountAddress: subAccounts[i].subAccountAddress
+                    });
+
+                    k++;
+                }
             }
-        }
 
-        response = eulerView.doQueryBatch(qs);
+            response = eulerView.doQueryBatch(qs);
 
-        claimedAmount = getClaimedAmount(user);
+            claimedAmount = getClaimedAmount(user);
 
-        activePositions = new Position[](count);
+            activePositions = new Position[](count);
 
-        for (uint256 j = 0; j < count; j++) {
-            (ResponseMarket[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
-                activeSubAccounts[j].subAccountAddress,
-                response[j],
-                _tokens
-            );
+            for (uint256 j = 0; j < count; j++) {
+                (ResponseMarket[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+                    activeSubAccounts[j].subAccountAddress,
+                    response[j],
+                    _tokens
+                );
 
-            activePositions[j] = Position({
-                subAccountInfo: SubAccount({
-                    id: activeSubAccounts[j].id,
-                    subAccountAddress: activeSubAccounts[j].subAccountAddress
-                }),
-                accountStatus: accountStatus,
-                marketsInfoSubAcc: marketsInfo
-            });
+                activePositions[j] = Position({
+                    subAccountInfo: SubAccount({
+                        id: activeSubAccounts[j].id,
+                        subAccountAddress: activeSubAccounts[j].subAccountAddress
+                    }),
+                    accountStatus: accountStatus,
+                    marketsInfoSubAcc: marketsInfo
+                });
+            }
+            id += 10;
         }
     }
 }
