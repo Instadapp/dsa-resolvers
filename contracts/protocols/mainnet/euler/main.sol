@@ -11,12 +11,11 @@ contract EulerResolver is EulerHelper {
      * @param user Address of user
      * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      */
-    function getAllActiveSubAccounts(
-        address user,
-        uint256 start,
-        uint256 end,
-        address[] memory tokens
-    ) public view returns (SubAccount[] memory activeSubAccounts) {
+    function getAllActiveSubAccounts(address user, address[] memory tokens)
+        public
+        view
+        returns (SubAccount[] memory activeSubAccounts)
+    {
         address[] memory _tokens = new address[](tokens.length);
 
         for (uint256 i = 0; i < tokens.length; i++) {
