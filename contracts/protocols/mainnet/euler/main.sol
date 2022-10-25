@@ -3,44 +3,50 @@ pragma solidity ^0.7.6;
 pragma abicoder v2;
 import "./helpers.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
 
 contract EulerResolver is EulerHelper {
     /**
      * @dev Get all active sub-account Ids and addresses of a user.
      * @notice Get all sub-account of a user that has some token liquidity in it.
-     * @param user Address of user
-     * @param tokens Array of the tokens(For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+     * @param start Start sub-account.
+     * @param end End sub-account.
+     * @param user Address of user.
+     * @param tokens Array of the tokens. (For ETH: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
      */
-    function getAllActiveSubAccounts(address user, address[] memory tokens)
-        public
-        view
-        returns (SubAccount[] memory activeSubAccounts)
-    {
+    function getAllActiveSubAccounts(
+        uint256 start,
+        uint256 end,
+        address user,
+        address[] memory tokens
+    ) public view returns (SubAccount[] memory activeSubAccounts) {
+        require(end > start, "end-account-should-be-greater");
+
         address[] memory _tokens = new address[](tokens.length);
 
         for (uint256 i = 0; i < tokens.length; i++) {
             _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
         }
 
-        SubAccount[] memory subAccounts = getAllSubAccounts(user);
+        SubAccount[] memory subAccounts = getSubAccountInRange(start, end, user);
 
-        bool[] memory activeSubAccBool = new bool[](256);
+        bool[] memory activeSubAccBool = new bool[](sub(end, start));
         uint256 count;
+        uint256 k = 0;
 
-        for (uint256 i = 0; i < subAccounts.length; ) {
-            (activeSubAccBool, count) = getActiveSubAccounts(i, i + 10, subAccounts, _tokens);
+        (activeSubAccBool, count) = getActiveSubAccounts(start, end, subAccounts, _tokens);
 
-            activeSubAccounts = new SubAccount[](count);
-            uint256 k = 0;
+        activeSubAccounts = new SubAccount[](count);
 
-            for (uint256 j = 0; j < subAccounts.length; j++) {
+        if (count > 0) {
+            for (uint256 j = start; j <= end; j++) {
                 if (activeSubAccBool[j]) {
-                    activeSubAccounts[k].id = j;
+                    activeSubAccounts[k].id = subAccounts[j].id;
                     activeSubAccounts[k].subAccountAddress = subAccounts[j].subAccountAddress;
                     k++;
                 }
             }
-            i += 10;
+            console.log("activeSubAccounts: ", activeSubAccounts[0].id);
         }
     }
 
@@ -113,56 +119,52 @@ contract EulerResolver is EulerHelper {
         uint256 length = 256;
 
         SubAccount[] memory subAccounts = getAllSubAccounts(user);
+        (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(0, 256, subAccounts, _tokens);
 
-        for (uint256 id = 0; id < subAccounts.length; ) {
-            (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(id, id + 10, subAccounts, _tokens);
+        Query[] memory qs = new Query[](count);
+        Response[] memory response = new Response[](count);
 
-            Query[] memory qs = new Query[](count);
-            Response[] memory response = new Response[](count);
+        SubAccount[] memory activeSubAccounts = new SubAccount[](count);
+        uint256 k;
 
-            SubAccount[] memory activeSubAccounts = new SubAccount[](count);
-            uint256 k;
-
-            for (uint256 i = 0; i < length; i++) {
-                if (activeSubAcc[i]) {
-                    qs[i] = Query({
-                        eulerContract: EULER_MAINNET,
-                        account: subAccounts[i].subAccountAddress,
-                        markets: _tokens
-                    });
-
-                    activeSubAccounts[k] = SubAccount({
-                        id: subAccounts[i].id,
-                        subAccountAddress: subAccounts[i].subAccountAddress
-                    });
-
-                    k++;
-                }
-            }
-
-            response = eulerView.doQueryBatch(qs);
-
-            claimedAmount = getClaimedAmount(user);
-
-            activePositions = new Position[](count);
-
-            for (uint256 j = 0; j < count; j++) {
-                (ResponseMarket[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
-                    activeSubAccounts[j].subAccountAddress,
-                    response[j],
-                    _tokens
-                );
-
-                activePositions[j] = Position({
-                    subAccountInfo: SubAccount({
-                        id: activeSubAccounts[j].id,
-                        subAccountAddress: activeSubAccounts[j].subAccountAddress
-                    }),
-                    accountStatus: accountStatus,
-                    marketsInfoSubAcc: marketsInfo
+        for (uint256 i = 0; i < length; i++) {
+            if (activeSubAcc[i]) {
+                qs[i] = Query({
+                    eulerContract: EULER_MAINNET,
+                    account: subAccounts[i].subAccountAddress,
+                    markets: _tokens
                 });
+
+                activeSubAccounts[k] = SubAccount({
+                    id: subAccounts[i].id,
+                    subAccountAddress: subAccounts[i].subAccountAddress
+                });
+
+                k++;
             }
-            id += 10;
+        }
+
+        response = eulerView.doQueryBatch(qs);
+
+        claimedAmount = getClaimedAmount(user);
+
+        activePositions = new Position[](count);
+
+        for (uint256 j = 0; j < count; j++) {
+            (ResponseMarket[] memory marketsInfo, AccountStatus memory accountStatus) = getSubAccountInfo(
+                activeSubAccounts[j].subAccountAddress,
+                response[j],
+                _tokens
+            );
+
+            activePositions[j] = Position({
+                subAccountInfo: SubAccount({
+                    id: activeSubAccounts[j].id,
+                    subAccountAddress: activeSubAccounts[j].subAccountAddress
+                }),
+                accountStatus: accountStatus,
+                marketsInfoSubAcc: marketsInfo
+            });
         }
     }
 }

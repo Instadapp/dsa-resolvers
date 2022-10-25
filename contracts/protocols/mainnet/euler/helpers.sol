@@ -64,6 +64,26 @@ contract EulerHelper is DSMath {
     /**
      * @dev Get all sub-accounts of a user.
      * @notice Get all sub-accounts of a user.
+     * @param end End sub-account.
+     * @param user Address of user.
+     * @param user Address of user.
+     */
+    function getSubAccountInRange(
+        uint256 start,
+        uint256 end,
+        address user
+    ) public pure returns (SubAccount[] memory subAccounts) {
+        subAccounts = new SubAccount[](sub(end, start));
+
+        for (uint256 i = start; i < end; i++) {
+            address subAccount = getSubAccountAddress(user, i);
+            subAccounts[i] = SubAccount({ id: i, subAccountAddress: subAccount });
+        }
+    }
+
+    /**
+     * @dev Get all sub-accounts of a user.
+     * @notice Get all sub-accounts of a user.
      * @param user Address of user
      */
     function getAllSubAccounts(address user) public pure returns (SubAccount[] memory subAccounts) {
@@ -101,9 +121,8 @@ contract EulerHelper is DSMath {
         SubAccount[] memory subAccounts,
         address[] memory tokens
     ) public view returns (bool[] memory activeSubAcc, uint256 count) {
-        uint256 accLength = subAccounts.length;
         uint256 tokenLength = tokens.length;
-        activeSubAcc = new bool[](accLength);
+        activeSubAcc = new bool[](subAccounts.length);
 
         for (uint256 i = start; i < end; i++) {
             for (uint256 j = 0; j < tokenLength; j++) {
