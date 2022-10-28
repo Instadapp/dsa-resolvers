@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 import "./interfaces.sol";
+import { DSMath } from "../../../../utils/dsmath.sol";
 
-contract MorphoHelpers {
+contract MorphoHelpers is DSMath {
     /**
      *@dev Returns ethereum address
      */
     function getEthAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    }
+
+    function getCETHAddr() internal pure returns (address) {
+        return 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
     }
 
     struct MorphoData {
@@ -25,6 +30,8 @@ contract MorphoHelpers {
         address poolTokenAddress;
         address underlyingToken;
         uint256 decimals;
+        uint256 tokenPriceInEth;
+        uint256 tokenPriceInUsd;
     }
 
     struct CompoundMarketDetail {
@@ -95,12 +102,29 @@ contract MorphoHelpers {
         uint256 maxDebtValue; //calculated by updating interest accrue indices for all markets for comp
         bool isLiquidatable;
         uint256 unclaimedRewards; //only for compound as of now
+        uint256 compPriceInEth;
+        uint256 ethPriceInUsd;
         UserMarketData[] marketData;
     }
 
-    ICompoundLens internal compLens = ICompoundLens(0x930f1b46e1D081Ec1524efD95752bE3eCe51EF67);
-    IMorpho internal compMorpho = IMorpho(0x8888882f8f843896699869179fB6E4f7e3B58888);
-    IComp internal comptroller = IComp(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
+    ICompoundLens internal constant compLens = ICompoundLens(0x930f1b46e1D081Ec1524efD95752bE3eCe51EF67);
+    IMorpho internal constant compMorpho = IMorpho(0x8888882f8f843896699869179fB6E4f7e3B58888);
+    IComp internal constant comptroller = IComp(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
+
+    function getEthPriceInUsd() internal view returns (uint256 ethPriceInUsd) {
+        ethPriceInUsd = ICompoundOracle(comptroller.oracle()).price("ETH") * 1e12;
+    }
+
+    function getTokenPrices(address cToken) internal view returns (uint256 priceInETH, uint256 priceInUSD) {
+        ICompoundOracle oracle_ = ICompoundOracle(comptroller.oracle());
+        uint256 decimals = getCETHAddr() == cToken
+            ? 18
+            : TokenInterface(CTokenInterface(cToken).underlying()).decimals();
+        uint256 ethPrice = getEthPriceInUsd();
+        uint256 price = cToken == getCETHAddr() ? ethPrice : oracle_.getUnderlyingPrice(cToken);
+        priceInUSD = price / 10**(18 - decimals);
+        priceInETH = wdiv(priceInUSD, ethPrice);
+    }
 
     function getCompSpeeds(CompoundMarketDetail memory cf_, address poolTokenAddress_)
         internal
@@ -142,6 +166,7 @@ contract MorphoHelpers {
 
         tokenData_.poolTokenAddress = poolTokenAddress_;
         tokenData_.decimals = TokenInterface(poolTokenAddress_).decimals();
+        (tokenData_.tokenPriceInEth, tokenData_.tokenPriceInUsd) = getTokenPrices(poolTokenAddress_);
         (
             tokenData_.underlyingToken,
             flags_.isCreated,
@@ -250,6 +275,8 @@ contract MorphoHelpers {
         );
         userData_.isLiquidatable = compLens.isLiquidatable(user, userMarkets_);
         userData_.unclaimedRewards = compLens.getUserUnclaimedRewards(userMarkets_, user);
+        userData_.ethPriceInUsd = getEthPriceInUsd();
+        (userData_.compPriceInEth, ) = getTokenPrices(0x70e36f6BF80a52b3B46b3aF8e106CC0ed743E8e4);
     }
 
     function getMorphoData() internal view returns (MorphoData memory morphoData_) {

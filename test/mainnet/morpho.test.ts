@@ -136,6 +136,8 @@ describe("Morpho Resolvers", () => {
       console.log(`Max Debt Value user can have: ${userData.maxDebtValue}`);
       console.log(`is liquidatable: ${userData.isLiquidatable}`);
       console.log(`unclaimed rewards: ${userData.unclaimedRewards}`);
+      console.log(`eth price: ${userData.ethPriceInUsd}`);
+      console.log(`comp price: ${userData.compPriceInEth}`);
       console.log(`\n\t**Entered markets data**`);
 
       for (const market of userData.marketData) {
@@ -144,6 +146,8 @@ describe("Morpho Resolvers", () => {
         console.log(`decimals: ${market.marketData.config.decimals}`);
         console.log(`borrow rate: ${market.borrowRatePerBlock}`);
         console.log(`supply rate: ${market.supplyRatePerBlock}`);
+        console.log(`token Price in Eth: ${market.marketData.config.tokenPriceInEth}`);
+        console.log(`token Price in Eth: ${market.marketData.config.tokenPriceInUsd}`);
         console.log(`total supplies: ${market.totalSupplies}`);
         console.log(`total borrows: ${market.totalBorrows}`);
         console.log(`p2p supplies: ${market.p2pSupplies}`);

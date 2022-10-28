@@ -31,6 +31,8 @@ interface IComptroller {
         uint32 block;
     }
 
+    function oracle() external view returns (address);
+
     /*** Liquidity/Liquidation Calculations ***/
 
     function liquidateCalculateSeizeTokens(
@@ -54,12 +56,6 @@ interface IComptroller {
 
     function claimComp(address holder, address[] memory cTokens) external;
 
-    function compSpeeds(address) external view returns (uint256);
-
-    function compSupplySpeeds(address) external view returns (uint256);
-
-    function compBorrowSpeeds(address) external view returns (uint256);
-
     function compSupplyState(address) external view returns (CompMarketState memory);
 
     function compBorrowState(address) external view returns (CompMarketState memory);
@@ -67,6 +63,8 @@ interface IComptroller {
 
 interface ICompoundOracle {
     function getUnderlyingPrice(address) external view returns (uint256);
+
+    function price(string calldata symbol) external view returns (uint256);
 }
 
 interface IMorpho {
@@ -317,7 +315,7 @@ interface ICompoundLens {
     function getUserHealthFactor(address _user, address[] calldata _updatedMarkets) external view returns (uint256);
 }
 
-interface IComp {
+interface IComp is IComptroller {
     function compSpeeds(address) external view returns (uint256);
 
     function compSupplySpeeds(address) external view returns (uint256);
@@ -325,4 +323,22 @@ interface IComp {
     function compBorrowSpeeds(address) external view returns (uint256);
 
     function borrowCaps(address) external view returns (uint256);
+}
+
+interface CTokenInterface {
+    function exchangeRateStored() external view returns (uint256);
+
+    function borrowRatePerBlock() external view returns (uint256);
+
+    function supplyRatePerBlock() external view returns (uint256);
+
+    function borrowBalanceStored(address) external view returns (uint256);
+
+    function totalBorrows() external view returns (uint256);
+
+    function underlying() external view returns (address);
+
+    function balanceOf(address) external view returns (uint256);
+
+    function getCash() external view returns (uint256);
 }
