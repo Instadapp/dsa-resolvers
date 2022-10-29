@@ -73,10 +73,11 @@ contract EulerHelper is DSMath {
         uint256 end,
         address user
     ) public pure returns (SubAccount[] memory subAccounts) {
-        subAccounts = new SubAccount[](sub(end, start));
+        uint256 _length = sub(end, start);
+        subAccounts = new SubAccount[](_length);
 
-        for (uint256 i = start; i < end; i++) {
-            address subAccount = getSubAccountAddress(user, i);
+        for (uint256 i = 0; i < _length; i++) {
+            address subAccount = getSubAccountAddress(user, start + i);
             subAccounts[i] = SubAccount({ id: i, subAccountAddress: subAccount });
         }
     }
@@ -110,21 +111,18 @@ contract EulerHelper is DSMath {
     /**
      * @dev Get active sub-accounts.
      * @notice Get active sub-accounts.
-     * @param start start id for subaccounts.
-     * @param end end id for subaccounts.
      * @param subAccounts Array of SubAccount struct(id and address)
      * @param tokens Array of the tokens
      */
-    function getActiveSubAccounts(
-        uint256 start,
-        uint256 end,
-        SubAccount[] memory subAccounts,
-        address[] memory tokens
-    ) public view returns (bool[] memory activeSubAcc, uint256 count) {
+    function getActiveSubAccounts(SubAccount[] memory subAccounts, address[] memory tokens)
+        public
+        view
+        returns (bool[] memory activeSubAcc, uint256 count)
+    {
         uint256 tokenLength = tokens.length;
         activeSubAcc = new bool[](subAccounts.length);
 
-        for (uint256 i = start; i < end; i++) {
+        for (uint256 i = 0; i < subAccounts.length; i++) {
             for (uint256 j = 0; j < tokenLength; j++) {
                 address eToken = markets.underlyingToEToken(tokens[j]);
 

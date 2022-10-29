@@ -3,7 +3,6 @@ pragma solidity ^0.7.6;
 pragma abicoder v2;
 import "./helpers.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "hardhat/console.sol";
 
 contract EulerResolver is EulerHelper {
     /**
@@ -30,23 +29,22 @@ contract EulerResolver is EulerHelper {
 
         SubAccount[] memory subAccounts = getSubAccountInRange(start, end, user);
 
-        bool[] memory activeSubAccBool = new bool[](sub(end, start));
+        bool[] memory activeSubAccBool;
         uint256 count;
         uint256 k = 0;
 
-        (activeSubAccBool, count) = getActiveSubAccounts(start, end, subAccounts, _tokens);
+        (activeSubAccBool, count) = getActiveSubAccounts(subAccounts, _tokens);
 
         activeSubAccounts = new SubAccount[](count);
 
         if (count > 0) {
-            for (uint256 j = start; j <= end; j++) {
+            for (uint256 j = 0; j < activeSubAccBool.length; j++) {
                 if (activeSubAccBool[j]) {
                     activeSubAccounts[k].id = subAccounts[j].id;
                     activeSubAccounts[k].subAccountAddress = subAccounts[j].subAccountAddress;
                     k++;
                 }
             }
-            console.log("activeSubAccounts: ", activeSubAccounts[0].id);
         }
     }
 
@@ -116,10 +114,8 @@ contract EulerResolver is EulerHelper {
             _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
         }
 
-        uint256 length = 256;
-
         SubAccount[] memory subAccounts = getAllSubAccounts(user);
-        (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(0, 256, subAccounts, _tokens);
+        (bool[] memory activeSubAcc, uint256 count) = getActiveSubAccounts(subAccounts, _tokens);
 
         Query[] memory qs = new Query[](count);
         Response[] memory response = new Response[](count);
@@ -127,9 +123,9 @@ contract EulerResolver is EulerHelper {
         SubAccount[] memory activeSubAccounts = new SubAccount[](count);
         uint256 k;
 
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < 256; i++) {
             if (activeSubAcc[i]) {
-                qs[i] = Query({
+                qs[k] = Query({
                     eulerContract: EULER_MAINNET,
                     account: subAccounts[i].subAccountAddress,
                     markets: _tokens
