@@ -72,11 +72,15 @@ describe("Morpho Resolvers", () => {
         console.log(`sToken emission per second: ${aaveMarket.aaveData.sEmissionPerSecond}`);
         console.log(`vToken emission per second: ${aaveMarket.aaveData.vEmissionPerSecond}`);
         console.log(`available liquidity: ${aaveMarket.aaveData.availableLiquidity}`);
+        console.log(`total supplies in underlying: ${aaveMarket.aaveData.totalSupplies}`);
+        console.log(`total stables borrows in underlying: ${aaveMarket.aaveData.totalStableBorrows}`);
+        console.log(`total variable borrows in underlying: ${aaveMarket.aaveData.totalVariableBorrows}`);
         console.log(`liquidity rate: ${aaveMarket.aaveData.liquidityRate}`);
         console.log(`isPaused: ${aaveMarket.flags.isPaused}`);
         console.log(`isCreated: ${aaveMarket.flags.isCreated}`);
         console.log(`isPartiallyPaused: ${aaveMarket.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${aaveMarket.flags.isP2PDisabled}\n`);
+        console.log(`isBorrowEnabled: ${aaveMarket.flags.isUnderlyingBorrowEnabled}\n`);
       }
 
       const compConfig = await compResolver.getMorphoConfig();
@@ -118,7 +122,10 @@ describe("Morpho Resolvers", () => {
         console.log(`comp speed: ${compMarket.compData.compSpeed}`);
         console.log(`comp supply speed: ${compMarket.compData.compSupplySpeed}`);
         console.log(`comp borrow speed: ${compMarket.compData.compBorrowSpeed}`);
+        console.log(`total supplies in underlying: ${compMarket.compData.totalSupplies}`);
+        console.log(`total borrows in underlying: ${compMarket.compData.totalBorrows}`);
         console.log(`isPaused: ${compMarket.flags.isPaused}`);
+        console.log(`isBorrowEnabled: ${compMarket.flags.isUnderlyingBorrowEnabled}`);
         console.log(`isCreated: ${compMarket.flags.isCreated}`);
         console.log(`isPartiallyPaused: ${compMarket.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${compMarket.flags.isP2PDisabled}\n`);
@@ -187,6 +194,7 @@ describe("Morpho Resolvers", () => {
         console.log(`isCreated: ${market.marketData.flags.isCreated}`);
         console.log(`isPartiallyPaused: ${market.marketData.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${market.marketData.flags.isP2PDisabled}\n`);
+        console.log(`isBorrowEnabled: ${market.marketData.flags.isUnderlyingBorrowEnabled}\n`);
       }
 
       console.log("\n\t****************AAVE USER POSITION DATA**************\n");
@@ -243,6 +251,7 @@ describe("Morpho Resolvers", () => {
         console.log(`isPaused: ${market.marketData.flags.isPaused}`);
         console.log(`isPartiallyPaused: ${market.marketData.flags.isPartiallyPaused}`);
         console.log(`isP2PDisabled: ${market.marketData.flags.isP2PDisabled}\n`);
+        console.log(`isBorrowEnabled: ${market.marketData.flags.isUnderlyingBorrowEnabled}\n`);
       }
     });
   });

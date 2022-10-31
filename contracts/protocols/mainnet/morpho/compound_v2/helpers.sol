@@ -40,6 +40,8 @@ contract MorphoHelpers is DSMath {
         uint256 compBorrowSpeed;
         uint256 collateralFactor;
         uint256 marketBorrowCap;
+        uint256 totalSupplies;
+        uint256 totalBorrows;
     }
 
     struct MarketDetail {
@@ -79,6 +81,7 @@ contract MorphoHelpers is DSMath {
         bool isPaused;
         bool isPartiallyPaused;
         bool isP2PDisabled;
+        bool isUnderlyingBorrowEnabled;
     }
 
     struct UserMarketData {
@@ -152,6 +155,12 @@ contract MorphoHelpers is DSMath {
             marketData_.p2pIndexCursor,
             marketData_.compData.collateralFactor
         ) = compLens.getMarketConfiguration(poolTokenAddress_);
+
+        marketData_.compData.totalBorrows = CTokenInterface(poolTokenAddress_).totalBorrows();
+        marketData_.compData.totalSupplies = add(
+            marketData_.compData.totalBorrows,
+            CTokenInterface(poolTokenAddress_).getCash()
+        );
         return marketData_;
     }
 
@@ -181,6 +190,8 @@ contract MorphoHelpers is DSMath {
         cf_.marketBorrowCap = comptroller.borrowCaps(poolTokenAddress_);
 
         cf_ = getCompSpeeds(cf_, poolTokenAddress_);
+
+        flags_.isUnderlyingBorrowEnabled = comptroller.borrowGuardianPaused(poolTokenAddress_) ? false : true;
 
         marketData_.config = tokenData_;
         marketData_.compData = cf_;

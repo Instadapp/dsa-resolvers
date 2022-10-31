@@ -323,6 +323,8 @@ interface IComp is IComptroller {
     function compBorrowSpeeds(address) external view returns (uint256);
 
     function borrowCaps(address) external view returns (uint256);
+
+    function borrowGuardianPaused(address) external view returns (bool);
 }
 
 interface CTokenInterface {

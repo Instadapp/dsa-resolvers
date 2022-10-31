@@ -55,6 +55,9 @@ contract MorphoHelpers is DSMath {
         uint256 ltv;
         uint256 liquidationThreshold;
         uint256 liquidationBonus;
+        uint256 totalSupplies;
+        uint256 totalStableBorrows;
+        uint256 totalVariableBorrows;
     }
 
     struct MarketDetail {
@@ -90,6 +93,7 @@ contract MorphoHelpers is DSMath {
         bool isPaused;
         bool isPartiallyPaused;
         bool isP2PDisabled;
+        bool isUnderlyingBorrowEnabled;
     }
 
     struct UserMarketData {
@@ -165,8 +169,30 @@ contract MorphoHelpers is DSMath {
         (, marketData_.aaveData.aEmissionPerSecond, ) = incentiveData.getAssetData(asset);
         (, marketData_.aaveData.sEmissionPerSecond, ) = incentiveData.getAssetData(sToken_);
         (, marketData_.aaveData.vEmissionPerSecond, ) = incentiveData.getAssetData(vToken_);
-        (marketData_.aaveData.availableLiquidity, , , marketData_.aaveData.liquidityRate, , , , , , ) = protocolData
-            .getReserveData(asset);
+        (
+            marketData_.aaveData.availableLiquidity,
+            marketData_.aaveData.totalStableBorrows,
+            marketData_.aaveData.totalVariableBorrows,
+            marketData_.aaveData.liquidityRate,
+            ,
+            ,
+            ,
+            ,
+            ,
+
+        ) = protocolData.getReserveData(asset);
+        return marketData_;
+    }
+
+    function getAaveHelperData(
+        MarketDetail memory marketData_,
+        address poolTokenAddress_,
+        address token_
+    ) internal view returns (MarketDetail memory) {
+        (, , , , , , marketData_.flags.isUnderlyingBorrowEnabled, , , ) = protocolData.getReserveConfigurationData(
+            token_
+        );
+        marketData_.aaveData.totalSupplies = IAToken(poolTokenAddress_).totalSupply();
         return marketData_;
     }
 
@@ -194,6 +220,7 @@ contract MorphoHelpers is DSMath {
         ) = aavelens.getMarketConfiguration(poolTokenAddress_);
 
         marketData_ = getLiquidatyData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
+        marketData_ = getAaveHelperData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
 
         return marketData_;
     }
