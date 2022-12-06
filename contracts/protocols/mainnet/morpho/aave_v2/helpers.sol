@@ -126,7 +126,7 @@ contract MorphoHelpers is DSMath {
         uint256 priceInUsd;
     }
 
-    IAaveLens internal aavelens = IAaveLens(0x507fA343d0A90786d86C7cd885f5C49263A91FF4);
+    IAaveLens internal aavelens = IAaveLens(0x01ccD53a4838e94797d0579Ab1818a834a6A3855);
     IMorpho internal aaveMorpho = IMorpho(0x777777c9898D384F785Ee44Acfe945efDFf5f3E0);
     AaveAddressProvider addrProvider = AaveAddressProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
     IAave internal protocolData = IAave(getAaveProtocolDataProvider());
