@@ -8,16 +8,16 @@ import "./helpers.sol";
  *@dev get user position details and market details.
  */
 contract MorphoResolver is MorphoHelpers {
-    /**
-     *@dev get position of the user for all markets entered.
-     *@notice get position details of the user in all entered market: overall position data, collaterals, rewards etc.
-     *@param user Address of the user whose position details are needed.
-     *@return positionData_ Overall position details of the user - balances, rewards, collaterals, market details.
-     */
-    function getPositionAll(address user) public view returns (UserData memory positionData_) {
-        address[] memory userMarkets_ = getUserMarkets(user);
-        positionData_ = getUserData(user, userMarkets_);
-    }
+    // /**
+    //  *@dev get position of the user for all markets entered.
+    //  *@notice get position details of the user in all entered market: overall position data, collaterals, rewards etc.
+    //  *@param user Address of the user whose position details are needed.
+    //  *@return positionData_ Overall position details of the user - balances, rewards, collaterals, market details.
+    //  */
+    // function getPositionAll(address user) public view returns (UserData memory positionData_) {
+    //     address[] memory userMarkets_ = getUserMarkets(user);
+    //     positionData_ = getUserData(user, userMarkets_);
+    // }
 
     /**
      *@dev get position of the user for given markets.

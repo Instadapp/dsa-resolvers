@@ -254,14 +254,14 @@ contract MorphoHelpers is DSMath {
         //////////////////////////////////////////////////////////////////////////////////////////////////
     }
 
-    function getUserMarkets(address user) internal view returns (address[] memory userMarkets_) {
-        // address[] memory totalMarkets = morphoGetter.marketsCreated();
-        // for (uint256 i = 0; i < totalMarkets.length; i++) {
-        //     (MarketSideIndexes256 memory supply, MarketSideIndexes256 memory borrow)
-        //     = morphoGetter.updatedIndexes(totalMarkets[i]);
-        // }
-        userMarkets_ = morphoGetter.marketsCreated();
-    }
+    // function getUserMarkets(address user) internal view returns (address[] memory userMarkets_) {
+    //     // address[] memory totalMarkets = morphoGetter.marketsCreated();
+    //     // for (uint256 i = 0; i < totalMarkets.length; i++) {
+    //     //     (MarketSideIndexes256 memory supply, MarketSideIndexes256 memory borrow)
+    //     //     = morphoGetter.updatedIndexes(totalMarkets[i]);
+    //     // }
+    //     userMarkets_ = morphoGetter.marketsCreated();
+    // }
 
     function getUserData(address user, address[] memory underlyingList)
         internal
