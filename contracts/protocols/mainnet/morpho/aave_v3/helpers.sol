@@ -16,22 +16,20 @@ contract MorphoHelpers is DSMath {
     }
 
     function getChainlinkEthFeed() internal pure returns (address) {
-        return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419; // should be updated after deployment
+        return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     }
 
     function getAaveProtocolDataProvider() internal pure returns (address) {
-        return 0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d; // should be updated after deployment
+        return 0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3;
     }
 
     function getAaveIncentivesController() internal pure returns (address) {
-        return 0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5; // should be updated after deployment
+        return 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb; // should be updated after deployment
     }
 
     struct MorphoData {
         MarketDetail[] aaveMarketsCreated;
         bool isClaimRewardsPausedAave;
-        uint128 repay;
-        uint128 withdraw;
         uint256 p2pSupplyAmount;
         uint256 p2pBorrowAmount;
         uint256 poolSupplyAmount;
@@ -49,9 +47,10 @@ contract MorphoHelpers is DSMath {
     }
 
     struct AaveMarketDetail {
-        uint256 aEmissionPerSecond;
-        uint256 sEmissionPerSecond;
-        uint256 vEmissionPerSecond;
+        address[] rewardsList;
+        uint256[] aEmissionPerSecond;
+        uint256[] sEmissionPerSecond;
+        uint256[] vEmissionPerSecond;
         uint256 availableLiquidity;
         uint256 liquidityRate;
         // uint256 ltv;
@@ -147,9 +146,26 @@ contract MorphoHelpers is DSMath {
     {
         (, address sToken_, address vToken_) = protocolData.getReserveTokensAddresses(asset);
 
-        (, marketData_.aaveData.aEmissionPerSecond, ) = incentiveData.getAssetData(asset);
-        (, marketData_.aaveData.sEmissionPerSecond, ) = incentiveData.getAssetData(sToken_);
-        (, marketData_.aaveData.vEmissionPerSecond, ) = incentiveData.getAssetData(vToken_);
+        marketData_.aaveData.rewardsList = incentiveData.getRewardsList();
+        marketData_.aaveData.aEmissionPerSecond = new uint256[](marketData_.aaveData.rewardsList.length);
+        marketData_.aaveData.sEmissionPerSecond = new uint256[](marketData_.aaveData.rewardsList.length);
+        marketData_.aaveData.vEmissionPerSecond = new uint256[](marketData_.aaveData.rewardsList.length);
+
+        for (uint256 i = 0; i < marketData_.aaveData.rewardsList.length; i++) {
+            (, marketData_.aaveData.aEmissionPerSecond[i], , ) = incentiveData.getRewardsData(
+                asset,
+                marketData_.aaveData.rewardsList[i]
+            );
+            (, marketData_.aaveData.sEmissionPerSecond[i], , ) = incentiveData.getRewardsData(
+                sToken_,
+                marketData_.aaveData.rewardsList[i]
+            );
+            (, marketData_.aaveData.vEmissionPerSecond[i], , ) = incentiveData.getRewardsData(
+                vToken_,
+                marketData_.aaveData.rewardsList[i]
+            );
+        }
+
         (
             marketData_.aaveData.availableLiquidity,
             marketData_.aaveData.totalStableBorrows,
@@ -308,10 +324,6 @@ contract MorphoHelpers is DSMath {
         morphoData_.aaveMarketsCreated = aaveMarket_;
 
         morphoData_.isClaimRewardsPausedAave = morphoGetter.isClaimRewardsPaused();
-        Iterations memory itr = morphoGetter.defaultIterations();
-        morphoData_.repay = itr.repay;
-        morphoData_.withdraw = itr.withdraw;
-
         // (morphoData_.p2pSupplyAmount, morphoData_.poolSupplyAmount, morphoData_.totalSupplyAmount) = morphoGetter
         //     .getTotalSupply();
         // (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = morphoGetter

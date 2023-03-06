@@ -261,14 +261,17 @@ interface IAave {
             uint40 lastUpdateTimestamp
         );
 
-    function getAssetData(address asset)
+    function getRewardsData(address asset, address reward)
         external
         view
         returns (
             uint256,
             uint256,
+            uint256,
             uint256
         );
+
+    function getRewardsList() external view returns (address[] memory);
 
     function getReserveTokensAddresses(address asset)
         external
