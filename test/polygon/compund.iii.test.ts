@@ -1,9 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-// import { expect } from "chai";
-// import { formatEther, formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import { InstaCompoundIIIPolygonResolver, InstaCompoundIIIPolygonResolver__factory } from "../../typechain";
-// import { Tokens } from "../consts";
 
 describe("Compound Resolvers", () => {
   let signer: SignerWithAddress;
