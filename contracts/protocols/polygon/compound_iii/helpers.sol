@@ -15,10 +15,6 @@ contract CompoundIIIHelpers is DSMath {
         return 0x45939657d1CA34A8FA39A924B71D28Fe8431e581;
     }
 
-    function getConfiguratorAddress() internal pure returns (address) {
-        return 0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf;
-    }
-
     struct BaseAssetInfo {
         address token;
         address priceFeed;
@@ -165,7 +161,6 @@ contract CompoundIIIHelpers is DSMath {
     }
 
     ICometRewards internal cometRewards = ICometRewards(getCometRewardsAddress());
-    ICometConfig internal cometConfig = ICometConfig(getConfiguratorAddress());
 
     function getBaseTokenInfo(IComet _comet) internal view returns (BaseAssetInfo memory baseAssetInfo) {
         baseAssetInfo.token = _comet.baseToken();
