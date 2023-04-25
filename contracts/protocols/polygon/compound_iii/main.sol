@@ -4,10 +4,10 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 /**
- *@title Compund III Resolver
+ *@title Compund III Polygon Resolver
  *@dev get user position, user configuration, market configuration.
  */
-contract CompoundIIIResolver is CompoundIIIHelpers {
+contract CompoundIIIResolver is CompoundIIIHelpersPolygon {
     /**
      *@dev get position of the user for all collaterals.
      *@notice get position details of the user in a market including overall position data, collaterals, rewards etc.
@@ -97,5 +97,5 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
 }
 
 contract InstaCompoundIIIPolygonResolver is CompoundIIIResolver {
-    string public constant name = "Compound-III-Polygon-Resolver-v1.0";
+    string public constant name = "Compound-V3-Polygon-Resolver-v1.0";
 }
