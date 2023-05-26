@@ -4,10 +4,10 @@ import "./interfaces.sol";
 import "./helpers.sol";
 
 /**
- *@title Compund III Polygon Resolver
+ *@title Compund III Arbitrum Resolver
  *@dev get user position, user configuration, market configuration.
  */
-contract CompoundIIIResolver is CompoundIIIHelpersPolygon {
+contract CompoundIIIResolver is CompoundIIIHelpersArbitrum {
     /**
      *@dev get position of the user for all collaterals.
      *@notice get position details of the user in a market including overall position data, collaterals, rewards etc.
