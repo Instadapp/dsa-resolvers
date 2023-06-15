@@ -570,7 +570,7 @@ contract MorphoHelpers is DSMath {
 
         UserMarketData[] memory marketData_ = new UserMarketData[](length_);
 
-        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, tokens_);
+        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(addrProvider, tokens_);
 
         for (uint256 i = 0; i < length_; i++) {
             marketData_[i] = getUserMarketData(
@@ -736,7 +736,7 @@ contract MorphoHelpers is DSMath {
         MarketDetail[] memory aaveMarket_ = new MarketDetail[](tokens_.length);
         uint256 length_ = tokens_.length;
 
-        (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, tokens_);
+        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(addrProvider, tokens_);
 
         for (uint256 i = 0; i < length_; i++) {
             aaveMarket_[i] = getMarketData(aaveMarkets_[i], tokenPrices[i].priceInEth, tokenPrices[i].priceInUsd);
