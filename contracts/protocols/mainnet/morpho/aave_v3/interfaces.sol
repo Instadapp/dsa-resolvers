@@ -1,257 +1,63 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-enum Position {
-    POOL_SUPPLIER,
-    P2P_SUPPLIER,
-    POOL_BORROWER,
-    P2P_BORROWER
-}
+import { Types } from "./lib/morpho-dao/morpho-aave-v3/src/libraries/Types.sol";
 
-/* NESTED STRUCTS */
-
-struct MarketSideDelta {
-    uint256 scaledDelta; // In pool unit.
-    uint256 scaledP2PTotal; // In peer-to-peer unit.
-}
-
-struct Deltas {
-    MarketSideDelta supply;
-    MarketSideDelta borrow;
-}
-
-struct MarketSideIndexes {
-    uint128 poolIndex;
-    uint128 p2pIndex;
-}
-
-struct Indexes {
-    MarketSideIndexes supply;
-    MarketSideIndexes borrow;
-}
-
-struct PauseStatuses {
-    bool isP2PDisabled;
-    bool isSupplyPaused;
-    bool isSupplyCollateralPaused;
-    bool isBorrowPaused;
-    bool isWithdrawPaused;
-    bool isWithdrawCollateralPaused;
-    bool isRepayPaused;
-    bool isLiquidateCollateralPaused;
-    bool isLiquidateBorrowPaused;
-    bool isDeprecated;
-}
-
-/* STORAGE STRUCTS */
-
-// This market struct is able to be passed into memory.
-struct Market {
-    // SLOT 0-1
-    Indexes indexes;
-    // SLOT 2-5
-    Deltas deltas; // 1024 bits
-    // SLOT 6
-    address underlying; // 160 bits
-    PauseStatuses pauseStatuses; // 80 bits
-    // SLOT 7
-    address variableDebtToken; // 160 bits
-    uint32 lastUpdateTimestamp; // 32 bits
-    uint16 reserveFactor; // 16 bits
-    uint16 p2pIndexCursor; // 16 bits
-    // SLOT 8
-    address aToken; // 160 bits
-    // SLOT 9
-    address stableDebtToken; // 160 bits
-    // SLOT 10
-    uint256 idleSupply; // 256 bits
-}
-
-struct Iterations {
-    uint128 repay;
-    uint128 withdraw;
-}
-
-/* STACK AND RETURN STRUCTS */
-
-struct LiquidityData {
-    uint256 borrowable; // The maximum debt value allowed to borrow (in base currency).
-    uint256 maxDebt; // The maximum debt value allowed before being liquidatable (in base currency).
-    uint256 debt; // The debt value (in base currency).
-}
-
-struct IndexesParams {
-    MarketSideIndexes256 lastSupplyIndexes;
-    MarketSideIndexes256 lastBorrowIndexes;
-    uint256 poolSupplyIndex; // The current pool supply index.
-    uint256 poolBorrowIndex; // The current pool borrow index.
-    uint256 reserveFactor; // The reserve factor percentage (10 000 = 100%).
-    uint256 p2pIndexCursor; // The peer-to-peer index cursor (10 000 = 100%).
-    Deltas deltas; // The deltas and peer-to-peer amounts.
-    uint256 proportionIdle; // in ray.
-}
-
-struct GrowthFactors {
-    uint256 poolSupplyGrowthFactor; // The pool's supply index growth factor (in ray).
-    uint256 p2pSupplyGrowthFactor; // Peer-to-peer supply index growth factor (in ray).
-    uint256 poolBorrowGrowthFactor; // The pool's borrow index growth factor (in ray).
-    uint256 p2pBorrowGrowthFactor; // Peer-to-peer borrow index growth factor (in ray).
-}
-
-struct MarketSideIndexes256 {
-    uint256 poolIndex;
-    uint256 p2pIndex;
-}
-
-struct Indexes256 {
-    MarketSideIndexes256 supply;
-    MarketSideIndexes256 borrow;
-}
-
-struct Signature {
-    uint8 v;
-    bytes32 r;
-    bytes32 s;
-}
-
-struct MatchingEngineVars {
-    address underlying;
-    MarketSideIndexes256 indexes;
-    uint256 amount;
-    uint256 maxIterations;
-    bool borrow;
-    // This function will be used to update the data-structure.
-    function(address, address, uint256, uint256, bool) updateDS;
-    bool demoting; // True for demote, False for promote.
-    // This function will be used to decide whether to use the algorithm for promoting or for demoting.
-    function(uint256, uint256, MarketSideIndexes256 memory, uint256) pure returns (uint256, uint256, uint256) step;
-}
-
-// struct LiquidityVars {
-//     address user;
-//     IAaveOracle oracle;
-//     DataTypes.EModeCategory eModeCategory;
-// }
-
-struct PromoteVars {
-    address underlying;
-    uint256 amount;
-    uint256 p2pIndex;
-    uint256 maxIterations;
-    function(address, uint256, uint256) returns (uint256, uint256) promote;
-}
-
-struct BorrowWithdrawVars {
-    uint256 onPool;
-    uint256 inP2P;
-    uint256 toWithdraw;
-    uint256 toBorrow;
-}
-
-struct SupplyRepayVars {
-    uint256 onPool;
-    uint256 inP2P;
-    uint256 toSupply;
-    uint256 toRepay;
-}
-
-struct LiquidateVars {
-    uint256 closeFactor;
-    uint256 seized;
-}
-
-struct AmountToSeizeVars {
-    uint256 liquidationBonus;
-    uint256 borrowedTokenUnit;
-    uint256 collateralTokenUnit;
-    uint256 borrowedPrice;
-    uint256 collateralPrice;
-}
-
-// Max gas to consume during the matching process for supply, borrow, withdraw and repay functions.
-struct MaxGasForMatching {
-    uint64 supply;
-    uint64 borrow;
-    uint64 withdraw;
-    uint64 repay;
-}
-
-struct AssetLiquidityData {
-    uint256 collateralValue; // The collateral value of the asset.
-    uint256 maxDebtValue; // The maximum possible debt value of the asset.
-    uint256 debtValue; // The debt value of the asset.
-    uint256 underlyingPrice; // The price of the token.
-    uint256 collateralFactor; // The liquidation threshold applied on this token.
-}
-
-interface IMorphoGetter {
-    function POOL() external view returns (address);
-
-    function ADDRESSES_PROVIDER() external view returns (address);
-
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-
-    function E_MODE_CATEGORY_ID() external view returns (uint256);
-
-    function market(address underlying) external view returns (Market memory);
-
+interface IMorpho {
     function marketsCreated() external view returns (address[] memory);
 
-    function scaledCollateralBalance(address underlying, address user) external view returns (uint256);
+    function market(address underlying) external view returns (Types.Market memory);
 
-    function scaledP2PBorrowBalance(address underlying, address user) external view returns (uint256);
+    function updatedIndexes(address underlying) external view returns (Types.Indexes256 memory);
 
     function scaledP2PSupplyBalance(address underlying, address user) external view returns (uint256);
 
-    function scaledPoolBorrowBalance(address underlying, address user) external view returns (uint256);
-
     function scaledPoolSupplyBalance(address underlying, address user) external view returns (uint256);
-
-    function supplyBalance(address underlying, address user) external view returns (uint256);
-
-    function borrowBalance(address underlying, address user) external view returns (uint256);
-
-    function collateralBalance(address underlying, address user) external view returns (uint256);
 
     function userCollaterals(address user) external view returns (address[] memory);
 
-    function userBorrows(address user) external view returns (address[] memory);
+    function collateralBalance(address underlying, address user) external view returns (uint256);
 
-    function isManaging(address delegator, address manager) external view returns (bool);
+    function scaledP2PBorrowBalance(address underlying, address user) external view returns (uint256);
 
-    function userNonce(address user) external view returns (uint256);
+    function scaledPoolBorrowBalance(address underlying, address user) external view returns (uint256);
 
-    function defaultIterations() external view returns (Iterations memory);
-
-    function positionsManager() external view returns (address);
-
-    function rewardsManager() external view returns (address);
-
-    function treasuryVault() external view returns (address);
+    function liquidityData(address user) external view returns (Types.LiquidityData memory);
 
     function isClaimRewardsPaused() external view returns (bool);
-
-    function updatedIndexes(address underlying) external view returns (Indexes256 memory);
-
-    function liquidityData(address user) external view returns (LiquidityData memory);
-
-    function getNext(
-        address underlying,
-        Position position,
-        address user
-    ) external view returns (address);
-
-    function getBucketsMask(address underlying, Position position) external view returns (uint256);
 }
 
-interface IMorpho is IMorphoGetter {}
+interface IAaveProtocolDataProvider {
+    function getReserveTokensAddresses(address asset)
+        external
+        view
+        returns (
+            address aTokenAddress,
+            address stableDebtTokenAddress,
+            address variableDebtTokenAddress
+        );
 
-interface IAave {
+    /**
+     * @return unbacked The amount of unbacked tokens
+     * @return accruedToTreasuryScaled The scaled amount of tokens accrued to treasury that is to be minted
+     * @return totalAToken The total supply of the aToken
+     * @return totalStableDebt The total stable debt of the reserve
+     * @return totalVariableDebt The total variable debt of the reserve
+     * @return liquidityRate The liquidity rate of the reserve
+     * @return variableBorrowRate The variable borrow rate of the reserve
+     * @return stableBorrowRate The stable borrow rate of the reserve
+     * @return averageStableBorrowRate The average stable borrow rate of the reserve
+     * @return liquidityIndex The liquidity index of the reserve
+     * @return variableBorrowIndex The variable borrow index of the reserve
+     * @return lastUpdateTimestamp The timestamp of the last update of the reserve
+     */
     function getReserveData(address asset)
         external
         view
         returns (
-            uint256 availableLiquidity,
+            uint256 unbacked,
+            uint256 accruedToTreasuryScaled,
+            uint256 totalAToken,
             uint256 totalStableDebt,
             uint256 totalVariableDebt,
             uint256 liquidityRate,
@@ -262,52 +68,89 @@ interface IAave {
             uint256 variableBorrowIndex,
             uint40 lastUpdateTimestamp
         );
-
-    function getRewardsData(address asset, address reward)
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        );
-
-    function getRewardsList() external view returns (address[] memory);
-
-    function getReserveTokensAddresses(address asset)
-        external
-        view
-        returns (
-            address aTokenAddress,
-            address stableDebtTokenAddress,
-            address variableDebtTokenAddress
-        );
-
-    function getReserveConfigurationData(address asset)
-        external
-        view
-        returns (
-            uint256 decimals,
-            uint256 ltv,
-            uint256 liquidationThreshold,
-            uint256 liquidationBonus,
-            uint256 reserveFactor,
-            bool usageAsCollateralEnabled,
-            bool borrowingEnabled,
-            bool stableBorrowRateEnabled,
-            bool isActive,
-            bool isFrozen
-        );
 }
 
 interface AaveAddressProvider {
-    function getLendingPool() external view returns (address);
+    function getPool() external view returns (address);
 
     function getPriceOracle() external view returns (address);
 }
 
-interface AavePriceOracle {
+interface IPool {
+    struct ReserveConfigurationMap {
+        //bit 0-15: LTV
+        //bit 16-31: Liq. threshold
+        //bit 32-47: Liq. bonus
+        //bit 48-55: Decimals
+        //bit 56: reserve is active
+        //bit 57: reserve is frozen
+        //bit 58: borrowing is enabled
+        //bit 59: stable rate borrowing enabled
+        //bit 60: asset is paused
+        //bit 61: borrowing in isolation mode is enabled
+        //bit 62-63: reserved
+        //bit 64-79: reserve factor
+        //bit 80-115 borrow cap in whole tokens, borrowCap == 0 => no cap
+        //bit 116-151 supply cap in whole tokens, supplyCap == 0 => no cap
+        //bit 152-167 liquidation protocol fee
+        //bit 168-175 eMode category
+        //bit 176-211 unbacked mint cap in whole tokens, unbackedMintCap == 0 => minting disabled
+        //bit 212-251 debt ceiling for isolation mode with (ReserveConfiguration::DEBT_CEILING_DECIMALS) decimals
+        //bit 252-255 unused
+
+        uint256 data;
+    }
+
+    struct ReserveData {
+        //stores the reserve configuration
+        ReserveConfigurationMap configuration;
+        //the liquidity index. Expressed in ray
+        uint128 liquidityIndex;
+        //the current supply rate. Expressed in ray
+        uint128 currentLiquidityRate;
+        //variable borrow index. Expressed in ray
+        uint128 variableBorrowIndex;
+        //the current variable borrow rate. Expressed in ray
+        uint128 currentVariableBorrowRate;
+        //the current stable borrow rate. Expressed in ray
+        uint128 currentStableBorrowRate;
+        //timestamp of last update
+        uint40 lastUpdateTimestamp;
+        //the id of the reserve. Represents the position in the list of the active reserves
+        uint16 id;
+        //aToken address
+        address aTokenAddress;
+        //stableDebtToken address
+        address stableDebtTokenAddress;
+        //variableDebtToken address
+        address variableDebtTokenAddress;
+        //address of the interest rate strategy
+        address interestRateStrategyAddress;
+        //the current treasury balance, scaled
+        uint128 accruedToTreasury;
+        //the outstanding unbacked aTokens minted through the bridging feature
+        uint128 unbacked;
+        //the outstanding debt borrowed against this asset in isolation mode
+        uint128 isolationModeTotalDebt;
+    }
+
+    struct EModeCategory {
+        // each eMode category has a custom ltv and liquidation threshold
+        uint16 ltv;
+        uint16 liquidationThreshold;
+        uint16 liquidationBonus;
+        // each eMode category may or may not have a custom oracle to override the individual assets price oracles
+        address priceSource;
+        string label;
+    }
+
+    /// @inheritdoc IPool
+    function getConfiguration(address asset) external view returns (DataTypes.ReserveConfigurationMap memory);
+
+    function getEModeCategoryData(uint8 id) external view returns (DataTypes.EModeCategory memory);
+}
+
+interface IAavePriceOracle {
     function getAssetPrice(address _asset) external view returns (uint256);
 
     function getAssetsPrices(address[] calldata _assets) external view returns (uint256[] memory);

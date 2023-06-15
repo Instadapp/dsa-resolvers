@@ -8,8 +8,8 @@ import { MarketLib } from "./lib/morpho-dao/morpho-aave-v3/src/libraries/MarketL
 contract MorphoHelpers is DSMath {
     IMorpho internal morpho = IMorpho(0x33333aea097c193e66081E930c33020272b33333);
     AaveAddressProvider addrProvider = AaveAddressProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
-    IAave internal protocolData = IAave(0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3);
-    IAave internal incentiveData = IAave(0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb);
+    IAaveProtocolDataProvider internal protocolData =
+        IAaveProtocolDataProvider(0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3);
     IPool internal pool = IPool(addrProvider.getPool());
 
     /**
@@ -21,49 +21,6 @@ contract MorphoHelpers is DSMath {
 
     function getChainlinkEthFeed() internal pure returns (address) {
         return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
-    }
-
-    struct ReserveData {
-        //stores the reserve configuration
-        ReserveConfigurationMap configuration;
-        //the liquidity index. Expressed in ray
-        uint128 liquidityIndex;
-        //the current supply rate. Expressed in ray
-        uint128 currentLiquidityRate;
-        //variable borrow index. Expressed in ray
-        uint128 variableBorrowIndex;
-        //the current variable borrow rate. Expressed in ray
-        uint128 currentVariableBorrowRate;
-        //the current stable borrow rate. Expressed in ray
-        uint128 currentStableBorrowRate;
-        //timestamp of last update
-        uint40 lastUpdateTimestamp;
-        //the id of the reserve. Represents the position in the list of the active reserves
-        uint16 id;
-        //aToken address
-        address aTokenAddress;
-        //stableDebtToken address
-        address stableDebtTokenAddress;
-        //variableDebtToken address
-        address variableDebtTokenAddress;
-        //address of the interest rate strategy
-        address interestRateStrategyAddress;
-        //the current treasury balance, scaled
-        uint128 accruedToTreasury;
-        //the outstanding unbacked aTokens minted through the bridging feature
-        uint128 unbacked;
-        //the outstanding debt borrowed against this asset in isolation mode
-        uint128 isolationModeTotalDebt;
-    }
-
-    struct EModeCategory {
-        // each eMode category has a custom ltv and liquidation threshold
-        uint16 ltv;
-        uint16 liquidationThreshold;
-        uint16 liquidationBonus;
-        // each eMode category may or may not have a custom oracle to override the individual assets price oracles
-        address priceSource;
-        string label;
     }
 
     struct MorphoData {
@@ -88,7 +45,6 @@ contract MorphoHelpers is DSMath {
     }
 
     struct AaveMarketDetail {
-        uint256 availableLiquidity;
         uint256 liquidityRate;
         uint256 ltv;
         uint256 liquidationThreshold;
@@ -168,7 +124,7 @@ contract MorphoHelpers is DSMath {
         view
         returns (TokenPrice[] memory tokenPrices, uint256 ethPrice)
     {
-        uint256[] memory _tokenPrices = AavePriceOracle(aaveAddressProvider.getPriceOracle()).getAssetsPrices(tokens);
+        uint256[] memory _tokenPrices = IAavePriceOracle(aaveAddressProvider.getPriceOracle()).getAssetsPrices(tokens);
         ethPrice = uint256(ChainLinkInterface(getChainlinkEthFeed()).latestAnswer());
         tokenPrices = new TokenPrice[](_tokenPrices.length);
         for (uint256 i = 0; i < _tokenPrices.length; i++) {
@@ -344,7 +300,7 @@ contract MorphoHelpers is DSMath {
         view
         returns (uint256 poolSupplyRatePerYear, uint256 poolBorrowRatePerYear)
     {
-        ReserveData memory reserve = pool.getReserveData(underlying);
+        IPool.ReserveData memory reserve = pool.getReserveData(underlying);
         poolSupplyRatePerYear = reserve.currentLiquidityRate;
         poolBorrowRatePerYear = reserve.currentVariableBorrowRate;
     }
@@ -698,7 +654,6 @@ contract MorphoHelpers is DSMath {
         uint256 priceInEth,
         uint256 priceInUsd
     ) internal view returns (MarketDetail memory) {
-        // marketData_.config.poolTokenAddress = poolTokenAddress_;
         (
             marketData_.config.aTokenAddress,
             marketData_.config.sTokenAddress,
@@ -711,7 +666,7 @@ contract MorphoHelpers is DSMath {
         marketData_.config.tokenPriceInUsd = priceInUsd;
         marketData_.config.eModeCategory = aaveData.getReserveEModeCategory(underlying);
 
-        marketData_ = getLiquidityData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
+        marketData_ = getLiquidityData(marketData_, marketData_.config.underlyingToken);
 
         return marketData_;
     }
@@ -739,16 +694,18 @@ contract MorphoHelpers is DSMath {
         (, address sToken_, address vToken_) = protocolData.getReserveTokensAddresses(asset);
 
         (
-            marketData_.aaveData.availableLiquidity,
+            ,
+            ,
+            marketData_.aaveData.totalSupplies,
             marketData_.aaveData.totalStableBorrows,
             marketData_.aaveData.totalVariableBorrows,
             marketData_.aaveData.liquidityRate,
             ,
             ,
-            marketData_.lastUpdateTimestamp,
             ,
             ,
-
+            ,
+            marketData_.lastUpdateTimestamp
         ) = protocolData.getReserveData(asset);
 
         marketData_.aaveData.totalSupplies = IAToken(poolTokenAddress_).totalSupply();
@@ -769,7 +726,7 @@ contract MorphoHelpers is DSMath {
     }
 
     // TODO: Return from a main function
-    function getEmodeCategoryData(uint8 id) external view returns (EModeCategory memory emodeCategoryData) {
+    function getEmodeCategoryData(uint8 id) external view returns (IPool.EModeCategory memory emodeCategoryData) {
         emodeCategoryData = pool.getEModeCategoryData(id);
     }
 
