@@ -1,0 +1,9 @@
+[submodule "contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/morpho-utils"]
+	path = contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/morpho-utils
+	url = https://github.com/morpho-dao/morpho-utils
+[submodule "contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/morpho-aave-v3"]
+	path = contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/morpho-aave-v3
+	url = https://github.com/morpho-dao/morpho-aave-v3
+[submodule "contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/aave-v3-core"]
+	path = contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/aave-v3-core
+	url = https://github.com/aave/aave-v3-core
