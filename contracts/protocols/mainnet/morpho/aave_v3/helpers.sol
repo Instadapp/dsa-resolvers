@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.17;
 import "./interfaces.sol";
 import { DSMath } from "../../../../utils/dsmath.sol";
-import { Types } from "@morpho-aave-v3/libraries/Types.sol";
-import { DataTypes } from "@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol";
+import { Types } from "./lib/morpho-dao/morpho-aave-v3/src/libraries/Types.sol";
+import { MarketLib } from "./lib/morpho-dao/morpho-aave-v3/src/libraries/MarketLib.sol";
 
 contract MorphoHelpers is DSMath {
     IMorpho internal morpho = IMorpho(0x33333aea097c193e66081E930c33020272b33333);
     AaveAddressProvider addrProvider = AaveAddressProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
     IAave internal protocolData = IAave(0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3);
     IAave internal incentiveData = IAave(0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb);
+    IPool internal pool = IPool(addrProvider.getPool());
 
     /**
      *@dev Returns ethereum address
@@ -20,6 +21,49 @@ contract MorphoHelpers is DSMath {
 
     function getChainlinkEthFeed() internal pure returns (address) {
         return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    }
+
+    struct ReserveData {
+        //stores the reserve configuration
+        ReserveConfigurationMap configuration;
+        //the liquidity index. Expressed in ray
+        uint128 liquidityIndex;
+        //the current supply rate. Expressed in ray
+        uint128 currentLiquidityRate;
+        //variable borrow index. Expressed in ray
+        uint128 variableBorrowIndex;
+        //the current variable borrow rate. Expressed in ray
+        uint128 currentVariableBorrowRate;
+        //the current stable borrow rate. Expressed in ray
+        uint128 currentStableBorrowRate;
+        //timestamp of last update
+        uint40 lastUpdateTimestamp;
+        //the id of the reserve. Represents the position in the list of the active reserves
+        uint16 id;
+        //aToken address
+        address aTokenAddress;
+        //stableDebtToken address
+        address stableDebtTokenAddress;
+        //variableDebtToken address
+        address variableDebtTokenAddress;
+        //address of the interest rate strategy
+        address interestRateStrategyAddress;
+        //the current treasury balance, scaled
+        uint128 accruedToTreasury;
+        //the outstanding unbacked aTokens minted through the bridging feature
+        uint128 unbacked;
+        //the outstanding debt borrowed against this asset in isolation mode
+        uint128 isolationModeTotalDebt;
+    }
+
+    struct EModeCategory {
+        // each eMode category has a custom ltv and liquidation threshold
+        uint16 ltv;
+        uint16 liquidationThreshold;
+        uint16 liquidationBonus;
+        // each eMode category may or may not have a custom oracle to override the individual assets price oracles
+        address priceSource;
+        string label;
     }
 
     struct MorphoData {
@@ -34,24 +78,20 @@ contract MorphoHelpers is DSMath {
     }
 
     struct TokenConfig {
-        address underlyingToken;
         address aTokenAddress;
         address sDebtTokenAddress;
         address vDebtTokenAddress;
         uint256 decimals;
         uint256 tokenPriceInEth;
         uint256 tokenPriceInUsd;
+        uint256 eModeCategory;
     }
 
     struct AaveMarketDetail {
-        uint256 aEmissionPerSecond;
-        uint256 sEmissionPerSecond;
-        uint256 vEmissionPerSecond;
         uint256 availableLiquidity;
         uint256 liquidityRate;
         uint256 ltv;
         uint256 liquidationThreshold;
-        uint256 liquidationBonus;
         uint256 totalSupplies;
         uint256 totalStableBorrows;
         uint256 totalVariableBorrows;
@@ -59,27 +99,21 @@ contract MorphoHelpers is DSMath {
 
     struct MarketDetail {
         TokenConfig config;
-        uint256 avgSupplyRatePerYear; //in wad
-        uint256 avgBorrowRatePerYear; //in wad
+        uint256 avgSupplyRatePerYear;
+        //in wad
+        uint256 avgBorrowRatePerYear;
+        //in wad
         uint256 p2pSupplyRate;
         uint256 p2pBorrowRate;
         uint256 poolSupplyRate;
         uint256 poolBorrowRate;
         uint256 totalP2PSupply;
         uint256 totalPoolSupply;
+        uint256 totalIdleSupply;
         uint256 totalP2PBorrows;
         uint256 totalPoolBorrows;
-        uint256 p2pSupplyIndex;
-        uint256 p2pBorrowIndex;
-        uint256 poolSupplyIndex;
-        uint256 poolBorrowIndex;
-        uint256 lastUpdateTimestamp;
-        uint256 p2pSupplyDelta; //The total amount of underlying ERC20 tokens supplied through Morpho,
-        //stored as matched peer-to-peer but supplied on the underlying pool
-        uint256 p2pBorrowDelta; //The total amount of underlying ERC20 tokens borrow through Morpho,
-        //stored as matched peer-to-peer but borrowed from the underlying pool
+        uint40 lastUpdateTimestamp;
         uint256 reserveFactor;
-        uint256 p2pIndexCursor; //p2p rate position b/w supply and borrow rate, in bps,
         // 0% = supply rate, 100% = borrow rate
         AaveMarketDetail aaveData;
         Flags flags;
@@ -87,8 +121,15 @@ contract MorphoHelpers is DSMath {
 
     struct Flags {
         bool isCreated;
-        bool isPaused;
-        bool isPartiallyPaused;
+        bool isSupplyPaused;
+        bool isSupplyCollateralPaused;
+        bool isBorrowPaused;
+        bool isRepayPaused;
+        bool isWithdrawPaused;
+        bool isWithdrawCollateralPaused;
+        bool isLiquidateCollateralPaused;
+        bool isLiquidateBorrowPaused;
+        bool isDeprecated;
         bool isP2PDisabled;
         bool isUnderlyingBorrowEnabled;
     }
@@ -98,21 +139,20 @@ contract MorphoHelpers is DSMath {
         uint256 borrowRatePerYear;
         uint256 supplyRatePerYear;
         uint256 totalSupplies;
+        uint256 totalCollateral;
         uint256 totalBorrows;
         uint256 p2pBorrows;
         uint256 p2pSupplies;
         uint256 poolBorrows;
         uint256 poolSupplies;
-        uint256 maxWithdrawable;
-        uint256 maxBorrowable;
     }
 
     struct UserData {
-        uint256 healthFactor; //calculated by updating interest accrue indices for all markets
-        uint256 collateralValue; //calculated by updating interest accrue indices for all markets
-        uint256 debtValue; //calculated by updating interest accrue indices for all markets
-        uint256 maxDebtValue; //calculated by updating interest accrue indices for all markets
-        bool isLiquidatable;
+        uint256 healthFactor;
+        uint256 collateralValue;
+        uint256 supplyValue;
+        uint256 debtValue;
+        uint256 maxDebtValue;
         uint256 liquidationThreshold;
         UserMarketData[] marketData;
         uint256 ethPriceInUsd;
@@ -136,7 +176,11 @@ contract MorphoHelpers is DSMath {
         }
     }
 
-    /// @notice Morpho pool data
+    /************************************|
+    |            SUPPLY DATA             |
+    |___________________________________*/
+
+    /// @notice Morpho data for "Supply". P2P + Pool + Idle
     /// @return p2pSupplyAmount The total supplied amount matched peer-to-peer
     /// subtracting the supply delta and the idle supply on Morpho's contract (in base currency).
     /// @return poolSupplyAmount The total supplied amount on the underlying pool
@@ -161,7 +205,7 @@ contract MorphoHelpers is DSMath {
         for (uint256 i; i < nbMarkets; ++i) {
             address underlying = marketAddresses[i];
 
-            DataTypes.ReserveConfigurationMap memory reserve = pool.getConfiguration(underlying);
+            ReserveConfigurationMap memory reserve = pool.getConfiguration(underlying);
             underlyingPrice = assetPrice(underlying, reserve.getEModeCategory());
             uint256 assetUnit = 10**reserve.getDecimals();
 
@@ -183,7 +227,7 @@ contract MorphoHelpers is DSMath {
     /// @param underlying The address of the underlying asset.
     /// @param user The user to compute the supply rate per year for.
     /// @return supplyRatePerYear The supply rate per year the user is currently experiencing (in ray).
-    function supplyAPR(address underlying, address user) public view returns (uint256 supplyRatePerYear) {
+    function supplyAPRUser(address underlying, address user) public view returns (uint256 supplyRatePerYear) {
         (uint256 balanceInP2P, uint256 balanceOnPool, ) = supplyBalance(underlying, user);
         (uint256 poolSupplyRate, uint256 poolBorrowRate) = poolAPR(underlying);
 
@@ -207,9 +251,9 @@ contract MorphoHelpers is DSMath {
         supplyRatePerYear = Utils.weightedRate(p2pSupplyRate, poolSupplyRate, balanceInP2P, balanceOnPool);
     }
 
+    /// @notice Total amount deposited in supply and in collateral in Morpho.
     /// @notice Computes and returns the total distribution of supply for a given market
     /// using virtually updated indexes.
-    /// @notice It takes into account the amount of token deposit in supply and in collateral in Morpho.
     /// @param underlying The address of the underlying asset to check.
     /// @return p2pSupply The total supplied amount (in underlying) matched peer-to-peer
     /// subtracting the supply delta and the idle supply.
@@ -227,6 +271,7 @@ contract MorphoHelpers is DSMath {
         Types.Market memory market = morpho.market(underlying);
         Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
 
+        // TODO: check https://github.com/morpho-org/morpho-aave-v3/blob/main/src/libraries/MarketLib.sol
         p2pSupply = market.trueP2PSupply(indexes);
         poolSupply = ERC20(market.aToken).balanceOf(address(morpho));
         idleSupply = market.idleSupply;
@@ -238,7 +283,7 @@ contract MorphoHelpers is DSMath {
     /// @return balanceInP2P The balance in peer-to-peer of the user (in underlying).
     /// @return balanceOnPool The balance on pool of the user (in underlying).
     /// @return totalBalance The total balance of the user (in underlying).
-    function supplyBalance(address underlying, address user)
+    function supplyBalanceUser(address underlying, address user)
         public
         view
         returns (
@@ -254,16 +299,74 @@ contract MorphoHelpers is DSMath {
         totalBalance = balanceInP2P + balanceOnPool;
     }
 
+    /************************************|
+    |          COLLATERAL DATA           |
+    |___________________________________*/
+
     /// @notice Returns the total collateral balance in underlying of a given user.
     /// @param user The user to determine balances of.
     /// @return collateralBalance The total collateral balance of the user (in underlying).
-    function totalCollateralBalance(address user) public view returns (uint256 collateralBalance) {
+    function totalCollateralBalanceUser(address user) public view returns (uint256 collateralBalance) {
         address[] memory userCollaterals = morpho.userCollaterals(user);
 
         uint256 length = userCollaterals.length;
 
         for (uint256 i = 0; i < length; i++) {
             collateralBalance += morpho.collateralBalance(userCollaterals[i], user);
+        }
+    }
+
+    /// @notice Returns the supply collateral balance of `user` on the `underlying` market (in underlying).
+    function underlyingCollateralBalanceUser(address underlying, address user)
+        public
+        view
+        returns (uint256 collateralBalance)
+    {
+        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        collateralBalance = morpho.collateralBalance(underlying, user);
+    }
+
+    /// @notice Returns the list of collateral underlyings of `user`.
+    function userCollaterals(address user) public view returns (address[] memory collaterals) {
+        collaterals = morpho.userCollaterals(user);
+    }
+
+    /************************************|
+    |            COMMON DATA             |
+    |___________________________________*/
+
+    /// @dev Computes and returns the underlying pool rates for a specific market.
+    /// @param underlying The underlying pool market address.
+    /// @return poolSupplyRatePerYear The market's pool supply rate per year (in ray).
+    /// @return poolBorrowRatePerYear The market's pool borrow rate per year (in ray).
+    function poolAPR(address underlying)
+        public
+        view
+        returns (uint256 poolSupplyRatePerYear, uint256 poolBorrowRatePerYear)
+    {
+        ReserveData memory reserve = pool.getReserveData(underlying);
+        poolSupplyRatePerYear = reserve.currentLiquidityRate;
+        poolBorrowRatePerYear = reserve.currentVariableBorrowRate;
+    }
+
+    /// @notice Returns the price of a given asset.
+    /// @param asset The address of the asset to get the price of.
+    /// @param reserveEModeCategoryId Aave's associated reserve e-mode category.
+    /// @return price The current price of the asset.
+    function assetPrice(address asset, uint256 reserveEModeCategoryId) public view returns (uint256 price) {
+        address priceSource;
+        if (eModeCategoryId != 0 && reserveEModeCategoryId == eModeCategoryId) {
+            priceSource = pool.getEModeCategoryData(eModeCategoryId).priceSource;
+        }
+
+        IAaveOracle oracle = IAaveOracle(addressesProvider.getPriceOracle());
+
+        if (priceSource != address(0)) {
+            price = oracle.getAssetPrice(priceSource);
+        }
+
+        if (priceSource == address(0) || price == 0) {
+            price = oracle.getAssetPrice(asset);
         }
     }
 
@@ -309,40 +412,9 @@ contract MorphoHelpers is DSMath {
         );
     }
 
-    /// @dev Computes and returns the underlying pool rates for a specific market.
-    /// @param underlying The underlying pool market address.
-    /// @return poolSupplyRatePerYear The market's pool supply rate per year (in ray).
-    /// @return poolBorrowRatePerYear The market's pool borrow rate per year (in ray).
-    function poolAPR(address underlying)
-        public
-        view
-        returns (uint256 poolSupplyRatePerYear, uint256 poolBorrowRatePerYear)
-    {
-        DataTypes.ReserveData memory reserve = pool.getReserveData(underlying);
-        poolSupplyRatePerYear = reserve.currentLiquidityRate;
-        poolBorrowRatePerYear = reserve.currentVariableBorrowRate;
-    }
-
-    /// @notice Returns the price of a given asset.
-    /// @param asset The address of the asset to get the price of.
-    /// @param reserveEModeCategoryId Aave's associated reserve e-mode category.
-    /// @return price The current price of the asset.
-    function assetPrice(address asset, uint256 reserveEModeCategoryId) public view returns (uint256 price) {
-        address priceSource;
-        if (eModeCategoryId != 0 && reserveEModeCategoryId == eModeCategoryId) {
-            priceSource = pool.getEModeCategoryData(eModeCategoryId).priceSource;
-        }
-
-        IAaveOracle oracle = IAaveOracle(addressesProvider.getPriceOracle());
-
-        if (priceSource != address(0)) {
-            price = oracle.getAssetPrice(priceSource);
-        }
-
-        if (priceSource == address(0) || price == 0) {
-            price = oracle.getAssetPrice(asset);
-        }
-    }
+    /************************************|
+    |            BORROW DATA             |
+    |___________________________________*/
 
     /// @notice Computes and returns the total distribution of borrows through Morpho
     /// using virtually updated indexes.
@@ -368,7 +440,7 @@ contract MorphoHelpers is DSMath {
         for (uint256 i; i < nbMarkets; ++i) {
             address underlying = marketAddresses[i];
 
-            DataTypes.ReserveConfigurationMap memory reserve = pool.getConfiguration(underlying);
+            ReserveConfigurationMap memory reserve = pool.getConfiguration(underlying);
             underlyingPrice = assetPrice(underlying, reserve.getEModeCategory());
             uint256 assetUnit = 10**reserve.getDecimals();
 
@@ -381,11 +453,53 @@ contract MorphoHelpers is DSMath {
         totalBorrowAmount = p2pBorrowAmount + poolBorrowAmount;
     }
 
+    /// @notice Computes and returns the current borrow rate per year experienced on average on a given market.
+    /// @param underlying The address of the underlying asset.
+    /// @return avgBorrowRatePerYear The market's average borrow rate per year (in ray).
+    /// @return p2pBorrowRatePerYear The market's p2p borrow rate per year (in ray).
+    ///@return poolBorrowRatePerYear The market's pool borrow rate per year (in ray).
+    function avgBorrowAPR(address underlying)
+        public
+        view
+        returns (
+            uint256 avgBorrowRatePerYear,
+            uint256 p2pBorrowRatePerYear,
+            uint256 poolBorrowRatePerYear
+        )
+    {
+        Types.Market memory market = morpho.market(underlying);
+        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+
+        uint256 poolSupplyRatePerYear;
+        (poolSupplyRatePerYear, poolBorrowRatePerYear) = poolAPR(underlying);
+
+        p2pBorrowRatePerYear = Utils.p2pBorrowAPR(
+            Utils.P2PRateComputeParams({
+                poolSupplyRatePerYear: poolSupplyRatePerYear,
+                poolBorrowRatePerYear: poolBorrowRatePerYear,
+                poolIndex: indexes.borrow.poolIndex,
+                p2pIndex: indexes.borrow.p2pIndex,
+                proportionIdle: 0,
+                p2pDelta: 0, // Simpler to account for the delta in the weighted avg.
+                p2pTotal: 0,
+                p2pIndexCursor: market.p2pIndexCursor,
+                reserveFactor: market.reserveFactor
+            })
+        );
+
+        avgBorrowRatePerYear = Utils.weightedRate(
+            p2pBorrowRatePerYear,
+            poolBorrowRatePerYear,
+            market.trueP2PBorrow(indexes),
+            ERC20(market.variableDebtToken).balanceOf(address(morpho))
+        );
+    }
+
     /// @notice Returns the borrow rate per year a given user is currently experiencing on a given market.
     /// @param underlying The address of the underlying asset.
     /// @param user The user to compute the borrow rate per year for.
     /// @return borrowRatePerYear The borrow rate per year the user is currently experiencing (in ray).
-    function borrowAPR(address underlying, address user) public view returns (uint256 borrowRatePerYear) {
+    function borrowAPRUser(address underlying, address user) public view returns (uint256 borrowRatePerYear) {
         (uint256 balanceInP2P, uint256 balanceOnPool, ) = borrowBalance(underlying, user);
         (uint256 poolSupplyRate, uint256 poolBorrowRate) = poolAPR(underlying);
 
@@ -470,7 +584,7 @@ contract MorphoHelpers is DSMath {
     /// @return balanceInP2P The balance in peer-to-peer of the user (in underlying).
     /// @return balanceOnPool The balance on pool of the user (in underlying).
     /// @return totalBalance The total balance of the user (in underlying).
-    function borrowBalance(address underlying, address user)
+    function borrowBalanceUser(address underlying, address user)
         public
         view
         returns (
@@ -486,41 +600,6 @@ contract MorphoHelpers is DSMath {
         totalBalance = balanceInP2P + balanceOnPool;
     }
 
-    /// @dev Computes and returns the underlying pool rates for a specific market.
-    /// @param underlying The underlying pool market address.
-    /// @return poolSupplyRatePerYear The market's pool supply rate per year (in ray).
-    /// @return poolBorrowRatePerYear The market's pool borrow rate per year (in ray).
-    function poolAPR(address underlying)
-        public
-        view
-        returns (uint256 poolSupplyRatePerYear, uint256 poolBorrowRatePerYear)
-    {
-        DataTypes.ReserveData memory reserve = pool.getReserveData(underlying);
-        poolSupplyRatePerYear = reserve.currentLiquidityRate;
-        poolBorrowRatePerYear = reserve.currentVariableBorrowRate;
-    }
-
-    /// @notice Returns the price of a given asset.
-    /// @param asset The address of the asset to get the price of.
-    /// @param reserveEModeCategoryId Aave's associated reserve e-mode category.
-    /// @return price The current price of the asset.
-    function assetPrice(address asset, uint256 reserveEModeCategoryId) public view returns (uint256 price) {
-        address priceSource;
-        if (eModeCategoryId != 0 && reserveEModeCategoryId == eModeCategoryId) {
-            priceSource = pool.getEModeCategoryData(eModeCategoryId).priceSource;
-        }
-
-        IAaveOracle oracle = IAaveOracle(addressesProvider.getPriceOracle());
-
-        if (priceSource != address(0)) {
-            price = oracle.getAssetPrice(priceSource);
-        }
-
-        if (priceSource == address(0) || price == 0) {
-            price = oracle.getAssetPrice(asset);
-        }
-    }
-
     /// @notice Returns the health factor of a given user.
     /// @param user The user of whom to get the health factor.
     /// @return The health factor of the given user (in wad).
@@ -534,6 +613,7 @@ contract MorphoHelpers is DSMath {
         uint256 length_ = tokens_.length;
 
         UserMarketData[] memory marketData_ = new UserMarketData[](length_);
+
         (TokenPrice[] memory tokenPrices, uint256 ethPrice) = getTokensPrices(addrProvider, tokens_);
 
         for (uint256 i = 0; i < length_; i++) {
@@ -549,8 +629,9 @@ contract MorphoHelpers is DSMath {
 
         userData_.healthFactor = healthFactor(user);
 
-        // TODO: Factor in supply and collateral values everywhere
         userData_.collateralValue = totalCollateralBalance(user);
+
+        userData_.supplyValue = totalSupplyBalance(user);
 
         Types.LiquidityData memory liquidityData = morpho.liquidityData(user);
 
@@ -560,6 +641,8 @@ contract MorphoHelpers is DSMath {
         userData_.maxDebtValue = liquidityData.maxDebt;
         // The debt value (in base currency).
         userData_.debtValue = liquidityData.debt;
+
+        userData_.ethPriceInUsd = uint256(ChainLinkInterface(getChainlinkEthFeed()).latestAnswer());
     }
 
     function getUserMarketData(
@@ -568,31 +651,30 @@ contract MorphoHelpers is DSMath {
         uint256 priceInEth,
         uint256 priceInUsd
     ) internal view returns (UserMarketData memory userMarketData_) {
-        userMarketData_.marketData = getMarketData(poolTokenAddress, priceInEth, priceInUsd);
-
-        (userMarketData_.p2pBorrows, userMarketData_.poolBorrows, userMarketData_.totalBorrows) = borrowBalance(
-            underlying,
-            user
-        );
-
-        (userMarketData_.p2pSupplies, userMarketData_.poolSupplies, userMarketData_.totalSupplies) = supplyBalance(
-            underlying,
-            user
-        );
+        userMarketData_.marketData = getMarketData(underlying, priceInEth, priceInUsd);
 
         // With combined P2P and pool balance
-        userMarketData_.borrowRatePerYear = borrowAPR(underlying, user);
-        userMarketData_.supplyRatePerYear = supplyAPR(underlying, user);
+        userMarketData_.borrowRatePerYear = borrowAPRUser(underlying, user);
+        userMarketData_.supplyRatePerYear = supplyAPRUser(underlying, user);
+
+        (userMarketData_.p2pSupplies, userMarketData_.poolSupplies, userMarketData_.totalSupplies) = supplyBalanceUser(
+            underlying,
+            user
+        );
+
+        userMarketData_.totalCollateral = underlyingCollateralBalanceUser(underlying, user);
+
+        (userMarketData_.p2pBorrows, userMarketData_.poolBorrows, userMarketData_.totalBorrows) = borrowBalanceUser(
+            underlying,
+            user
+        );
     }
 
     function getMarketData(
-        address poolTokenAddress,
         address underlying,
         uint256 priceInEth,
         uint256 priceInUsd
     ) internal view returns (MarketDetail memory marketData_) {
-        marketData_ = getAaveMarketData(marketData_, poolTokenAddress, priceInEth, priceInUsd);
-
         (marketData_.totalP2PBorrows, marketData_.totalPoolBorrows) = marketBorrow(underlying);
 
         (marketData_.avgBorrowRatePerYear, marketData_.p2pBorrowRate, marketData_.poolBorrowRate) = avgBorrowAPR(
@@ -606,36 +688,89 @@ contract MorphoHelpers is DSMath {
         (marketData_.avgSupplyRatePerYear, marketData_.p2pSupplyRate, marketData_.poolSupplyRate) = avgSupplyAPR(
             underlying
         );
+
+        marketData_ = getAaveMarketData(marketData_, underlying, priceInEth, priceInUsd);
     }
 
     function getAaveMarketData(
-        // TODO: update
         MarketDetail memory marketData_,
-        address poolTokenAddress_,
+        address underlying,
         uint256 priceInEth,
         uint256 priceInUsd
     ) internal view returns (MarketDetail memory) {
-        marketData_.config.poolTokenAddress = poolTokenAddress_;
-        marketData_.config.tokenPriceInEth = priceInEth; // TODO: Update prices
-        marketData_.config.tokenPriceInUsd = priceInUsd;
+        // marketData_.config.poolTokenAddress = poolTokenAddress_;
         (
-            marketData_.config.underlyingToken,
-            marketData_.flags.isCreated,
-            marketData_.flags.isP2PDisabled,
-            marketData_.flags.isPaused,
-            marketData_.flags.isPartiallyPaused,
-            ,
-            ,
-            ,
-            ,
-            ,
-            marketData_.config.decimals
-        ) = aavelens.getMarketConfiguration(poolTokenAddress_);
+            marketData_.config.aTokenAddress,
+            marketData_.config.sTokenAddress,
+            marketData_.config.vTokenAddress
+        ) = aaveData.getReserveTokensAddresses(underlying);
 
-        marketData_ = getLiquidatyData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
-        marketData_ = getAaveHelperData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
+        marketData_.config.decimals = IERC20(marketData_.config.aTokenAddress).decimals();
+
+        marketData_.config.tokenPriceInEth = priceInEth;
+        marketData_.config.tokenPriceInUsd = priceInUsd;
+        marketData_.config.eModeCategory = aaveData.getReserveEModeCategory(underlying);
+
+        marketData_ = getLiquidityData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
 
         return marketData_;
+    }
+
+    function getLiquidityData(MarketDetail memory marketData_, address asset)
+        internal
+        view
+        returns (MarketDetail memory)
+    {
+        Types.Market market = morpho.market(underlying);
+
+        (
+            ,
+            marketData_.aaveData.ltv,
+            marketData_.aaveData.liquidationThreshold,
+            ,
+            marketData_.reserveFactor,
+            ,
+            marketData_.flags.isUnderlyingBorrowEnabled,
+            ,
+            ,
+
+        ) = aaveData.getReserveConfigurationData(token);
+
+        (, address sToken_, address vToken_) = protocolData.getReserveTokensAddresses(asset);
+
+        (
+            marketData_.aaveData.availableLiquidity,
+            marketData_.aaveData.totalStableBorrows,
+            marketData_.aaveData.totalVariableBorrows,
+            marketData_.aaveData.liquidityRate,
+            ,
+            ,
+            marketData_.lastUpdateTimestamp,
+            ,
+            ,
+
+        ) = protocolData.getReserveData(asset);
+
+        marketData_.aaveData.totalSupplies = IAToken(poolTokenAddress_).totalSupply();
+
+        marketData_.flags.isCreated = isCreated(market);
+        marketData_.flags.isSupplyPaused = isSupplyPaused(market);
+        marketData_.flags.isSupplyCollateralPaused = isSupplyCollateralPaused(market);
+        marketData_.flags.isBorrowPaused = isBorrowPaused(market);
+        marketData_.flags.isRepayPaused = isRepayPaused(market);
+        marketData_.flags.isWithdrawPaused = isWithdrawPaused(market);
+        marketData_.flags.isWithdrawCollateralPaused = isWithdrawCollateralPaused(market);
+        marketData_.flags.isLiquidateCollateralPaused = isLiquidateCollateralPaused(market);
+        marketData_.flags.isLiquidateBorrowPaused = isLiquidateBorrowPaused(market);
+        marketData_.flags.isDeprecated = isDeprecated(market);
+        marketData_.flags.isP2PDisabled = isP2PDisabled(market);
+
+        return marketData_;
+    }
+
+    // TODO: Return from a main function
+    function getEmodeCategoryData(uint8 id) external view returns (EModeCategory memory emodeCategoryData) {
+        emodeCategoryData = pool.getEModeCategoryData(id);
     }
 
     function getMorphoData() internal view returns (MorphoData memory morphoData_) {
