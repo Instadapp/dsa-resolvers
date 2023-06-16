@@ -4,6 +4,7 @@ import "./interfaces.sol";
 import { DSMath } from "../../../../utils/dsmath.sol";
 import { Types } from "./library/morpho-aave-v3/src/libraries/Types.sol";
 import { MarketLib } from "./library/morpho-aave-v3/src/libraries/MarketLib.sol";
+import { Utils } from "./library/Utils.sol";
 
 contract MorphoHelpers is DSMath {
     IMorpho internal morpho = IMorpho(0x33333aea097c193e66081E930c33020272b33333);

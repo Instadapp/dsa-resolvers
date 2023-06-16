@@ -1,6 +1,3 @@
 [submodule "contracts/protocols/mainnet/morpho/aave_v3/library/morpho-aave-v3"]
 	path = contracts/protocols/mainnet/morpho/aave_v3/library/morpho-aave-v3
 	url = https://github.com/morpho-org/morpho-aave-v3.git
-[submodule "contracts/protocols/mainnet/morpho/aave_v3/library/morpho-snippets"]
-	path = contracts/protocols/mainnet/morpho/aave_v3/library/morpho-snippets
-	url = https://github.com/morpho-org/morpho-snippets.git
