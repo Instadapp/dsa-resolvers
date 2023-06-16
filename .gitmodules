@@ -7,3 +7,6 @@
 [submodule "contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/aave-v3-core"]
 	path = contracts/protocols/mainnet/morpho/aave_v3/lib/morpho-dao/aave-v3-core
 	url = https://github.com/aave/aave-v3-core
+[submodule "morpho-utils"]
+	path = morpho-utils
+	url = https://github.com/morpho-org/morpho-utils.git
