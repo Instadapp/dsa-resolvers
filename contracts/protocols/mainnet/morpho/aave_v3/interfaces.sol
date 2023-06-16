@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { Types } from "./lib/morpho-dao/morpho-aave-v3/src/libraries/Types.sol";
+import { Types } from "./library/morpho-aave-v3/src/libraries/Types.sol";
 
 interface IMorpho {
     function marketsCreated() external view returns (address[] memory);
