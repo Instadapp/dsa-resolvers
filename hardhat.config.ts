@@ -3,6 +3,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@nomiclabs/hardhat-etherscan";
+import "@nomicfoundation/hardhat-foundry";
 
 import "./tasks/accounts";
 import "./tasks/clean";
@@ -13,7 +14,6 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
-import Web3 from "web3";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
