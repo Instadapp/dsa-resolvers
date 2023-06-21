@@ -185,7 +185,7 @@ contract MorphoHelpers is DSMath {
     /// @param user The user to compute the supply rate per year for.
     /// @return supplyRatePerYear The supply rate per year the user is currently experiencing (in ray).
     function supplyAPRUser(address underlying, address user) public view returns (uint256 supplyRatePerYear) {
-        (uint256 balanceInP2P, uint256 balanceOnPool, ) = supplyBalance(underlying, user);
+        (uint256 balanceInP2P, uint256 balanceOnPool, ) = supplyBalanceUser(underlying, user);
         (uint256 poolSupplyRate, uint256 poolBorrowRate) = poolAPR(underlying);
 
         Types.Market memory market = morpho.market(underlying);
@@ -254,6 +254,22 @@ contract MorphoHelpers is DSMath {
         balanceInP2P = morpho.scaledP2PSupplyBalance(underlying, user).rayMulDown(indexes.supply.p2pIndex);
         balanceOnPool = morpho.scaledPoolSupplyBalance(underlying, user).rayMulDown(indexes.supply.poolIndex);
         totalBalance = balanceInP2P + balanceOnPool;
+    }
+
+    /// @notice Returns the total supply balance in underlying of a given user.
+    /// @param user The user to determine balances of.
+    /// @return supplyBalance The total supply balance of the user (in underlying).
+    function totalSupplyBalanceUser(address[] calldata tokens, address user)
+        public
+        view
+        returns (uint256 supplyBalance)
+    {
+        uint256 length = tokens.length;
+
+        for (uint256 i = 0; i < length; i++) {
+            (, , uint256 totalBalance_) = supplyBalanceUser(tokens[i], user);
+            supplyBalance += totalBalance_;
+        }
     }
 
     /************************************|
@@ -457,7 +473,7 @@ contract MorphoHelpers is DSMath {
     /// @param user The user to compute the borrow rate per year for.
     /// @return borrowRatePerYear The borrow rate per year the user is currently experiencing (in ray).
     function borrowAPRUser(address underlying, address user) public view returns (uint256 borrowRatePerYear) {
-        (uint256 balanceInP2P, uint256 balanceOnPool, ) = borrowBalance(underlying, user);
+        (uint256 balanceInP2P, uint256 balanceOnPool, ) = borrowBalanceUser(underlying, user);
         (uint256 poolSupplyRate, uint256 poolBorrowRate) = poolAPR(underlying);
 
         Types.Market memory market = morpho.market(underlying);
@@ -574,21 +590,16 @@ contract MorphoHelpers is DSMath {
         (TokenPrice[] memory tokenPrices, ) = getTokensPrices(addrProvider, tokens_);
 
         for (uint256 i = 0; i < length_; i++) {
-            marketData_[i] = getUserMarketData(
-                user,
-                underlyingToken[i],
-                tokenPrices[i].priceInEth,
-                tokenPrices[i].priceInUsd
-            );
+            marketData_[i] = getUserMarketData(user, tokens_[i], tokenPrices[i].priceInEth, tokenPrices[i].priceInUsd);
+
+            userData_.totalSuppliedValue += marketData_[i].totalSuppliedValue;
         }
 
         userData_.marketData = marketData_;
 
         userData_.healthFactor = healthFactor(user);
 
-        userData_.collateralValue = totalCollateralBalance(user);
-
-        userData_.supplyValue = totalSupplyBalance(user);
+        userData_.collateralValue = totalCollateralBalanceUser(user);
 
         Types.LiquidityData memory liquidityData = morpho.liquidityData(user);
 
@@ -607,7 +618,7 @@ contract MorphoHelpers is DSMath {
         address underlying,
         uint256 priceInEth,
         uint256 priceInUsd
-    ) internal view returns (UserMarketData memory userMarketData_) {
+    ) internal view returns (UserMarketData memory userMarketData_, uint256 totalSuppliedValue) {
         userMarketData_.marketData = getMarketData(underlying, priceInEth, priceInUsd);
 
         // With combined P2P and pool balance
