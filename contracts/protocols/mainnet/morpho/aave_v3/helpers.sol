@@ -652,7 +652,7 @@ contract MorphoHelpers is DSMath {
         marketData_.config.tokenPriceInUsd = priceInUsd;
         marketData_.config.eModeCategory = protocolData.getReserveEModeCategory(underlying);
 
-        marketData_ = getLiquidityData(marketData_, marketData_.config.aTokenAddress);
+        marketData_ = getLiquidityData(marketData_, underlying);
 
         return marketData_;
     }
