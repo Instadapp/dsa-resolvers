@@ -15,8 +15,8 @@ import { PercentageMath } from "./math/PercentageMath.sol";
 
 // import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-// import {DataTypes} from "@aave-v3-core/protocol/libraries/types/DataTypes.sol";
-// import {ReserveConfiguration} from "@aave-v3-core/protocol/libraries/configuration/ReserveConfiguration.sol";
+import { DataTypes } from "./aave-v3-core/protocol/libraries/types/DataTypes.sol";
+import { ReserveConfiguration } from "./aave-v3-core/protocol/libraries/configration/ReserveConfiguration.sol";
 
 /// @title MarketLib
 /// @author Morpho Labs
@@ -29,60 +29,60 @@ library MarketLib {
     using MarketLib for Types.Market;
 
     // using ReserveDataLib for DataTypes.ReserveData;
-    // using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
     /// @notice Returns whether the `market` is created or not.
-    function isCreated(Types.Market storage market) internal view returns (bool) {
+    function isCreated(Types.Market memory market) internal pure returns (bool) {
         return market.aToken != address(0);
     }
 
     /// @notice Returns whether supply is paused on `market` or not.
-    function isSupplyPaused(Types.Market storage market) internal view returns (bool) {
+    function isSupplyPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isSupplyPaused;
     }
 
     /// @notice Returns whether supply collateral is paused on `market` or not.
-    function isSupplyCollateralPaused(Types.Market storage market) internal view returns (bool) {
+    function isSupplyCollateralPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isSupplyCollateralPaused;
     }
 
     /// @notice Returns whether borrow is paused on `market` or not.
-    function isBorrowPaused(Types.Market storage market) internal view returns (bool) {
+    function isBorrowPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isBorrowPaused;
     }
 
     /// @notice Returns whether repay is paused on `market` or not.
-    function isRepayPaused(Types.Market storage market) internal view returns (bool) {
+    function isRepayPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isRepayPaused;
     }
 
     /// @notice Returns whether withdraw is paused on `market` or not.
-    function isWithdrawPaused(Types.Market storage market) internal view returns (bool) {
+    function isWithdrawPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isWithdrawPaused;
     }
 
     /// @notice Returns whether withdraw collateral is paused on `market` or not.
-    function isWithdrawCollateralPaused(Types.Market storage market) internal view returns (bool) {
+    function isWithdrawCollateralPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isWithdrawCollateralPaused;
     }
 
     /// @notice Returns whether liquidate collateral is paused on `market` or not.
-    function isLiquidateCollateralPaused(Types.Market storage market) internal view returns (bool) {
+    function isLiquidateCollateralPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isLiquidateCollateralPaused;
     }
 
     /// @notice Returns whether liquidate borrow is paused on `market` or not.
-    function isLiquidateBorrowPaused(Types.Market storage market) internal view returns (bool) {
+    function isLiquidateBorrowPaused(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isLiquidateBorrowPaused;
     }
 
     /// @notice Returns whether the `market` is deprecated or not.
-    function isDeprecated(Types.Market storage market) internal view returns (bool) {
+    function isDeprecated(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isDeprecated;
     }
 
     /// @notice Returns whether the peer-to-peer is disabled on `market` or not.
-    function isP2PDisabled(Types.Market storage market) internal view returns (bool) {
+    function isP2PDisabled(Types.Market memory market) internal pure returns (bool) {
         return market.pauseStatuses.isP2PDisabled;
     }
 
@@ -222,7 +222,7 @@ library MarketLib {
     // }
 
     /// @notice Returns the proportion of idle supply in `market` over the total peer-to-peer amount in supply.
-    function getProportionIdle(Types.Market storage market) internal view returns (uint256) {
+    function getProportionIdle(Types.Market memory market) internal pure returns (uint256) {
         uint256 idleSupply = market.idleSupply;
         if (idleSupply == 0) return 0;
 
@@ -292,12 +292,12 @@ library MarketLib {
     /// @notice Calculates the total quantity of underlyings truly supplied peer-to-peer on the given market.
     /// @param indexes The current indexes.
     /// @return The total peer-to-peer supply (total peer-to-peer supply - supply delta - idle supply).
-    function trueP2PSupply(Types.Market storage market, Types.Indexes256 memory indexes)
+    function trueP2PSupply(Types.Market memory market, Types.Indexes256 memory indexes)
         internal
-        view
+        pure
         returns (uint256)
     {
-        Types.MarketSideDelta storage supplyDelta = market.deltas.supply;
+        Types.MarketSideDelta memory supplyDelta = market.deltas.supply;
         return
             supplyDelta
                 .scaledP2PTotal
@@ -309,12 +309,12 @@ library MarketLib {
     /// @notice Calculates the total quantity of underlyings truly borrowed peer-to-peer on the given market.
     /// @param indexes The current indexes.
     /// @return The total peer-to-peer borrow (total peer-to-peer borrow - borrow delta).
-    function trueP2PBorrow(Types.Market storage market, Types.Indexes256 memory indexes)
+    function trueP2PBorrow(Types.Market memory market, Types.Indexes256 memory indexes)
         internal
-        view
+        pure
         returns (uint256)
     {
-        Types.MarketSideDelta storage borrowDelta = market.deltas.borrow;
+        Types.MarketSideDelta memory borrowDelta = market.deltas.borrow;
         return
             borrowDelta.scaledP2PTotal.rayMul(indexes.borrow.p2pIndex).zeroFloorSub(
                 borrowDelta.scaledDelta.rayMul(indexes.borrow.poolIndex)

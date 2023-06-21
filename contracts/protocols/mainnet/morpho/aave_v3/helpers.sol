@@ -8,11 +8,13 @@ import { Utils } from "./library/Utils.sol";
 import { DataTypes } from "./library/aave-v3-core/protocol/libraries/types/DataTypes.sol";
 import { Math } from "./library/math/Math.sol";
 import { WadRayMath } from "./library/math/WadRayMath.sol";
+import { ReserveConfiguration } from "./library/aave-v3-core/protocol/libraries/configration/ReserveConfiguration.sol";
 
 contract MorphoHelpers is DSMath {
     using MarketLib for Types.Market;
     using Math for uint256;
     using WadRayMath for uint256;
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
     IMorpho internal morpho = IMorpho(0x33333aea097c193e66081E930c33020272b33333);
     AaveAddressProvider addrProvider = AaveAddressProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
@@ -25,6 +27,10 @@ contract MorphoHelpers is DSMath {
      */
     function getEthAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    }
+
+    function getAWethAddr() internal pure returns (address) {
+        return 0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
     }
 
     function getChainlinkEthFeed() internal pure returns (address) {
@@ -117,6 +123,7 @@ contract MorphoHelpers is DSMath {
         uint256 supplyValue;
         uint256 debtValue;
         uint256 maxDebtValue;
+        uint256 maxBorrowable;
         uint256 liquidationThreshold;
         UserMarketData[] marketData;
         uint256 ethPriceInUsd;
@@ -434,48 +441,6 @@ contract MorphoHelpers is DSMath {
         totalBorrowAmount = p2pBorrowAmount + poolBorrowAmount;
     }
 
-    /// @notice Computes and returns the current borrow rate per year experienced on average on a given market.
-    /// @param underlying The address of the underlying asset.
-    /// @return avgBorrowRatePerYear The market's average borrow rate per year (in ray).
-    /// @return p2pBorrowRatePerYear The market's p2p borrow rate per year (in ray).
-    ///@return poolBorrowRatePerYear The market's pool borrow rate per year (in ray).
-    function avgBorrowAPR(address underlying)
-        public
-        view
-        returns (
-            uint256 avgBorrowRatePerYear,
-            uint256 p2pBorrowRatePerYear,
-            uint256 poolBorrowRatePerYear
-        )
-    {
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
-
-        uint256 poolSupplyRatePerYear;
-        (poolSupplyRatePerYear, poolBorrowRatePerYear) = poolAPR(underlying);
-
-        p2pBorrowRatePerYear = Utils.p2pBorrowAPR(
-            Utils.P2PRateComputeParams({
-                poolSupplyRatePerYear: poolSupplyRatePerYear,
-                poolBorrowRatePerYear: poolBorrowRatePerYear,
-                poolIndex: indexes.borrow.poolIndex,
-                p2pIndex: indexes.borrow.p2pIndex,
-                proportionIdle: 0,
-                p2pDelta: 0, // Simpler to account for the delta in the weighted avg.
-                p2pTotal: 0,
-                p2pIndexCursor: market.p2pIndexCursor,
-                reserveFactor: market.reserveFactor
-            })
-        );
-
-        avgBorrowRatePerYear = Utils.weightedRate(
-            p2pBorrowRatePerYear,
-            poolBorrowRatePerYear,
-            market.trueP2PBorrow(indexes),
-            IERC20(market.variableDebtToken).balanceOf(address(morpho))
-        );
-    }
-
     /// @notice Returns the borrow rate per year a given user is currently experiencing on a given market.
     /// @param underlying The address of the underlying asset.
     /// @param user The user to compute the borrow rate per year for.
@@ -677,8 +642,8 @@ contract MorphoHelpers is DSMath {
     ) internal view returns (MarketDetail memory) {
         (
             marketData_.config.aTokenAddress,
-            marketData_.config.sTokenAddress,
-            marketData_.config.vTokenAddress
+            marketData_.config.sDebtTokenAddress,
+            marketData_.config.vDebtTokenAddress
         ) = protocolData.getReserveTokensAddresses(underlying);
 
         marketData_.config.decimals = IERC20(marketData_.config.aTokenAddress).decimals();
@@ -687,7 +652,7 @@ contract MorphoHelpers is DSMath {
         marketData_.config.tokenPriceInUsd = priceInUsd;
         marketData_.config.eModeCategory = protocolData.getReserveEModeCategory(underlying);
 
-        marketData_ = getLiquidityData(marketData_, marketData_.config.underlyingToken);
+        marketData_ = getLiquidityData(marketData_, marketData_.config.aTokenAddress);
 
         return marketData_;
     }
@@ -697,7 +662,7 @@ contract MorphoHelpers is DSMath {
         view
         returns (MarketDetail memory)
     {
-        Types.Market market = morpho.market(asset);
+        Types.Market memory market = morpho.market(asset);
 
         (
             ,
@@ -768,5 +733,9 @@ contract MorphoHelpers is DSMath {
         morphoData_.isClaimRewardsPausedAave = morpho.isClaimRewardsPaused();
 
         (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = totalBorrow();
+    }
+
+    function getUserMarkets() internal view returns (address[] memory markets_) {
+        markets_ = morpho.marketsCreated();
     }
 }

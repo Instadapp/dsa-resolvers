@@ -15,7 +15,7 @@ contract MorphoResolver is MorphoHelpers {
      *@return positionData_ Overall position details of the user - balances, rewards, collaterals, market details.
      */
     function getPositionAll(address user) public view returns (UserData memory positionData_) {
-        address[] memory userMarkets_ = getUserMarkets(user);
+        address[] memory userMarkets_ = getUserMarkets();
         positionData_ = getUserData(user, userMarkets_);
     }
 
@@ -48,12 +48,8 @@ contract MorphoResolver is MorphoHelpers {
         morphoData_ = getMorphoData();
     }
 
-    /**
-     *@dev get E-Mode configuration data.
-     *@return EModeCategory Struct containing e-mode details: ltv, threshold, bonus, price source, flag.
-     */
     function getEModeData(uint8 id) public view returns (DataTypes.EModeCategory memory emodeCategoryData) {
-        emodeData = getEmodeCategoryData(id);
+        emodeCategoryData = getEmodeCategoryData(id);
     }
 }
 
