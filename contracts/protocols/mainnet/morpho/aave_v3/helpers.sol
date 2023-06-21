@@ -7,11 +7,12 @@ import { MarketLib } from "./library/morpho-aave-v3/src/libraries/MarketLib.sol"
 import { Utils } from "./library/Utils.sol";
 
 contract MorphoHelpers is DSMath {
-    IMorpho internal morpho = IMorpho(0x33333aea097c193e66081E930c33020272b33333);
-    AaveAddressProvider addrProvider = AaveAddressProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
-    IAaveProtocolDataProvider internal protocolData =
+    IMorpho internal constant MORPHO = IMorpho(0x33333aea097c193e66081E930c33020272b33333);
+    AaveAddressProvider internal constant ADDRESS_PROVIDER =
+        AaveAddressProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
+    IAaveProtocolDataProvider internal constant PROTOCOL_DATA =
         IAaveProtocolDataProvider(0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3);
-    IPool internal pool = IPool(addrProvider.getPool());
+    IPool internal pool = IPool(ADDRESS_PROVIDER.getPool());
 
     /**
      *@dev Returns ethereum address
@@ -154,7 +155,7 @@ contract MorphoHelpers is DSMath {
             uint256 totalSupplyAmount
         )
     {
-        address[] memory marketAddresses = morpho.marketsCreated();
+        address[] memory marketAddresses = MORPHO.marketsCreated();
 
         uint256 underlyingPrice;
         uint256 nbMarkets = marketAddresses.length;
@@ -188,8 +189,8 @@ contract MorphoHelpers is DSMath {
         (uint256 balanceInP2P, uint256 balanceOnPool, ) = supplyBalanceUser(underlying, user);
         (uint256 poolSupplyRate, uint256 poolBorrowRate) = poolAPR(underlying);
 
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Market memory market = MORPHO.market(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
         uint256 p2pSupplyRate = Utils.p2pSupplyAPR(
             Utils.P2PRateComputeParams({
@@ -225,12 +226,12 @@ contract MorphoHelpers is DSMath {
             uint256 idleSupply
         )
     {
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Market memory market = MORPHO.market(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
         // TODO: check https://github.com/morpho-org/morpho-aave-v3/blob/main/src/libraries/MarketLib.sol
         p2pSupply = market.trueP2PSupply(indexes);
-        poolSupply = ERC20(market.aToken).balanceOf(address(morpho));
+        poolSupply = ERC20(market.aToken).balanceOf(address(MORPHO));
         idleSupply = market.idleSupply;
     }
 
@@ -249,10 +250,10 @@ contract MorphoHelpers is DSMath {
             uint256 totalBalance
         )
     {
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
-        balanceInP2P = morpho.scaledP2PSupplyBalance(underlying, user).rayMulDown(indexes.supply.p2pIndex);
-        balanceOnPool = morpho.scaledPoolSupplyBalance(underlying, user).rayMulDown(indexes.supply.poolIndex);
+        balanceInP2P = MORPHO.scaledP2PSupplyBalance(underlying, user).rayMulDown(indexes.supply.p2pIndex);
+        balanceOnPool = MORPHO.scaledPoolSupplyBalance(underlying, user).rayMulDown(indexes.supply.poolIndex);
         totalBalance = balanceInP2P + balanceOnPool;
     }
 
@@ -280,12 +281,12 @@ contract MorphoHelpers is DSMath {
     /// @param user The user to determine balances of.
     /// @return collateralBalance The total collateral balance of the user (in underlying).
     function totalCollateralBalanceUser(address user) public view returns (uint256 collateralBalance) {
-        address[] memory userCollaterals = morpho.userCollaterals(user);
+        address[] memory userCollaterals = MORPHO.userCollaterals(user);
 
         uint256 length = userCollaterals.length;
 
         for (uint256 i = 0; i < length; i++) {
-            collateralBalance += morpho.collateralBalance(userCollaterals[i], user);
+            collateralBalance += MORPHO.collateralBalance(userCollaterals[i], user);
         }
     }
 
@@ -295,13 +296,13 @@ contract MorphoHelpers is DSMath {
         view
         returns (uint256 collateralBalance)
     {
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
-        collateralBalance = morpho.collateralBalance(underlying, user);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
+        collateralBalance = MORPHO.collateralBalance(underlying, user);
     }
 
     /// @notice Returns the list of collateral underlyings of `user`.
     function userCollaterals(address user) public view returns (address[] memory collaterals) {
-        collaterals = morpho.userCollaterals(user);
+        collaterals = MORPHO.userCollaterals(user);
     }
 
     /************************************|
@@ -357,8 +358,8 @@ contract MorphoHelpers is DSMath {
             uint256 poolSupplyRatePerYear
         )
     {
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Market memory market = MORPHO.market(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
         uint256 poolBorrowRatePerYear;
         (poolSupplyRatePerYear, poolBorrowRatePerYear) = poolAPR(underlying);
@@ -381,7 +382,7 @@ contract MorphoHelpers is DSMath {
             p2pSupplyRatePerYear,
             poolSupplyRatePerYear,
             market.trueP2PSupply(indexes),
-            ERC20(market.aToken).balanceOf(address(morpho))
+            ERC20(market.aToken).balanceOf(address(MORPHO))
         );
     }
 
@@ -405,7 +406,7 @@ contract MorphoHelpers is DSMath {
             uint256 totalBorrowAmount
         )
     {
-        address[] memory marketAddresses = morpho.marketsCreated();
+        address[] memory marketAddresses = MORPHO.marketsCreated();
 
         uint256 underlyingPrice;
         uint256 nbMarkets = marketAddresses.length;
@@ -440,8 +441,8 @@ contract MorphoHelpers is DSMath {
             uint256 poolBorrowRatePerYear
         )
     {
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Market memory market = MORPHO.market(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
         uint256 poolSupplyRatePerYear;
         (poolSupplyRatePerYear, poolBorrowRatePerYear) = poolAPR(underlying);
@@ -464,7 +465,7 @@ contract MorphoHelpers is DSMath {
             p2pBorrowRatePerYear,
             poolBorrowRatePerYear,
             market.trueP2PBorrow(indexes),
-            ERC20(market.variableDebtToken).balanceOf(address(morpho))
+            ERC20(market.variableDebtToken).balanceOf(address(MORPHO))
         );
     }
 
@@ -476,8 +477,8 @@ contract MorphoHelpers is DSMath {
         (uint256 balanceInP2P, uint256 balanceOnPool, ) = borrowBalanceUser(underlying, user);
         (uint256 poolSupplyRate, uint256 poolBorrowRate) = poolAPR(underlying);
 
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Market memory market = MORPHO.market(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
         uint256 p2pBorrowRate = Utils.p2pBorrowAPR(
             Utils.P2PRateComputeParams({
@@ -510,8 +511,8 @@ contract MorphoHelpers is DSMath {
             uint256 poolBorrowRatePerYear
         )
     {
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Market memory market = MORPHO.market(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
         uint256 poolSupplyRatePerYear;
         (poolSupplyRatePerYear, poolBorrowRatePerYear) = poolAPR(underlying);
@@ -534,7 +535,7 @@ contract MorphoHelpers is DSMath {
             p2pBorrowRatePerYear,
             poolBorrowRatePerYear,
             market.trueP2PBorrow(indexes),
-            ERC20(market.variableDebtToken).balanceOf(address(morpho))
+            ERC20(market.variableDebtToken).balanceOf(address(MORPHO))
         );
     }
 
@@ -544,11 +545,11 @@ contract MorphoHelpers is DSMath {
     /// @return p2pBorrow The total borrowed amount (in underlying) matched peer-to-peer, subtracting the borrow delta.
     /// @return poolBorrow The total borrowed amount (in underlying) on the underlying pool, adding the borrow delta.
     function marketBorrow(address underlying) public view returns (uint256 p2pBorrow, uint256 poolBorrow) {
-        Types.Market memory market = morpho.market(underlying);
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Market memory market = MORPHO.market(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
         p2pBorrow = market.trueP2PBorrow(indexes);
-        poolBorrow = ERC20(market.variableDebtToken).balanceOf(address(morpho));
+        poolBorrow = ERC20(market.variableDebtToken).balanceOf(address(MORPHO));
     }
 
     /// @notice Returns the borrow balance in underlying of a given user in a given market.
@@ -566,10 +567,10 @@ contract MorphoHelpers is DSMath {
             uint256 totalBalance
         )
     {
-        Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
+        Types.Indexes256 memory indexes = MORPHO.updatedIndexes(underlying);
 
-        balanceInP2P = morpho.scaledP2PBorrowBalance(underlying, user).rayMulUp(indexes.borrow.p2pIndex);
-        balanceOnPool = morpho.scaledPoolBorrowBalance(underlying, user).rayMulUp(indexes.borrow.poolIndex);
+        balanceInP2P = MORPHO.scaledP2PBorrowBalance(underlying, user).rayMulUp(indexes.borrow.p2pIndex);
+        balanceOnPool = MORPHO.scaledPoolBorrowBalance(underlying, user).rayMulUp(indexes.borrow.poolIndex);
         totalBalance = balanceInP2P + balanceOnPool;
     }
 
@@ -577,7 +578,7 @@ contract MorphoHelpers is DSMath {
     /// @param user The user of whom to get the health factor.
     /// @return The health factor of the given user (in wad).
     function healthFactor(address user) public view returns (uint256) {
-        Types.LiquidityData memory liquidityData = morpho.liquidityData(user);
+        Types.LiquidityData memory liquidityData = MORPHO.liquidityData(user);
 
         return liquidityData.debt > 0 ? liquidityData.maxDebt.wadDiv(liquidityData.debt) : type(uint256).max;
     }
@@ -587,7 +588,7 @@ contract MorphoHelpers is DSMath {
 
         UserMarketData[] memory marketData_ = new UserMarketData[](length_);
 
-        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(addrProvider, tokens_);
+        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(ADDRESS_PROVIDER, tokens_);
 
         for (uint256 i = 0; i < length_; i++) {
             marketData_[i] = getUserMarketData(user, tokens_[i], tokenPrices[i].priceInEth, tokenPrices[i].priceInUsd);
@@ -601,7 +602,7 @@ contract MorphoHelpers is DSMath {
 
         userData_.collateralValue = totalCollateralBalanceUser(user);
 
-        Types.LiquidityData memory liquidityData = morpho.liquidityData(user);
+        Types.LiquidityData memory liquidityData = MORPHO.liquidityData(user);
 
         // The maximum debt value allowed to borrow (in base currency).
         userData_.maxBorrowable = liquidityData.borrowable;
@@ -688,7 +689,7 @@ contract MorphoHelpers is DSMath {
         view
         returns (MarketDetail memory)
     {
-        Types.Market market = morpho.market(underlying);
+        Types.Market market = MORPHO.market(underlying);
 
         (
             ,
@@ -703,7 +704,7 @@ contract MorphoHelpers is DSMath {
 
         ) = aaveData.getReserveConfigurationData(token);
 
-        (, address sToken_, address vToken_) = protocolData.getReserveTokensAddresses(asset);
+        (, address sToken_, address vToken_) = PROTOCOL_DATA.getReserveTokensAddresses(asset);
 
         (
             ,
@@ -718,7 +719,7 @@ contract MorphoHelpers is DSMath {
             ,
             ,
             marketData_.lastUpdateTimestamp
-        ) = protocolData.getReserveData(asset);
+        ) = PROTOCOL_DATA.getReserveData(asset);
 
         marketData_.aaveData.totalSupplies = IAToken(poolTokenAddress_).totalSupply();
 
@@ -743,12 +744,12 @@ contract MorphoHelpers is DSMath {
     }
 
     function getMorphoData() internal view returns (MorphoData memory morphoData_) {
-        address[] memory tokens_ = morpho.marketsCreated();
+        address[] memory tokens_ = MORPHO.marketsCreated();
 
         MarketDetail[] memory aaveMarket_ = new MarketDetail[](tokens_.length);
         uint256 length_ = tokens_.length;
 
-        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(addrProvider, tokens_);
+        (TokenPrice[] memory tokenPrices, ) = getTokensPrices(ADDRESS_PROVIDER, tokens_);
 
         for (uint256 i = 0; i < length_; i++) {
             aaveMarket_[i] = getMarketData(aaveMarkets_[i], tokenPrices[i].priceInEth, tokenPrices[i].priceInUsd);
@@ -756,9 +757,9 @@ contract MorphoHelpers is DSMath {
 
         morphoData_.aaveMarketsCreated = aaveMarket_;
 
-        morphoData_.isClaimRewardsPausedAave = morpho.isClaimRewardsPaused();
+        morphoData_.isClaimRewardsPausedAave = MORPHO.isClaimRewardsPaused();
 
-        (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = morpho
+        (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = MORPHO
             .totalBorrow();
     }
 }
