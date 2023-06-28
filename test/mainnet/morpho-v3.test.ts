@@ -1,6 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { InstaAaveV3MorphoResolver, InstaAaveV3MorphoResolver__factory } from "../../typechain";
+import hre from "hardhat";
 
 describe("Morpho Resolvers", () => {
   let signer: SignerWithAddress;
@@ -13,9 +14,25 @@ describe("Morpho Resolvers", () => {
   describe("Morpho Resolver", () => {
     let aaveResolver: InstaAaveV3MorphoResolver;
     before(async () => {
+      await hre.network.provider.request({
+        method: "hardhat_reset",
+        params: [
+          {
+            forking: {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+              blockNumber: 17544460,
+            },
+          },
+        ],
+      });
+
       const deployer = new InstaAaveV3MorphoResolver__factory(signer);
       aaveResolver = await deployer.deploy();
       await aaveResolver.deployed();
+
+      console.log("Morpho Resolver deployed at: ", aaveResolver.address);
     });
 
     it("Returns the morpho's configurations", async () => {
@@ -43,8 +60,8 @@ describe("Morpho Resolvers", () => {
         console.log(`borrow rate experienced on average by user in market: ${aaveMarket.avgBorrowRatePerYear}`);
         console.log(`p2p borrow rate: ${aaveMarket.p2pBorrowRate}`);
         console.log(`p2p supply rate: ${aaveMarket.p2pSupplyRate}`);
-        console.log(`pool borrow rate: ${aaveMarket.poolSupplyRate}`);
-        console.log(`pool supply rate: ${aaveMarket.poolBorrowRate}`);
+        console.log(`pool supply rate: ${aaveMarket.poolSupplyRate}`);
+        console.log(`pool borrow rate: ${aaveMarket.poolBorrowRate}`);
         console.log(`total p2p supply: ${aaveMarket.totalP2PSupply}`);
         console.log(`total p2p borrow: ${aaveMarket.totalP2PBorrows}`);
         console.log(`total pool supply: ${aaveMarket.totalPoolSupply}`);

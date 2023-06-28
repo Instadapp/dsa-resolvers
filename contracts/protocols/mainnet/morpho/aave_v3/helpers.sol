@@ -46,6 +46,7 @@ contract MorphoHelpers is DSMath {
         uint256 poolBorrowAmount;
         uint256 totalSupplyAmount;
         uint256 totalBorrowAmount;
+        uint256 idleSupplyAmount;
     }
 
     struct TokenConfig {
@@ -158,7 +159,7 @@ contract MorphoHelpers is DSMath {
     /// adding the supply delta (in base currency).
     /// @return idleSupplyAmount The total idle supply amount on the Morpho's contract (in base currency).
     /// @return totalSupplyAmount The total amount supplied through Morpho (in base currency).
-    function totalSupplyMorpho()
+    function totalSupply()
         public
         view
         returns (
@@ -732,6 +733,12 @@ contract MorphoHelpers is DSMath {
 
         morphoData_.isClaimRewardsPausedAave = morpho.isClaimRewardsPaused();
 
+        (
+            morphoData_.p2pSupplyAmount,
+            morphoData_.poolSupplyAmount,
+            morphoData_.idleSupplyAmount,
+            morphoData_.totalSupplyAmount
+        ) = totalSupply();
         (morphoData_.p2pBorrowAmount, morphoData_.poolBorrowAmount, morphoData_.totalBorrowAmount) = totalBorrow();
     }
 
