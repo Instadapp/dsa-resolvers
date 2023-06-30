@@ -24,7 +24,6 @@
     "@types/chai-as-promised": "^7.1.4",
     "@types/fs-extra": "^9.0.11",
     "@types/inquirer": "^7.3.2",
-    "@types/mocha": "^8.2.2",
     "@types/node": "^15.6.1",
     "@typescript-eslint/eslint-plugin": "^4.25.0",
     "@typescript-eslint/parser": "^4.25.0",
@@ -43,7 +42,6 @@
     "husky": "^6.0.0",
     "inquirer": "^8.1.1",
     "lint-staged": "^11.0.0",
-    "mocha": "^8.4.0",
     "prettier": "^2.3.0",
     "prettier-plugin-solidity": "^1.0.0-beta.11",
     "shelljs": "^0.8.4",
@@ -84,15 +82,17 @@
     "prettier": "prettier --config ./.prettierrc --write \"**/*.{js,json,md,sol,ts}\"",
     "prettier:check": "prettier --check --config ./.prettierrc \"**/*.{js,json,md,sol,ts}\"",
     "test": "hardhat run scripts/global-test.ts",
-    "test:runner": "hardhat run scripts/run-tests.ts",
+    "test:runner": "NODE_OPTIONS='--max-old-space-size=4096' hardhat run scripts/run-tests.ts",
     "typechain": "hardhat typechain"
   },
   "dependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.1-solc-0.7-2",
+    "@types/mocha": "^10.0.1",
     "@uniswap/v3-periphery": "^1.2.0",
     "hardhat-etherscan": "^1.0.1",
+    "mocha": "^10.2.0",
     "web3": "^1.6.0"
   }
 }

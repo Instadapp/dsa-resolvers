@@ -13,7 +13,6 @@ import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
-import Web3 from "web3";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -123,7 +122,7 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
-      gasPrice: 10000000000,
+      gasPrice: 15000000000,
     },
   },
   paths: {
