@@ -5,7 +5,7 @@ import hre from "hardhat";
 
 describe("Morpho Resolvers", () => {
   let signer: SignerWithAddress;
-  const user = "0x49e96e255ba418d08e66c35b588e2f2f3766e1d0";
+  const user = "0xB5d870D24Fa7C0993a30c2fefAa83A40DC5a447a";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -22,7 +22,7 @@ describe("Morpho Resolvers", () => {
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-              blockNumber: 17544460,
+              blockNumber: 17581624,
             },
           },
         ],
@@ -38,9 +38,9 @@ describe("Morpho Resolvers", () => {
     it("Returns the morpho's configurations", async () => {
       const morphoConfig = await aaveResolver.getMorphoConfig();
       console.log("\t*******************AAVE MARKETS******************\n");
-      console.log(morphoConfig);
+      // console.log(morphoConfig);
       console.log(`Claim Rewards paused: ${morphoConfig.isClaimRewardsPausedAave}`);
-      console.log(`p2p supply amount: ${morphoConfig.p2pSupplyAmount}`);
+      console.log(`p2p supply amount: ${morphoConfig.p2pSupplyAmount}`); // TODO: doubtful
       console.log(`p2p borrow amount: ${morphoConfig.p2pBorrowAmount}`);
       console.log(`pool supply amount: ${morphoConfig.poolSupplyAmount}`);
       console.log(`pool borrow amount: ${morphoConfig.poolBorrowAmount}`);
@@ -66,13 +66,14 @@ describe("Morpho Resolvers", () => {
         console.log(`total p2p borrow: ${aaveMarket.totalP2PBorrows}`);
         console.log(`total pool supply: ${aaveMarket.totalPoolSupply}`);
         console.log(`total pool borrow: ${aaveMarket.totalPoolBorrows}`);
+        console.log(`total idle supply: ${aaveMarket.totalIdleSupply}`);
         console.log(`last updated timestamp: ${aaveMarket.lastUpdateTimestamp}`);
         console.log(`reserve Factor: ${aaveMarket.reserveFactor}`);
         console.log(`ltv: ${aaveMarket.aaveData.ltv}`);
         console.log(`liquidation threshold: ${aaveMarket.aaveData.liquidationThreshold}`);
-        console.log(`total supplies in underlying: ${aaveMarket.aaveData.totalSupplies}`);
-        console.log(`total stables borrows in underlying: ${aaveMarket.aaveData.totalStableBorrows}`);
-        console.log(`total variable borrows in underlying: ${aaveMarket.aaveData.totalVariableBorrows}`);
+        console.log(`total supplies in underlying aave: ${aaveMarket.aaveData.totalSupplies}`);
+        console.log(`total stables borrows in underlying aave: ${aaveMarket.aaveData.totalStableBorrows}`);
+        console.log(`total variable borrows in underlying aave: ${aaveMarket.aaveData.totalVariableBorrows}`);
         console.log(`liquidity rate: ${aaveMarket.aaveData.liquidityRate}`);
         console.log(`isSupplyPaused: ${aaveMarket.flags.isSupplyPaused}`);
         console.log(`isSupplyCollateralPaused: ${aaveMarket.flags.isSupplyCollateralPaused}`);

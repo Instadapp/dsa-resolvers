@@ -40,13 +40,13 @@ contract MorphoHelpers is DSMath {
     struct MorphoData {
         MarketDetail[] aaveMarketsCreated;
         bool isClaimRewardsPausedAave;
-        uint256 p2pSupplyAmount;
-        uint256 p2pBorrowAmount;
-        uint256 poolSupplyAmount;
-        uint256 poolBorrowAmount;
-        uint256 totalSupplyAmount;
-        uint256 totalBorrowAmount;
-        uint256 idleSupplyAmount;
+        uint256 p2pSupplyAmount; // In Base Currency
+        uint256 p2pBorrowAmount; // In Base Currency
+        uint256 poolSupplyAmount; // In Base Currency
+        uint256 poolBorrowAmount; // In Base Currency
+        uint256 totalSupplyAmount; // In Base Currency
+        uint256 totalBorrowAmount; // In Base Currency
+        uint256 idleSupplyAmount; // In Base Currency
     }
 
     struct TokenConfig {
@@ -140,11 +140,16 @@ contract MorphoHelpers is DSMath {
         view
         returns (TokenPrice[] memory tokenPrices, uint256 ethPrice)
     {
+        // Price of tokens in Base currency
         uint256[] memory _tokenPrices = IAaveOracle(aaveAddressProvider.getPriceOracle()).getAssetsPrices(tokens);
+
+        // Price of ETH in Base currency
         ethPrice = uint256(ChainLinkInterface(getChainlinkEthFeed()).latestAnswer());
+
         tokenPrices = new TokenPrice[](_tokenPrices.length);
+
         for (uint256 i = 0; i < _tokenPrices.length; i++) {
-            tokenPrices[i] = TokenPrice(_tokenPrices[i], wmul(_tokenPrices[i], uint256(ethPrice) * 10**10));
+            tokenPrices[i] = TokenPrice(((_tokenPrices[i] * 1e8) / ethPrice), _tokenPrices[i]);
         }
     }
 
@@ -243,7 +248,6 @@ contract MorphoHelpers is DSMath {
         Types.Market memory market = morpho.market(underlying);
         Types.Indexes256 memory indexes = morpho.updatedIndexes(underlying);
 
-        // TODO: check https://github.com/morpho-org/morpho-aave-v3/blob/main/src/libraries/MarketLib.sol
         p2pSupply = market.trueP2PSupply(indexes);
         poolSupply = IERC20(market.aToken).balanceOf(address(morpho));
         idleSupply = market.idleSupply;
@@ -574,8 +578,6 @@ contract MorphoHelpers is DSMath {
 
         userData_.collateralValue = totalCollateralBalanceUser(user);
 
-        // userData_.supplyValue = totalSupplyBalance(user);
-
         Types.LiquidityData memory liquidityData = morpho.liquidityData(user);
 
         // The maximum debt value allowed to borrow (in base currency).
@@ -694,8 +696,6 @@ contract MorphoHelpers is DSMath {
             ,
             marketData_.lastUpdateTimestamp
         ) = protocolData.getReserveData(asset);
-
-        // marketData_.aaveData.totalSupplies = IAToken(poolTokenAddress_).totalSupply();
 
         marketData_.flags.isCreated = MarketLib.isCreated(market);
         marketData_.flags.isSupplyPaused = MarketLib.isSupplyPaused(market);
