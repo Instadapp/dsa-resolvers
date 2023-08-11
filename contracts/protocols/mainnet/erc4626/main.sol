@@ -10,58 +10,147 @@ contract Resolver {
         uint256 decimals;
         address asset;
         uint256 totalAssets;
+        uint256 convertToShares;
+        uint256 convertToAssets;
     }
 
-    function getVaultDetails(address vaultAddress) public view returns (VaultData memory) {
-        VaultData memory _vaultData;
-        VaultInterface vaultToken = VaultInterface(vaultAddress);
-        bool isToken = true;
+    struct UserPosition {
+        uint256 underlyingBalance;
+        uint256 vaultBalance;
+    }
 
-        try vaultToken.symbol() {} catch {
-            isToken = false;
+    struct UserMaxMinVault {
+        uint256 maxDeposit;
+        uint256 maxMint;
+        uint256 maxWithdraw;
+        uint256 maxRedeem;
+        uint256 minDeposit;
+        uint256 minMint;
+        uint256 minWithdraw;
+        uint256 minRedeem;
+    }
+
+    struct VaultPreview {
+        uint256 previewDeposit;
+        uint256 previewMint;
+        uint256 previewWithdraw;
+        uint256 previewRedeem;
+    }
+
+    function getVaultDetails(address[] memory vaultAddresses) public view returns (VaultData[] memory) {
+        VaultData[] memory _vaultData = new VaultData[](vaultAddresses.length);
+        for (uint256 i = 0; i < vaultAddresses.length; i++) {
+            VaultInterface vaultToken = VaultInterface(vaultAddresses[i]);
+            bool isToken = true;
+
+            try vaultToken.symbol() {} catch {
+                isToken = false;
+                continue;
+            }
+
+            try vaultToken.name() {} catch {
+                isToken = false;
+                continue;
+            }
+
+            try vaultToken.decimals() {} catch {
+                isToken = false;
+                continue;
+            }
+
+            try vaultToken.asset() {} catch {
+                isToken = false;
+                continue;
+            }
+
+            _vaultData[i] = VaultData(
+                isToken,
+                vaultToken.name(),
+                vaultToken.symbol(),
+                vaultToken.decimals(),
+                vaultToken.asset(),
+                vaultToken.totalAssets(),
+                vaultToken.convertToShares(10**vaultToken.decimals()), // example convertToShares for 10 ** decimal
+                vaultToken.convertToAssets(10**vaultToken.decimals()) // example convertToAssets for 10 ** decimal
+            );
         }
-
-        try vaultToken.name() {} catch {
-            isToken = false;
-        }
-
-        try vaultToken.decimals() {} catch {
-            isToken = false;
-        }
-
-        _vaultData = VaultData(
-            isToken,
-            vaultToken.name(),
-            vaultToken.symbol(),
-            vaultToken.decimals(),
-            vaultToken.asset(),
-            vaultToken.totalAssets()
-        );
 
         return _vaultData;
     }
 
-    function getPosition(address owner, address vaultAddress) public view returns (uint256, uint256) {
-        uint256 _underlyingBalance;
-        uint256 _vaultBalance;
+    function getPositions(address owner, address[] memory vaultAddress) public view returns (UserPosition[] memory) {
+        UserPosition[] memory _userPosition = new UserPosition[](vaultAddress.length);
+        for (uint256 i = 0; i < vaultAddress.length; i++) {
+            VaultInterface vaultToken = VaultInterface(vaultAddress[i]);
 
-        VaultInterface vaultToken = VaultInterface(vaultAddress);
+            address _underlyingAddress = vaultToken.asset();
+            TokenInterface underlyingToken = TokenInterface(_underlyingAddress);
 
-        address _underlyingAddress = vaultToken.asset();
-        TokenInterface underlyingToken = TokenInterface(_underlyingAddress);
+            _userPosition[i].underlyingBalance = underlyingToken.balanceOf(owner);
+            _userPosition[i].vaultBalance = vaultToken.balanceOf(owner);
+        }
 
-        _underlyingBalance = underlyingToken.balanceOf(owner);
-        _vaultBalance = vaultToken.balanceOf(owner);
-
-        return (_underlyingBalance, _vaultBalance);
+        return _userPosition;
     }
 
-    function getAllowances(address owner, address vaultAddress) public view returns (uint256) {
-        uint256 _tokenAllowance;
+    function getAllowances(address owner, address[] memory vaultAddresses) public view returns (uint256[] memory) {
+        uint256[] memory _tokenAllowance = new uint256[](vaultAddresses.length);
 
-        VaultInterface vaultToken = VaultInterface(vaultAddress);
-        _tokenAllowance = vaultToken.allowance(owner, vaultAddress);
+        for (uint256 i = 0; i < vaultAddresses.length; i++) {
+            VaultInterface vaultToken = VaultInterface(vaultAddresses[i]);
+            _tokenAllowance[i] = vaultToken.allowance(owner, vaultAddresses[i]);
+        }
+
         return _tokenAllowance;
+    }
+
+    function getMixMinVaults(address owner, address[] memory vaultAddresses)
+        public
+        view
+        returns (UserMaxMinVault[] memory)
+    {
+        UserMaxMinVault[] memory _userMaxMinVault = new UserMaxMinVault[](vaultAddresses.length);
+
+        for (uint256 i = 0; i < vaultAddresses.length; i++) {
+            VaultInterface vaultToken = VaultInterface(vaultAddresses[i]);
+
+            // address _underlyingToken = vaultToken.asset();
+            //   uint256 _userUnderlyingBalance = TokenInterface(_underlyingToken).balanceOf(owner);
+
+            // _userMaxMinVault[i].maxDeposit = vaultToken.maxDeposit(owner) > _userUnderlyingBalance
+            //     ? _userUnderlyingBalance
+            //     : vaultToken.maxDeposit(owner);
+            // _userMaxMinVault[i].maxMint = vaultToken.maxMint(owner) > _userUnderlyingBalance
+            //     ? _userUnderlyingBalance
+            //     : vaultToken.maxMint(owner);
+
+            _userMaxMinVault[i].maxDeposit = vaultToken.maxDeposit(owner);
+            _userMaxMinVault[i].maxMint = vaultToken.maxMint(owner);
+            _userMaxMinVault[i].maxWithdraw = vaultToken.maxWithdraw(owner);
+            _userMaxMinVault[i].maxRedeem = vaultToken.maxRedeem(owner);
+            // _userMaxMinVault[i].minDeposit =
+        }
+
+        return _userMaxMinVault;
+    }
+
+    function getVaultPreview(uint256 amount, address[] memory vaultAddresses)
+        public
+        view
+        returns (VaultPreview[] memory)
+    {
+        VaultPreview[] memory _vaultPreview = new VaultPreview[](vaultAddresses.length);
+
+        for (uint256 i = 0; i < vaultAddresses.length; i++) {
+            VaultInterface vaultToken = VaultInterface(vaultAddresses[i]);
+
+            _vaultPreview[i].previewDeposit = vaultToken.previewDeposit(amount);
+            _vaultPreview[i].previewMint = vaultToken.previewMint(amount);
+            _vaultPreview[i].previewWithdraw = vaultToken.previewWithdraw(amount);
+            _vaultPreview[i].previewRedeem = vaultToken.previewRedeem(amount);
+        }
+
+        return _vaultPreview;
     }
 }
 
