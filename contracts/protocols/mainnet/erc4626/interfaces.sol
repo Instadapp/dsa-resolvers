@@ -20,11 +20,11 @@ interface VaultInterface {
 
     function symbol() external view returns (string memory);
 
-    function totalSupply() external view returns (uint256);
-
     function asset() external view returns (address);
 
     function totalAssets() external view returns (uint256);
+
+    function totalSupply() external view returns (uint256);
 
     function balanceOf(address) external view returns (uint256);
 

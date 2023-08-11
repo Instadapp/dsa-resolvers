@@ -83,22 +83,6 @@ describe("ERC4626 Resolvers", () => {
     });
 
     it("gets token allowances properly", async () => {
-      // impersonate account
-      // await network.provider.request({
-      //   method: "hardhat_impersonateAccount",
-      //   params: [account],
-      // });
-      // const fakeSigner = await ethers.getSigner(account);
-
-      // fake allowances
-
-      // const dai = IERC20__factory.connect(Tokens.DAI.addr, fakeSigner);
-      // const usdc = IERC20__factory.connect(Tokens.USDC.addr, fakeSigner);
-      // const expectedAmts = [parseEther("0"), parseEther("100"), parseUnits("100", 6)];
-
-      // await dai.approve(signer.address, expectedAmts[1]);
-      // await usdc.approve(signer.address, expectedAmts[2]);
-
       const res = await resolver.getAllowances(account, vaultAddresses);
 
       console.log("res :>> ", res);
