@@ -113,14 +113,8 @@ contract Resolver {
 
         return _vaultPreview;
     }
-
-    function _divup(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        unchecked {
-            z = x != 0 ? ((x - 1) / y) + 1 : 0;
-        }
-    }
 }
 
 contract InstaERC4626Resolver is Resolver {
-    string public constant name = "ERC4626-Resolver-v1.1";
+    string public constant name = "ERC4626-Resolver-v1";
 }
