@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
-import { DSMath } from "../../../utils/dsmath.sol";
 import "./interfaces.sol";
 
 contract Resolver {
@@ -19,17 +18,6 @@ contract Resolver {
     struct UserPosition {
         uint256 underlyingBalance;
         uint256 vaultBalance;
-    }
-
-    struct UserMaxMinVault {
-        uint256 maxDeposit;
-        uint256 maxMint;
-        uint256 maxWithdraw;
-        uint256 maxRedeem;
-        uint256 minDeposit;
-        uint256 minMint;
-        uint256 minWithdraw;
-        uint256 minRedeem;
     }
 
     struct VaultPreview {
@@ -105,37 +93,6 @@ contract Resolver {
         }
 
         return _tokenAllowance;
-    }
-
-    function getMixMinVaults(address owner, address[] memory vaultAddresses)
-        public
-        view
-        returns (UserMaxMinVault[] memory)
-    {
-        UserMaxMinVault[] memory _userMaxMinVault = new UserMaxMinVault[](vaultAddresses.length);
-
-        for (uint256 i = 0; i < vaultAddresses.length; i++) {
-            VaultInterface vaultToken = VaultInterface(vaultAddresses[i]);
-
-            address _underlyingToken = vaultToken.asset();
-            uint256 _userUnderlyingBalance = TokenInterface(_underlyingToken).balanceOf(owner);
-
-            _userMaxMinVault[i].maxDeposit = vaultToken.maxDeposit(owner) > _userUnderlyingBalance
-                ? _userUnderlyingBalance
-                : vaultToken.maxDeposit(owner);
-            _userMaxMinVault[i].maxMint = vaultToken.maxMint(owner) > _userUnderlyingBalance
-                ? _userUnderlyingBalance
-                : vaultToken.maxMint(owner);
-            _userMaxMinVault[i].maxWithdraw = vaultToken.maxWithdraw(owner);
-            _userMaxMinVault[i].maxRedeem = vaultToken.maxRedeem(owner);
-
-            _userMaxMinVault[i].minDeposit = _divup(vaultToken.totalAssets(), vaultToken.totalSupply());
-            _userMaxMinVault[i].minMint = _divup(vaultToken.totalSupply(), vaultToken.totalAssets());
-            _userMaxMinVault[i].minWithdraw = _divup(vaultToken.totalAssets(), vaultToken.totalSupply());
-            _userMaxMinVault[i].minRedeem = _divup(vaultToken.totalSupply(), vaultToken.totalAssets());
-        }
-
-        return _userMaxMinVault;
     }
 
     function getVaultPreview(uint256 amount, address[] memory vaultAddresses)

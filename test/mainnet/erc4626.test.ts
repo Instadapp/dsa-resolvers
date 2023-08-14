@@ -88,12 +88,6 @@ describe("ERC4626 Resolvers", () => {
       console.log("res :>> ", res);
     });
 
-    it("gets user Maximun and Minimum vaults", async () => {
-      const _MaxMinVaults = await resolver.getMixMinVaults(account, vaultAddresses);
-
-      console.log("_MaxMinVaults :>> ", _MaxMinVaults);
-    });
-
     it("gets Vault Preview", async () => {
       const _vaultPreview = await resolver.getVaultPreview(parseEther("1"), vaultAddresses);
 
