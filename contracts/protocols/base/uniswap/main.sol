@@ -196,6 +196,6 @@ contract Resolver is Helpers {
     }
 }
 
-contract InstaUniswapV3Resolver is Resolver {
+contract InstaUniswapV3ResolverBase is Resolver {
     string public constant name = "UniswapV3-Resolver-v1";
 }

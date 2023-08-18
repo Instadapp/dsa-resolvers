@@ -96,6 +96,6 @@ contract CompoundIIIResolver is CompoundIIIHelpers {
     }
 }
 
-contract InstaCompoundIIIResolver is CompoundIIIResolver {
+contract InstaCompoundIIIResolverBase is CompoundIIIResolver {
     string public constant name = "Compound-III-Resolver-v1.0";
 }

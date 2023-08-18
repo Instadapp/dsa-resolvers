@@ -74,6 +74,7 @@
     "compile": "hardhat compile",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
     "deploy": "hardhat run scripts/deploy.ts",
+    "deployAll": "hardhat run scripts/deployAll.ts",
     "deploy:network": "hardhat run scripts/deploy.ts --network",
     "lint": "npm run lint:sol && npm run lint:ts && npm run prettier:check",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",
@@ -86,7 +87,7 @@
     "typechain": "hardhat typechain"
   },
   "dependencies": {
-    "@nomiclabs/hardhat-etherscan": "^2.1.8",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.1-solc-0.7-2",
     "@types/mocha": "^10.0.1",

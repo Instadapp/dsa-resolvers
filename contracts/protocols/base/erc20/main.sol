@@ -71,6 +71,6 @@ contract Resolver {
     }
 }
 
-contract InstaERC20Resolver is Resolver {
+contract InstaERC20ResolverBase is Resolver {
     string public constant name = "ERC20-Resolver-v1.1";
 }
