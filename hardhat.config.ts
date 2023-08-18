@@ -118,6 +118,10 @@ const config: HardhatUserConfig = {
       accounts: [`0x${process.env.PRIVATE_KEY}`],
       gasPrice: 15000000000,
     },
+    base: {
+      url: `https://1rpc.io/base`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+    },
   },
   paths: {
     artifacts: "./artifacts",
