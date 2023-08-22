@@ -40,12 +40,6 @@ const alchemyApiKey = process.env.ALCHEMY_API_KEY;
 if (!alchemyApiKey) {
   throw new Error("Please set your ALCHEMY_ETH_API_KEY in a .env file");
 }
-const ETHERSCAN_API = process.env.ETHERSCAN_API_KEY;
-const POLYGONSCAN_API = process.env.POLYGON_API_KEY;
-const ARBISCAN_API = process.env.ARBISCAN_API_KEY;
-const OPTIMISM_API = process.env.OPTIMISM_API_KEY;
-const SNOWTRACE_API = process.env.SNOWTRACE_API_KEY;
-const FANTOMSCAN_API = process.env.FANTOM_API_KEY;
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   const url: string = "https://eth-" + network + ".alchemyapi.io/v2/" + alchemyApiKey;
@@ -60,14 +54,6 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
     url,
   };
 }
-function getScanApiKey(networkType: string) {
-  if (networkType === "avalanche") return SNOWTRACE_API;
-  else if (networkType === "polygon") return POLYGONSCAN_API;
-  else if (networkType === "arbitrum") return ARBISCAN_API;
-  else if (networkType === "fantom") return FANTOMSCAN_API;
-  else if (networkType === "optimism") return OPTIMISM_API;
-  else return ETHERSCAN_API;
-}
 
 function getNetworkUrl(networkType: string) {
   //console.log(process.env);
@@ -76,6 +62,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "optimism") return `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
+  else if (networkType === "base") return `https://1rpc.io/base`;
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
@@ -124,6 +111,11 @@ const config: HardhatUserConfig = {
       accounts: [`0x${process.env.PRIVATE_KEY}`],
       gasPrice: 15000000000,
     },
+    base: {
+      url: `https://1rpc.io/base`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 150000,
+    },
   },
   paths: {
     artifacts: "./artifacts",
@@ -164,7 +156,25 @@ const config: HardhatUserConfig = {
     timeout: 10000 * 1000,
   },
   etherscan: {
-    apiKey: getScanApiKey(String(process.env.networkType)),
+    apiKey: {
+      mainnet: String(process.env.ETHERSCAN_API_KEY),
+      optimisticEthereum: String(process.env.OPTIMISM_API_KEY),
+      polygon: String(process.env.POLYGONSCAN_API),
+      arbitrumOne: String(process.env.ARBISCAN_API_KEY),
+      avalanche: String(process.env.SNOWTRACE_API),
+      opera: String(process.env.FANTOM_API_KEY),
+      base: String(process.env.BASE_ETHSCAN_KEY),
+    },
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org",
+        },
+      },
+    ],
   },
 };
 

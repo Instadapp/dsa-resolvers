@@ -1,4 +1,4 @@
-import { execFile, spawn } from "child_process";
+import { spawn } from "child_process";
 
 interface ICommand {
   readonly cmd: string;
@@ -10,8 +10,8 @@ interface ICommand {
 
 export async function execScript(input: ICommand): Promise<number> {
   return new Promise((resolve, reject) => {
-    let cmdEnv = Object.create(process.env);
-    for (let param in input.env) {
+    const cmdEnv = Object.create(process.env);
+    for (const param in input.env) {
       cmdEnv[param] = input.env[param];
     }
 
