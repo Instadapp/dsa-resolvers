@@ -40,13 +40,6 @@ const alchemyApiKey = process.env.ALCHEMY_API_KEY;
 if (!alchemyApiKey) {
   throw new Error("Please set your ALCHEMY_ETH_API_KEY in a .env file");
 }
-const ETHERSCAN_API = process.env.ETHERSCAN_API_KEY;
-const POLYGONSCAN_API = process.env.POLYGON_API_KEY;
-const ARBISCAN_API = process.env.ARBISCAN_API_KEY;
-const OPTIMISM_API = process.env.OPTIMISM_API_KEY;
-const SNOWTRACE_API = process.env.SNOWTRACE_API_KEY;
-const FANTOMSCAN_API = process.env.FANTOM_API_KEY;
-const BASE_ETHSCAN_KEY = process.env.BASE_ETHSCAN_KEY;
 
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   const url: string = "https://eth-" + network + ".alchemyapi.io/v2/" + alchemyApiKey;
@@ -121,6 +114,7 @@ const config: HardhatUserConfig = {
     base: {
       url: `https://1rpc.io/base`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 150000,
     },
   },
   paths: {
@@ -171,6 +165,16 @@ const config: HardhatUserConfig = {
       opera: String(process.env.FANTOM_API_KEY),
       base: String(process.env.BASE_ETHSCAN_KEY),
     },
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org",
+        },
+      },
+    ],
   },
 };
 
