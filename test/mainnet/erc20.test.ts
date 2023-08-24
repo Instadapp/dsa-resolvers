@@ -10,15 +10,20 @@ describe("ERC20 Resolvers", () => {
   const account = "0xa8ABe411d1A3F524a2aB9C54f8427066a1F9f266";
 
   before(async () => {
+    console.log("0");
     [signer] = await ethers.getSigners();
+    console.log("00");
   });
 
   describe("ERC20 Resolver", () => {
     let resolver: InstaERC20Resolver;
 
     before(async () => {
+      console.log("1");
       const deployer = new InstaERC20Resolver__factory(signer);
+      console.log("2");
       resolver = await deployer.deploy();
+      console.log("3");
     });
 
     it("get token details should revert with a wrong token address", async () => {
