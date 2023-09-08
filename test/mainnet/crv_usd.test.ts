@@ -46,7 +46,7 @@ describe("CRV-USD Resolvers", () => {
         console.log(`oracle price: ${market.oraclePrice}`);
         console.log(`Amplicitation coefficient: ${market.A}`);
         console.log(`Count of loan: ${market.loanLen}`);
-        console.log(`Rate0: ${market.rate0}`);
+        console.log(`fractionPerSecond: ${market.fractionPerSecond}`);
         console.log(`sigma factor: ${market.sigma}`);
         console.log(`Fraction of the target fraction: ${market.targetDebtFraction}`);
         console.log(`CRV market controller address: ${market.controller}`);

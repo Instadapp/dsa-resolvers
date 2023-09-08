@@ -31,7 +31,7 @@ struct MarketConfig {
     uint256 oraclePrice; // external oracle price
     uint256 A; // amplicitation coefficient
     uint256 loanLen;
-    uint256 rate0;
+    uint256 fractionPerSecond;
     int256 sigma;
     uint256 targetDebtFraction;
     address controller;
@@ -84,9 +84,9 @@ interface I_LLAMMA {
 }
 
 interface IMonetary {
-    function rate() external view returns (uint256);
+    function rate(address controller) external view returns (uint256);
 
-    function rate0() external view returns (uint256);
+    function rate() external view returns (uint256);
 
     function sigma() external view returns (int256);
 

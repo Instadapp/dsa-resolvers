@@ -41,7 +41,11 @@ contract CRVHelpers is DSMath {
         config.borrowable = IERC20(CRV_USD).balanceOf(address(controller));
         config.basePrice = I_LLAMMA(AMM).get_base_price();
         config.A = I_LLAMMA(AMM).A();
-        config.rate0 = IMonetary(monetary).rate0();
+        try IMonetary(monetary).rate(address(controller)) returns (uint256 rate) {
+            config.fractionPerSecond = rate;
+        } catch {
+            config.fractionPerSecond = IMonetary(monetary).rate();
+        }
         config.sigma = IMonetary(monetary).sigma();
         config.targetDebtFraction = IMonetary(monetary).target_debt_fraction();
     }
