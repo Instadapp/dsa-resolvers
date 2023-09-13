@@ -2,7 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 // import { expect } from "chai";
 // import { formatEther, formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
-import { InstaCRVResolver, InstaCRVResolver__factory } from "../../typechain";
+import { InstaCurveUSDResolver, InstaCurveUSDResolver__factory } from "../../typechain";
 // import { Tokens } from "../consts";
 
 describe("CRV-USD Resolvers", () => {
@@ -30,9 +30,9 @@ describe("CRV-USD Resolvers", () => {
   });
 
   describe("CRV-USD Resolver", () => {
-    let resolver: InstaCRVResolver;
+    let resolver: InstaCurveUSDResolver;
     before(async () => {
-      const deployer = new InstaCRVResolver__factory(signer);
+      const deployer = new InstaCurveUSDResolver__factory(signer);
       resolver = await deployer.deploy();
       await resolver.deployed();
     });
