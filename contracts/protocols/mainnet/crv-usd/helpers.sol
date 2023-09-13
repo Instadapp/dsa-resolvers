@@ -8,13 +8,14 @@ contract CRVHelpers is DSMath {
     /**
      * @dev ControllerFactory Interface
      */
-    IControllerFactory internal constant ctrFactory = IControllerFactory(0xC9332fdCB1C491Dcc683bAe86Fe3cb70360738BC);
+    IControllerFactory internal constant CONTROLLER_FACTORY =
+        IControllerFactory(0xC9332fdCB1C491Dcc683bAe86Fe3cb70360738BC);
 
     /**
      * @dev Get controller address by given collateral asset
      */
     function getController(address collateral, uint256 i) internal view returns (IController controller) {
-        controller = IController(ctrFactory.get_controller(collateral, i));
+        controller = IController(CONTROLLER_FACTORY.get_controller(collateral, i));
     }
 
     function getMarketConfig(address market, uint256 index) internal view returns (MarketConfig memory config) {

@@ -3,10 +3,10 @@ pragma solidity ^0.8.6;
 import "./helpers.sol";
 
 /**
- *@title Compund III Resolver
+ *@title Curve USD Resolver
  *@dev get user position, user configuration, market configuration.
  */
-contract CRVResolver is CRVHelpers {
+contract CurveUSDResolver is CRVHelpers {
     /**
      *@dev get position of the user for given collateral.
      *@notice get position details of the user in a market.
@@ -94,6 +94,6 @@ contract CRVResolver is CRVHelpers {
     }
 }
 
-contract InstaCRVResolver is CRVResolver {
-    string public constant name = "CRV-USD-Resolver-v1.0";
+contract InstaCurveUSDResolver is CurveUSDResolver {
+    string public constant name = "CRVUSD-Resolver-v1.0";
 }
