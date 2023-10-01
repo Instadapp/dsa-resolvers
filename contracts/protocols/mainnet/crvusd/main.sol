@@ -135,7 +135,7 @@ contract CurveUSDResolver is CRVHelpers {
      *@param debt  debt amount.
      *@return range Band range.
      */
-    function getCalculateBandRange(
+    function getBandRange(
         address market,
         uint256 version,
         uint256 collateral,
