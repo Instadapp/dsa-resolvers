@@ -134,14 +134,15 @@ contract CurveUSDResolver is CRVHelpers {
      *@param collateral  collateral amount.
      *@param debt  debt amount.
      *@return range Band range.
+     *@return liquidation liquidation price range.
      */
-    function getBandRange(
+    function getBandRangeAndLiquidationRange(
         address market,
         uint256 version,
         uint256 collateral,
         uint256 debt,
         uint256 bandNumber
-    ) public view returns (int256[2] memory range) {
+    ) public view returns (int256[2] memory range, uint256[2] memory liquidation) {
         IController controller = getController(market, version);
         address AMM = controller.amm();
         int256 minBand = I_LLAMMA(AMM).min_band();
@@ -150,6 +151,8 @@ contract CurveUSDResolver is CRVHelpers {
 
         range[0] = controller.calculate_debt_n1(collateral, debt, bandNumber);
         range[1] = range[0] + int256(bandNumber) - 1;
+        liquidation[0] = I_LLAMMA(AMM).p_oracle_up(range[0]);
+        liquidation[1] = I_LLAMMA(AMM).p_oracle_down(range[1]);
     }
 }
 

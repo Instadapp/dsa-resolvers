@@ -100,6 +100,10 @@ interface I_LLAMMA {
     function min_band() external view returns (int256);
 
     function max_band() external view returns (int256);
+
+    function p_oracle_up(int256 bandNumber0) external view returns (uint256);
+
+    function p_oracle_down(int256 bandNumber1) external view returns (uint256);
 }
 
 interface IMonetary {

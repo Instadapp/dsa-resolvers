@@ -95,7 +95,7 @@ describe("CRV-USD Resolvers", () => {
     });
 
     it("Returns Band range", async () => {
-      const minCollateral = await resolver.getCalculateBandRange(
+      const minCollateral = await resolver.getBandRangeAndLiquidationRange(
         markets[0],
         0,
         "2205663198573977494528",
