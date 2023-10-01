@@ -9,6 +9,7 @@ struct PositionData {
     uint256 health;
     UserPrices prices;
     uint256 loanId;
+    int256[2] userTickNumber; // calculating for user band range
 }
 
 struct UserPrices {
@@ -39,6 +40,8 @@ struct MarketConfig {
     address monetary;
     uint256 borrowable;
     Coins coins; // factors for total collaterals
+    int256 minBand;
+    int256 maxBand;
 }
 
 interface IControllerFactory {
@@ -71,6 +74,16 @@ interface IController {
     function amm_price() external view returns (uint256);
 
     function monetary_policy() external view returns (address);
+
+    function max_borrowable(uint256 collateral, uint256 N) external view returns (uint256);
+
+    function min_collateral(uint256 debt, uint256 N) external view returns (uint256);
+
+    function calculate_debt_n1(
+        uint256 collateral,
+        uint256 debt,
+        uint256 N
+    ) external view returns (int256);
 }
 
 interface I_LLAMMA {
@@ -81,6 +94,12 @@ interface I_LLAMMA {
     function coins(uint256 i) external view returns (address);
 
     function get_base_price() external view returns (uint256);
+
+    function read_user_tick_numbers(address user) external view returns (int256[2] memory);
+
+    function min_band() external view returns (int256);
+
+    function max_band() external view returns (int256);
 }
 
 interface IMonetary {
