@@ -79,7 +79,8 @@ describe("CRV-USD Resolvers", () => {
         console.log(`Use loan ID: ${position.loanId}`);
         console.log(`User upper price: ${position.prices.upper}`);
         console.log(`User lower price: ${position.prices.lower}`);
-        console.log(`User userTickNumber: ${position.userTickNumber}`);
+        console.log(`User bandRange: ${position.bandRange}`);
+        console.log(`User liquidationRange: ${position.liquidationRange}`);
         console.log("-----------------------------------------------------------");
       }
     });

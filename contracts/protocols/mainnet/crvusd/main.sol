@@ -23,8 +23,6 @@ contract CurveUSDResolver is CRVHelpers {
     ) public view returns (PositionData memory positionData, MarketConfig memory marketConfig) {
         IController controller = getController(market, index);
         uint256[4] memory res = controller.user_state(user);
-        address AMM = controller.amm();
-        positionData.userTickNumber = I_LLAMMA(AMM).read_user_tick_numbers(user);
         positionData.borrow = res[2];
         positionData.supply = res[0];
         positionData.N = res[3];
@@ -35,6 +33,10 @@ contract CurveUSDResolver is CRVHelpers {
             uint256[2] memory prices = controller.user_prices(user);
             UserPrices memory userPrices = UserPrices(prices[0], prices[1]);
             positionData.prices = userPrices;
+            address AMM = controller.amm();
+            positionData.bandRange = I_LLAMMA(AMM).read_user_tick_numbers(user);
+            positionData.liquidationRange[0] = I_LLAMMA(AMM).p_oracle_up(positionData.bandRange[0]);
+            positionData.liquidationRange[1] = I_LLAMMA(AMM).p_oracle_down(positionData.bandRange[1]);
         }
 
         marketConfig = getMarketConfig(market, index);

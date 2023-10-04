@@ -9,7 +9,8 @@ struct PositionData {
     uint256 health;
     UserPrices prices;
     uint256 loanId;
-    int256[2] userTickNumber; // calculating for user band range
+    int256[2] bandRange; // calculating for user band range
+    uint256[2] liquidationRange;
 }
 
 struct UserPrices {
