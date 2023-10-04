@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.6;
 import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
@@ -42,6 +42,9 @@ contract CRVHelpers is DSMath {
         config.borrowable = IERC20(CRV_USD).balanceOf(address(controller));
         config.basePrice = I_LLAMMA(AMM).get_base_price();
         config.A = I_LLAMMA(AMM).A();
+        config.minBand = I_LLAMMA(AMM).min_band();
+        config.maxBand = I_LLAMMA(AMM).max_band();
+
         try IMonetary(monetary).rate(address(controller)) returns (uint256 rate) {
             config.fractionPerSecond = rate;
         } catch {

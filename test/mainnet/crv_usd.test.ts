@@ -59,6 +59,8 @@ describe("CRV-USD Resolvers", () => {
         console.log(`Coin1 token decimals: ${market.coins.coin1Decimals}`);
         console.log(`Coin0 balance: ${market.coins.coin0Amount}`);
         console.log(`Coin1 balance: ${market.coins.coin1Amount}`);
+        console.log(`min Band: ${market.minBand}`);
+        console.log(`max Band: ${market.maxBand}`);
         console.log("======================================================");
       }
     });
@@ -77,8 +79,30 @@ describe("CRV-USD Resolvers", () => {
         console.log(`Use loan ID: ${position.loanId}`);
         console.log(`User upper price: ${position.prices.upper}`);
         console.log(`User lower price: ${position.prices.lower}`);
+        console.log(`User userTickNumber: ${position.userTickNumber}`);
         console.log("-----------------------------------------------------------");
       }
+    });
+
+    it("Returns max debt amount", async () => {
+      const maxDebt = await resolver.getMaxDebt(markets[0], 0, "1000000000000000000", 12);
+      console.log("maxDebt amount: ", maxDebt);
+    });
+
+    it("Returns min collateral amount", async () => {
+      const minCollateral = await resolver.getMinCollateral(markets[0], 0, "500000000000000000000", 10);
+      console.log("minCollateral amount: ", minCollateral);
+    });
+
+    it("Returns Band range", async () => {
+      const minCollateral = await resolver.getBandRangeAndLiquidationRange(
+        markets[0],
+        0,
+        "2205663198573977494528",
+        "2589469072122129017791488",
+        21,
+      );
+      console.log("maxDebt amount: ", minCollateral);
     });
   });
 });

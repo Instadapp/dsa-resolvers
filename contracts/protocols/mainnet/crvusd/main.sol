@@ -23,6 +23,8 @@ contract CurveUSDResolver is CRVHelpers {
     ) public view returns (PositionData memory positionData, MarketConfig memory marketConfig) {
         IController controller = getController(market, index);
         uint256[4] memory res = controller.user_state(user);
+        address AMM = controller.amm();
+        positionData.userTickNumber = I_LLAMMA(AMM).read_user_tick_numbers(user);
         positionData.borrow = res[2];
         positionData.supply = res[0];
         positionData.N = res[3];
@@ -91,6 +93,66 @@ contract CurveUSDResolver is CRVHelpers {
         for (uint256 i = 0; i < length; i++) {
             marketConfig[i] = getMarketConfig(markets[i], indexes[i]);
         }
+    }
+
+    /**
+     *@dev get max debt amount with given collateral.
+     *@param market Addresse of the market
+     *@param version  Latest controller version
+     *@return debt Max debt amount.
+     */
+    function getMaxDebt(
+        address market,
+        uint256 version,
+        uint256 collateralAmount,
+        uint256 bandNumber
+    ) public view returns (uint256 debt) {
+        IController controller = getController(market, version);
+        return controller.max_borrowable(collateralAmount, bandNumber);
+    }
+
+    /**
+     *@dev get min collateral amount with given debt.
+     *@param market Addresse of the market
+     *@param version  Latest controller version
+     *@return collateral Min collateral amount.
+     */
+    function getMinCollateral(
+        address market,
+        uint256 version,
+        uint256 debt,
+        uint256 bandNumber
+    ) public view returns (uint256 collateral) {
+        IController controller = getController(market, version);
+        return controller.min_collateral(debt, bandNumber);
+    }
+
+    /**
+     *@dev get band range according to given collateral, debt and bandNumber.
+     *@param market Addresse of the market
+     *@param version Latest controller version
+     *@param collateral  collateral amount.
+     *@param debt  debt amount.
+     *@return range Band range.
+     *@return liquidation liquidation price range.
+     */
+    function getBandRangeAndLiquidationRange(
+        address market,
+        uint256 version,
+        uint256 collateral,
+        uint256 debt,
+        uint256 bandNumber
+    ) public view returns (int256[2] memory range, uint256[2] memory liquidation) {
+        IController controller = getController(market, version);
+        address AMM = controller.amm();
+        int256 minBand = I_LLAMMA(AMM).min_band();
+        int256 maxBand = I_LLAMMA(AMM).max_band();
+        require(int256(bandNumber) >= minBand && int256(bandNumber) <= maxBand, "Invalid band number");
+
+        range[0] = controller.calculate_debt_n1(collateral, debt, bandNumber);
+        range[1] = range[0] + int256(bandNumber) - 1;
+        liquidation[0] = I_LLAMMA(AMM).p_oracle_up(range[0]);
+        liquidation[1] = I_LLAMMA(AMM).p_oracle_down(range[1]);
     }
 }
 
