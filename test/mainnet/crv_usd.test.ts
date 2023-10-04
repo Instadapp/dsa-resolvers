@@ -92,7 +92,7 @@ describe("CRV-USD Resolvers", () => {
 
     it("Returns min collateral amount", async () => {
       const minCollateral = await resolver.getMinCollateral(markets[0], 0, "500000000000000000000", 10);
-      console.log("maxDebt amount: ", minCollateral);
+      console.log("minCollateral amount: ", minCollateral);
     });
 
     it("Returns Band range", async () => {

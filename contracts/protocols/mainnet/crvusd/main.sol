@@ -100,7 +100,7 @@ contract CurveUSDResolver is CRVHelpers {
     /**
      *@dev get max debt amount with given collateral.
      *@param market Addresse of the market
-     *@param version  This is used for getting controller.
+     *@param version  Latest controller version
      *@return debt Max debt amount.
      */
     function getMaxDebt(
@@ -116,7 +116,7 @@ contract CurveUSDResolver is CRVHelpers {
     /**
      *@dev get min collateral amount with given debt.
      *@param market Addresse of the market
-     *@param version  This is used for getting controller.
+     *@param version  Latest controller version
      *@return collateral Min collateral amount.
      */
     function getMinCollateral(
@@ -126,13 +126,13 @@ contract CurveUSDResolver is CRVHelpers {
         uint256 bandNumber
     ) public view returns (uint256 collateral) {
         IController controller = getController(market, version);
-        return controller.max_borrowable(debt, bandNumber);
+        return controller.min_collateral(debt, bandNumber);
     }
 
     /**
      *@dev get band range according to given collateral, debt and bandNumber.
      *@param market Addresse of the market
-     *@param version  This is used for getting controller.
+     *@param version Latest controller version
      *@param collateral  collateral amount.
      *@param debt  debt amount.
      *@return range Band range.
@@ -149,7 +149,7 @@ contract CurveUSDResolver is CRVHelpers {
         address AMM = controller.amm();
         int256 minBand = I_LLAMMA(AMM).min_band();
         int256 maxBand = I_LLAMMA(AMM).max_band();
-        require(int256(bandNumber) >= minBand && int256(bandNumber) <= maxBand);
+        require(int256(bandNumber) >= minBand && int256(bandNumber) <= maxBand, "Invalid band number");
 
         range[0] = controller.calculate_debt_n1(collateral, debt, bandNumber);
         range[1] = range[0] + int256(bandNumber) - 1;
