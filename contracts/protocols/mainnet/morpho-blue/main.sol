@@ -12,13 +12,13 @@ contract MorphoBlueResolver is Helpers {
     using MorphoLib for IMorpho;
     using MorphoBalancesLib for IMorpho;
     using MarketParamsLib for MarketParams;
-    using SafeERC20 for ERC20;
+    // using SafeERC20 for ERC20;
     using SharesMathLib for uint256;
 
     function getPosition(address user, MarketParams[] memory marketParams) 
         public 
         view 
-        returns(PositionData[] memory positionData, MarketData[] memory marketData)
+        returns(UserData[] memory userDataData, MarketData[] memory marketData)
     {
         uint256 length = marketParams.length;
 

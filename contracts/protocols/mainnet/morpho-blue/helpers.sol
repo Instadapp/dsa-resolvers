@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-// import "./interfaces/IMorpho.sol";
-// import "./interfaces/IIrm.sol";
+import "./interfaces/IMorpho.sol";
+import "./interfaces/IIrm.sol";
 import {MathLib} from "./libraries/MathLib.sol";
 import {MorphoBalancesLib} from "./libraries/periphery/MorphoBalancesLib.sol";
 import {MarketParamsLib} from "./libraries/MarketParamsLib.sol";
 import {SharesMathLib} from "./libraries/SharesMathLib.sol";
 import {MorphoLib} from "./libraries/periphery/MorphoLib.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {MorphoStorageLib} from "./libraries/periphery/MorphoStorageLib.sol";
+import "./interfaces/IOracle.sol";
+import "./libraries/ConstantsLib.sol";
+// import {SafeERC20} from "./libraries/SafeERC20.sol";
 
 
 contract Helpers {
@@ -16,52 +19,33 @@ contract Helpers {
     using MorphoLib for IMorpho;
     using MorphoBalancesLib for IMorpho;
     using MarketParamsLib for MarketParams;
-    using SafeERC20 for ERC20;
+    // using SafeERC20 for ERC20;
     using SharesMathLib for uint256;
 
     IMorpho public immutable morpho = IMorpho(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE); // TODO: Update
 
-    struct MarketData {
-        Id id;
-        Market market;
-        uint256 totalSuppliedAsset;
-        uint256 totalBorrowedAsset;
-        uint256 supplyAPR;
-        uint256 borrowAPR;
-        uint256 lastUpdate;
-        uint256 fee;
-    }
-
-    struct UserData {
-        uint256 totalSuppliedAssets;
-        uint256 totalBorrowedAssets;
-        uint256 totalCollateralAssets;
-        uint256 healthFactor;
-    }
-
     // TODO: Ask how should input be? ID or marketparams?
-    function getMarketConfig(MarketParams memory marketParams) public view {
-        MarketData memory marketData;
-
+    function getMarketConfig(MarketParams memory marketParams) public view returns(MarketData memory marketData) {
         marketData.id = marketParams.id(); // TODO: Ask, id? its not in the struct
-        marketData.market = morpho.market(id);
+        marketData.market = morpho.market(marketData.id);
 
         marketData.totalSuppliedAsset = marketTotalSupply(marketParams);
         marketData.totalBorrowedAsset = marketTotalBorrow(marketParams);
-        marketData.supplyAPR = supplyAPR(marketParams, market);
-        marketData.borrowAPR = borrowAPR(marketParams, market);
+        marketData.supplyAPR = supplyAPR(marketParams, marketData.market);
+        marketData.borrowAPR = borrowAPR(marketParams, marketData.market);
 
-        marketData.lastUpdate = morpho.lastUpdate(id);
-        marketData.fee = morpho.fee(id);
+        marketData.lastUpdate = morpho.lastUpdate(marketData.id);
+        marketData.fee = morpho.fee(marketData.id);
     }
 
-    function getUserConfig(address user, MarketParams memory marketParams) public view {
-        UserData memory userData;
+    function getUserConfig(address user, MarketParams memory marketParams) public view returns(UserData memory userData) {
+        Id id = marketParams.id();
 
         userData.totalSuppliedAssets = supplyAssetsUser(marketParams, user);
         userData.totalBorrowedAssets = borrowAssetsUser(marketParams, user);
         userData.totalCollateralAssets = collateralAssetsUser(id, user);
         userData.healthFactor = userHealthFactor(marketParams, id, user);
+        userData.position = morpho.position(id, user);
     }
     
     /**
@@ -180,5 +164,20 @@ contract Helpers {
 
         if (borrowed == 0) return type(uint256).max;
         healthFactor = maxBorrow.wDivDown(borrowed);
+    }
+
+    /**
+     * @dev Return ethereum address
+     */
+    function getEthAddr() internal pure returns (address) {
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // ETH Address
+    }
+
+    /**
+     * @dev Return Weth address
+     */
+    function getWethAddr() internal pure returns (address) {
+        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Mainnet WETH Address
+        // return 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // Kovan WETH Address
     }
 }

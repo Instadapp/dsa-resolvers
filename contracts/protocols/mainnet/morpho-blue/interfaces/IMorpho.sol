@@ -1,8 +1,27 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.6;
 // pragma experimental ABIEncoderV2;
 
 type Id is bytes32;
+
+struct MarketData {
+    Id id;
+    Market market;
+    uint256 totalSuppliedAsset;
+    uint256 totalBorrowedAsset;
+    uint256 supplyAPR;
+    uint256 borrowAPR;
+    uint256 lastUpdate;
+    uint256 fee;
+}
+
+struct UserData {
+    uint256 totalSuppliedAssets;
+    uint256 totalBorrowedAssets;
+    uint256 totalCollateralAssets;
+    uint256 healthFactor;
+    Position position;
+}
 
 struct MarketParams {
     address loanToken;
