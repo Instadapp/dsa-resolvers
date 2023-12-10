@@ -2,30 +2,27 @@
 pragma solidity ^0.8.6;
 
 import "./interfaces/IMorpho.sol";
-import "./interfaces/IIrm.sol";
-import {MathLib} from "./libraries/MathLib.sol";
-import {MorphoBalancesLib} from "./libraries/periphery/MorphoBalancesLib.sol";
-import {MarketParamsLib} from "./libraries/MarketParamsLib.sol";
-import {SharesMathLib} from "./libraries/SharesMathLib.sol";
-import {MorphoLib} from "./libraries/periphery/MorphoLib.sol";
-import {MorphoStorageLib} from "./libraries/periphery/MorphoStorageLib.sol";
-import "./interfaces/IOracle.sol";
-import "./libraries/ConstantsLib.sol";
-// import {SafeERC20} from "./libraries/SafeERC20.sol";
-
+import { IIrm } from "./interfaces/IIrm.sol";
+import { MathLib } from "./libraries/MathLib.sol";
+import { MorphoBalancesLib } from "./libraries/periphery/MorphoBalancesLib.sol";
+import { MarketParamsLib } from "./libraries/MarketParamsLib.sol";
+import { SharesMathLib } from "./libraries/SharesMathLib.sol";
+import { MorphoLib } from "./libraries/periphery/MorphoLib.sol";
+import { MorphoStorageLib } from "./libraries/periphery/MorphoStorageLib.sol";
+import { IOracle } from "./interfaces/IOracle.sol";
+import { ORACLE_PRICE_SCALE } from "./libraries/ConstantsLib.sol";
 
 contract Helpers {
     using MathLib for uint256;
     using MorphoLib for IMorpho;
     using MorphoBalancesLib for IMorpho;
     using MarketParamsLib for MarketParams;
-    // using SafeERC20 for ERC20;
     using SharesMathLib for uint256;
 
     IMorpho public immutable morpho = IMorpho(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE); // TODO: Update
 
     // TODO: Ask how should input be? ID or marketparams?
-    function getMarketConfig(MarketParams memory marketParams) public view returns(MarketData memory marketData) {
+    function getMarketConfig(MarketParams memory marketParams) public view returns (MarketData memory marketData) {
         marketData.id = marketParams.id(); // TODO: Ask, id? its not in the struct
         marketData.market = morpho.market(marketData.id);
 
@@ -38,7 +35,11 @@ contract Helpers {
         marketData.fee = morpho.fee(marketData.id);
     }
 
-    function getUserConfig(address user, MarketParams memory marketParams) public view returns(UserData memory userData) {
+    function getUserConfig(address user, MarketParams memory marketParams)
+        public
+        view
+        returns (UserData memory userData)
+    {
         Id id = marketParams.id();
 
         userData.totalSuppliedAssets = supplyAssetsUser(marketParams, user);
@@ -47,7 +48,7 @@ contract Helpers {
         userData.healthFactor = userHealthFactor(marketParams, id, user);
         userData.position = morpho.position(id, user);
     }
-    
+
     /**
      * @notice Calculates the supply APR (Annual Percentage Rate) for a given market.
      * @param marketParams The parameters of the market.
@@ -59,7 +60,7 @@ contract Helpers {
         view
         returns (uint256 supplyRate)
     {
-        (uint256 totalSupplyAssets,, uint256 totalBorrowAssets,) = morpho.expectedMarketBalances(marketParams);
+        (uint256 totalSupplyAssets, , uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(marketParams);
 
         // Get the borrow rate
         uint256 borrowRate = IIrm(marketParams.irm).borrowRateView(marketParams, market);
@@ -151,11 +152,11 @@ contract Helpers {
      * @param user The address of the user whose health factor is being calculated.
      * @return healthFactor The calculated health factor.
      */
-    function userHealthFactor(MarketParams memory marketParams, Id id, address user)
-        public
-        view
-        returns (uint256 healthFactor)
-    {
+    function userHealthFactor(
+        MarketParams memory marketParams,
+        Id id,
+        address user
+    ) public view returns (uint256 healthFactor) {
         uint256 collateralPrice = IOracle(marketParams.oracle).price();
         uint256 collateral = morpho.collateral(id, user);
         uint256 borrowed = morpho.expectedBorrowAssets(marketParams, user);
