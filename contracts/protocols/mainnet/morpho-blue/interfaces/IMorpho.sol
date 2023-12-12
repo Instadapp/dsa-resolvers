@@ -1,27 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.6;
-// pragma experimental ABIEncoderV2;
+pragma solidity >=0.8.0;
 
 type Id is bytes32;
-
-struct MarketData {
-    Id id;
-    Market market;
-    uint256 totalSuppliedAsset;
-    uint256 totalBorrowedAsset;
-    uint256 supplyAPR;
-    uint256 borrowAPR;
-    uint256 lastUpdate;
-    uint256 fee;
-}
-
-struct UserData {
-    uint256 totalSuppliedAssets;
-    uint256 totalBorrowedAssets;
-    uint256 totalCollateralAssets;
-    uint256 healthFactor;
-    Position position;
-}
 
 struct MarketParams {
     address loanToken;
@@ -44,8 +24,8 @@ struct Position {
 /// @dev Warning: `totalSupplyShares` does not contain the additional shares accrued by `feeRecipient` since the last
 /// interest accrual.
 struct Market {
-    uint128 totalSupplyAssets; // coll
-    uint128 totalSupplyShares; // coll
+    uint128 totalSupplyAssets;
+    uint128 totalSupplyShares;
     uint128 totalBorrowAssets;
     uint128 totalBorrowShares;
     uint128 lastUpdate;

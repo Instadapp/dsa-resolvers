@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import "./interfaces/IMorpho.sol";
+import { Id, IMorpho, MarketParams, Position, Market } from "./interfaces/IMorpho.sol";
 import { IIrm } from "./interfaces/IIrm.sol";
 import { MathLib } from "./libraries/MathLib.sol";
 import { MorphoBalancesLib } from "./libraries/periphery/MorphoBalancesLib.sol";
@@ -19,29 +19,81 @@ contract Helpers {
     using MarketParamsLib for MarketParams;
     using SharesMathLib for uint256;
 
+    struct MarketData {
+        Id id;
+        Market market;
+        uint256 totalSuppliedAsset;
+        uint256 totalSuppliedShares;
+        uint256 totalBorrowedAsset;
+        uint256 totalBorrowedShares;
+        uint256 supplyAPY;
+        uint256 borrowAPY;
+        uint256 lastUpdate;
+        uint256 fee;
+    }
+
+    struct UserData {
+        uint256 totalSuppliedAssets;
+        uint256 totalBorrowedAssets;
+        uint256 totalCollateralAssets;
+        uint256 healthFactor;
+        Position position;
+    }
+
     IMorpho public immutable morpho = IMorpho(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE); // TODO: Update
 
-    // TODO: Ask how should input be? ID or marketparams?
+    /**
+     * @dev Return ethereum address
+     */
+    function getEthAddr() internal pure returns (address) {
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // ETH Address
+    }
+
+    /**
+     * @dev Return Weth address
+     */
+    function getWethAddr() internal pure returns (address) {
+        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Mainnet WETH Address
+    }
+
+    /**
+     * @dev Return detailed market configs
+     * @param marketParams The parameters of the market.
+     */
     function getMarketConfig(MarketParams memory marketParams) public view returns (MarketData memory marketData) {
-        marketData.id = marketParams.id(); // TODO: Ask, id? its not in the struct
+        marketData.id = marketParams.id();
         marketData.market = morpho.market(marketData.id);
 
-        marketData.totalSuppliedAsset = marketTotalSupply(marketParams);
-        marketData.totalBorrowedAsset = marketTotalBorrow(marketParams);
-        marketData.supplyAPR = supplyAPR(marketParams, marketData.market);
-        marketData.borrowAPR = borrowAPR(marketParams, marketData.market);
+        // Expected market balances of a market after having accrued interest.
+        (
+            marketData.totalSuppliedAsset,
+            marketData.totalSuppliedShares,
+            marketData.totalBorrowedAsset,
+            marketData.totalBorrowedShares
+        ) = morpho.expectedMarketBalances(marketParams);
+
+        (marketData.supplyAPY, marketData.borrowAPY) = getSupplyAndBorrowAPY(
+            marketParams,
+            marketData.market,
+            marketData.totalSuppliedAsset,
+            marketData.totalBorrowedAsset
+        );
 
         marketData.lastUpdate = morpho.lastUpdate(marketData.id);
         marketData.fee = morpho.fee(marketData.id);
     }
 
-    function getUserConfig(address user, MarketParams memory marketParams)
-        public
-        view
-        returns (UserData memory userData)
-    {
-        Id id = marketParams.id();
-
+    /**
+     * @dev Return detailed user position
+     * @param id The identifier of the market.
+     * @param marketParams The parameters of the market.
+     * @param user The address of the user whose position is being calculated.
+     */
+    function getUserConfig(
+        Id id,
+        MarketParams memory marketParams,
+        address user
+    ) public view returns (UserData memory userData) {
         userData.totalSuppliedAssets = supplyAssetsUser(marketParams, user);
         userData.totalBorrowedAssets = borrowAssetsUser(marketParams, user);
         userData.totalCollateralAssets = collateralAssetsUser(id, user);
@@ -50,20 +102,22 @@ contract Helpers {
     }
 
     /**
-     * @notice Calculates the supply APR (Annual Percentage Rate) for a given market.
+     * @notice Calculates the supply APY (Annual Percentage Yield) and
+     * borrow APY (Annual Percentage Yield) for a given market.
      * @param marketParams The parameters of the market.
-     * @param market The market for which the supply APR is being calculated.
-     * @return supplyRate The calculated supply APR.
+     * @param market The market for which the supply APY is being calculated.
+     * @return supplyRate and borrowRate The calculated supply and borrow APY.
      */
-    function supplyAPR(MarketParams memory marketParams, Market memory market)
-        public
-        view
-        returns (uint256 supplyRate)
-    {
-        (uint256 totalSupplyAssets, , uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(marketParams);
+    function getSupplyAndBorrowAPY(
+        MarketParams memory marketParams,
+        Market memory market,
+        uint256 totalSupplyAssets,
+        uint256 totalBorrowAssets
+    ) public view returns (uint256 supplyRate, uint256 borrowRate) {
+        // (uint256 totalSupplyAssets, , uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(marketParams);
 
         // Get the borrow rate
-        uint256 borrowRate = IIrm(marketParams.irm).borrowRateView(marketParams, market);
+        borrowRate = IIrm(marketParams.irm).borrowRateView(marketParams, market).wTaylorCompounded(1);
 
         // Get the supply rate
         uint256 utilization = totalBorrowAssets == 0 ? 0 : totalBorrowAssets.wDivUp(totalSupplyAssets);
@@ -72,48 +126,15 @@ contract Helpers {
     }
 
     /**
-     * @notice Calculates the borrow APR (Annual Percentage Rate) for a given market.
-     * @param marketParams The parameters of the market.
-     * @param market The market for which the borrow APR is being calculated.
-     * @return borrowRate The calculated borrow APR.
-     */
-    function borrowAPR(MarketParams memory marketParams, Market memory market)
-        public
-        view
-        returns (uint256 borrowRate)
-    {
-        borrowRate = IIrm(marketParams.irm).borrowRateView(marketParams, market);
-    }
-
-    /**
-     * @notice Calculates the total supply of assets in a specific market after having accrued interest.
-     * @param marketParams The parameters of the market.
-     * @return totalSupplyAssets The calculated total supply of assets.
-     */
-    function marketTotalSupply(MarketParams memory marketParams) public view returns (uint256 totalSupplyAssets) {
-        totalSupplyAssets = morpho.expectedTotalSupplyAssets(marketParams);
-    }
-
-    /**
-     * @notice Calculates the total borrow of assets in a specific market after having accrued interest.
-     * @param marketParams The parameters of the market.
-     * @return totalBorrowAssets The calculated total borrow of assets.
-     */
-    function marketTotalBorrow(MarketParams memory marketParams) public view returns (uint256 totalBorrowAssets) {
-        totalBorrowAssets = morpho.expectedTotalBorrowAssets(marketParams);
-    }
-
-    /**
      * @notice Calculates the total supply balance of a given user in a specific market after having accrued interest.
      * @param marketParams The parameters of the market.
      * @param user The address of the user whose supply balance is being calculated.
      * @return totalSupplyAssets The calculated total supply balance.
      */
-    function supplyAssetsUser(MarketParams memory marketParams, address user)
-        public
-        view
-        returns (uint256 totalSupplyAssets)
-    {
+    function supplyAssetsUser(
+        MarketParams memory marketParams,
+        address user
+    ) public view returns (uint256 totalSupplyAssets) {
         totalSupplyAssets = morpho.expectedSupplyAssets(marketParams, user);
     }
 
@@ -123,11 +144,10 @@ contract Helpers {
      * @param user The address of the user whose borrow balance is being calculated.
      * @return totalBorrowAssets The calculated total borrow balance.
      */
-    function borrowAssetsUser(MarketParams memory marketParams, address user)
-        public
-        view
-        returns (uint256 totalBorrowAssets)
-    {
+    function borrowAssetsUser(
+        MarketParams memory marketParams,
+        address user
+    ) public view returns (uint256 totalBorrowAssets) {
         totalBorrowAssets = morpho.expectedBorrowAssets(marketParams, user);
     }
 
@@ -165,20 +185,5 @@ contract Helpers {
 
         if (borrowed == 0) return type(uint256).max;
         healthFactor = maxBorrow.wDivDown(borrowed);
-    }
-
-    /**
-     * @dev Return ethereum address
-     */
-    function getEthAddr() internal pure returns (address) {
-        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // ETH Address
-    }
-
-    /**
-     * @dev Return Weth address
-     */
-    function getWethAddr() internal pure returns (address) {
-        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Mainnet WETH Address
-        // return 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // Kovan WETH Address
     }
 }

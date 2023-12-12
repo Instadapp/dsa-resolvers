@@ -167,6 +167,15 @@ const config: HardhatUserConfig = {
           },
         },
       },
+      {
+        version: "0.5.0",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 800,
+          },
+        },
+      },
     ],
   },
   typechain: {
