@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.12;
 
 interface ISushiSwapRouter {
     function factory() external pure returns (address);

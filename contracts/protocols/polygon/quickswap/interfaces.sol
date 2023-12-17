@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.12;
 
 interface IQuickSwapRouter {
     function factory() external pure returns (address);

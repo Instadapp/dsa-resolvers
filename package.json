@@ -87,7 +87,7 @@
   "dependencies": {
     "@nomicfoundation/hardhat-verify": "^2.0.2",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "^3.4.1-solc-0.7-2",
+    "@openzeppelin/contracts": "^4.9.3",
     "@types/mocha": "^10.0.6",
     "@uniswap/v3-periphery": "^1.4.4",
     "mocha": "^10.2.0",

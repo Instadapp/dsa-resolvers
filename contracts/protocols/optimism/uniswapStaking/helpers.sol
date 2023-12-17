@@ -1,4 +1,4 @@
-pragma solidity 0.7.6;
+pragma solidity ^0.8.12;
 pragma abicoder v2;
 
 import { DSMath } from "../../../utils/dsmath.sol";
@@ -8,7 +8,7 @@ import "./contracts/libraries/FixedPoint128.sol";
 import "./contracts/libraries/LiquidityAmounts.sol";
 import "./contracts/libraries/PositionKey.sol";
 import "./contracts/libraries/PoolAddress.sol";
-import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces.sol";
 
 abstract contract Helpers is DSMath {

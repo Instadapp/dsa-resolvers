@@ -1,9 +1,9 @@
-pragma solidity =0.7.6;
+pragma solidity ^0.8.12;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IMulticall.sol";
 import "@uniswap/v3-core/contracts/interfaces/IERC20Minimal.sol";

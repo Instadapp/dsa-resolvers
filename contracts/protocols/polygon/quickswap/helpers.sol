@@ -1,7 +1,7 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.12;
 
 import { DSMath } from "../../../utils/dsmath.sol";
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { IQuickSwapRouter, IQuickSwapFactory, IQuickSwapPair, TokenInterface } from "./interfaces.sol";
 
 library Babylonian {
@@ -181,7 +181,7 @@ abstract contract Helpers is DSMath {
     {
         (TokenInterface _tokenA, TokenInterface _tokenB) = changeEthAddress(tokenA, tokenB);
 
-        _amtA = _amt == uint256(-1) ? getTokenBal(TokenInterface(tokenA)) : _amt;
+        _amtA = _amt == type(uint256).max ? getTokenBal(TokenInterface(tokenA)) : _amt;
         _amtB = convert18ToDec(_tokenB.decimals(), wmul(unitAmt, convertTo18(_tokenA.decimals(), _amtA)));
 
         bool isEth = address(_tokenA) == wethAddr;
@@ -262,7 +262,7 @@ abstract contract Helpers is DSMath {
         require(exchangeAddr != address(0), "pair-not-found.");
 
         TokenInterface uniToken = TokenInterface(exchangeAddr);
-        _uniAmt = _amt == uint256(-1) ? uniToken.balanceOf(address(this)) : _amt;
+        _uniAmt = _amt == type(uint256).max ? uniToken.balanceOf(address(this)) : _amt;
         approve(uniToken, address(router), _uniAmt);
     }
 
