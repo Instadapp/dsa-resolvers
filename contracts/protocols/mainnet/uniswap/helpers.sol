@@ -376,13 +376,14 @@ abstract contract Helpers is DSMath {
                 singleAmountParams.amountA,
                 0x1000000000000000000000000 // Q96
             );
-
+            
             (, amountB) = LiquidityAmounts.getAmountsForLiquidity(
                 singleAmountParams.sqrtPriceX96,
                 singleAmountParams.sqrtPriceX96Lower,
                 singleAmountParams.sqrtPriceX96Upper,
                 uint128(liquidity)
             );
+            
         } else {
             liquidity = LiquidityAmounts.getLiquidityForAmounts(
                 singleAmountParams.sqrtPriceX96,
@@ -445,7 +446,6 @@ abstract contract Helpers is DSMath {
             getPoolAddress(positionInfo.token0, positionInfo.token1, positionInfo.fee)
         );
         (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
-
         (amountB, liquidity) = calculateSingleAmount(
             SingleAmountParams(
                 amountA,
@@ -456,7 +456,6 @@ abstract contract Helpers is DSMath {
                 TickMath.getSqrtRatioAtTick(positionInfo.tickUpper)
             )
         );
-
         amountAMin = getMinAmount(TokenInterface(tokenA), amountA, slippage);
         amountBMin = getMinAmount(TokenInterface(tokenB), amountB, slippage);
     }

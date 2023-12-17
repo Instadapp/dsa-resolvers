@@ -4,6 +4,8 @@ pragma abicoder v2;
 import "./interfaces.sol";
 import "./helpers.sol";
 
+import "hardhat/console.sol";
+
 contract Resolver is Helpers {
     /**
      * @dev Sort token address
@@ -138,6 +140,7 @@ contract Resolver is Helpers {
             uint256 amountBMin
         )
     {
+        console.log('----------mainnet----------');
         (liquidity, tokenB, amountB, amountAMin, amountBMin) = singleDepositAmount(tokenId, tokenA, amountA, slippage);
     }
 
