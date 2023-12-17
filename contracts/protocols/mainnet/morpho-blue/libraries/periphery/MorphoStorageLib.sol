@@ -36,16 +36,6 @@ library MorphoStorageLib {
     uint256 internal constant TOTAL_BORROW_ASSETS_AND_SHARES_OFFSET = 1;
     uint256 internal constant LAST_UPDATE_AND_FEE_OFFSET = 2;
 
-    /* GETTERS */
-
-    function ownerSlot() internal pure returns (bytes32) {
-        return bytes32(OWNER_SLOT);
-    }
-
-    function feeRecipientSlot() internal pure returns (bytes32) {
-        return bytes32(FEE_RECIPIENT_SLOT);
-    }
-
     function positionSupplySharesSlot(Id id, address user) internal pure returns (bytes32) {
         return bytes32(
             uint256(keccak256(abi.encode(user, keccak256(abi.encode(id, POSITION_SLOT))))) + SUPPLY_SHARES_OFFSET
@@ -69,41 +59,5 @@ library MorphoStorageLib {
 
     function marketLastUpdateAndFeeSlot(Id id) internal pure returns (bytes32) {
         return bytes32(uint256(keccak256(abi.encode(id, MARKET_SLOT))) + LAST_UPDATE_AND_FEE_OFFSET);
-    }
-
-    function isIrmEnabledSlot(address irm) internal pure returns (bytes32) {
-        return keccak256(abi.encode(irm, IS_IRM_ENABLED_SLOT));
-    }
-
-    function isLltvEnabledSlot(uint256 lltv) internal pure returns (bytes32) {
-        return keccak256(abi.encode(lltv, IS_LLTV_ENABLED_SLOT));
-    }
-
-    function isAuthorizedSlot(address authorizer, address authorizee) internal pure returns (bytes32) {
-        return keccak256(abi.encode(authorizee, keccak256(abi.encode(authorizer, IS_AUTHORIZED_SLOT))));
-    }
-
-    function nonceSlot(address authorizer) internal pure returns (bytes32) {
-        return keccak256(abi.encode(authorizer, NONCE_SLOT));
-    }
-
-    function idToLoanTokenSlot(Id id) internal pure returns (bytes32) {
-        return bytes32(uint256(keccak256(abi.encode(id, ID_TO_MARKET_PARAMS_SLOT))) + LOAN_TOKEN_OFFSET);
-    }
-
-    function idToCollateralTokenSlot(Id id) internal pure returns (bytes32) {
-        return bytes32(uint256(keccak256(abi.encode(id, ID_TO_MARKET_PARAMS_SLOT))) + COLLATERAL_TOKEN_OFFSET);
-    }
-
-    function idToOracleSlot(Id id) internal pure returns (bytes32) {
-        return bytes32(uint256(keccak256(abi.encode(id, ID_TO_MARKET_PARAMS_SLOT))) + ORACLE_OFFSET);
-    }
-
-    function idToIrmSlot(Id id) internal pure returns (bytes32) {
-        return bytes32(uint256(keccak256(abi.encode(id, ID_TO_MARKET_PARAMS_SLOT))) + IRM_OFFSET);
-    }
-
-    function idToLltvSlot(Id id) internal pure returns (bytes32) {
-        return bytes32(uint256(keccak256(abi.encode(id, ID_TO_MARKET_PARAMS_SLOT))) + LLTV_OFFSET);
     }
 }

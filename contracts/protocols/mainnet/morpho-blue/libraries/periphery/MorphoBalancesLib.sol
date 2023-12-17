@@ -61,33 +61,6 @@ library MorphoBalancesLib {
         return (market.totalSupplyAssets, market.totalSupplyShares, market.totalBorrowAssets, market.totalBorrowShares);
     }
 
-    /// @notice Returns the expected total supply assets of a market after having accrued interest.
-    function expectedTotalSupplyAssets(IMorpho morpho, MarketParams memory marketParams)
-        internal
-        view
-        returns (uint256 totalSupplyAssets)
-    {
-        (totalSupplyAssets,,,) = expectedMarketBalances(morpho, marketParams);
-    }
-
-    /// @notice Returns the expected total borrow assets of a market after having accrued interest.
-    function expectedTotalBorrowAssets(IMorpho morpho, MarketParams memory marketParams)
-        internal
-        view
-        returns (uint256 totalBorrowAssets)
-    {
-        (,, totalBorrowAssets,) = expectedMarketBalances(morpho, marketParams);
-    }
-
-    /// @notice Returns the expected total supply shares of a market after having accrued interest.
-    function expectedTotalSupplyShares(IMorpho morpho, MarketParams memory marketParams)
-        internal
-        view
-        returns (uint256 totalSupplyShares)
-    {
-        (, totalSupplyShares,,) = expectedMarketBalances(morpho, marketParams);
-    }
-
     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.
     /// @dev Warning: Wrong for `feeRecipient` because their supply shares increase is not taken into account.
     /// @dev Warning: Withdrawing a supply position using the expected assets balance can lead to a revert due to
