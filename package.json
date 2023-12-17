@@ -29,7 +29,6 @@
     "@typescript-eslint/parser": "^6.14.0",
     "chai": "^4.3.10",
     "chai-as-promised": "^7.1.1",
-    "commitizen": "^4.3.0",
     "cz-conventional-changelog": "^3.3.0",
     "dotenv": "^16.3.1",
     "eslint": "^8.56.0",
@@ -40,7 +39,6 @@
     "hardhat": "^2.19.2",
     "hardhat-gas-reporter": "^1.0.9",
     "inquirer": "^8.2.6",
-    "lint-staged": "^15.2.0",
     "prettier": "^3.1.1",
     "prettier-plugin-solidity": "^1.2.0",
     "shelljs": "^0.8.5",
@@ -86,11 +84,9 @@
   },
   "dependencies": {
     "@nomicfoundation/hardhat-verify": "^2.0.2",
-    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^4.9.3",
     "@types/mocha": "^10.0.6",
     "@uniswap/v3-periphery": "^1.4.4",
-    "mocha": "^10.2.0",
-    "web3": "^4.3.0"
+    "mocha": "^10.2.0"
   }
 }
