@@ -93,5 +93,15 @@ describe("ERC4626 Resolvers", () => {
 
       console.log("_vaultPreview :>> ", _vaultPreview);
     });
+
+    it("gets MetaMorpho Details", async () => {
+      const metaMorphoMarkets = [
+        '0x38989bba00bdf8181f4082995b3deae96163ac5d',
+        '0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB',
+      ]
+      const _vaultPreview = await resolver.getMetaMorphoDetails(metaMorphoMarkets);
+
+      console.log("_vaultPreview :>> ", _vaultPreview);
+    });
   });
 });
