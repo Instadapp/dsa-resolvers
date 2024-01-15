@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { parseUnits, parseEther } from "ethers/lib/utils";
-import { ethers, network } from "hardhat";
+import { parseEther } from "ethers/lib/utils";
+import { ethers } from "hardhat";
 import { InstaERC4626Resolver, InstaERC4626Resolver__factory } from "../../typechain";
 
 describe("ERC4626 Resolvers", () => {
@@ -99,9 +99,9 @@ describe("ERC4626 Resolvers", () => {
         '0x38989bba00bdf8181f4082995b3deae96163ac5d',
         '0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB',
       ]
-      const _vaultPreview = await resolver.getMetaMorphoDetails(metaMorphoMarkets);
+      const _metamorphpDetails = await resolver.getMetaMorphoDetails(metaMorphoMarkets);
 
-      console.log("_vaultPreview :>> ", _vaultPreview);
+      console.log("_metamorphpDetails :>> ", _metamorphpDetails);
     });
   });
 });
