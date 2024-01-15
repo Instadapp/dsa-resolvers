@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity >=0.8.19;
+
+type Id is bytes32;
 
 interface TokenInterface {
     function balanceOf(address) external view returns (uint256);
@@ -51,4 +53,17 @@ interface VaultInterface {
     function maxWithdraw(address owner) external view returns (uint256);
 
     function maxRedeem(address owner) external view returns (uint256);
+}
+
+interface MorphoBlueInterface {
+    function idToMarketParams(Id id)
+        external
+        view
+        returns (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv);
+}
+
+interface MetaMorphoInterface {
+    function fee() external view returns (uint96);
+    function supplyQueue(uint256) external view returns (Id);
+    function config(Id) external view returns (uint184 cap, bool enabled, uint64 removableAt);
 }
