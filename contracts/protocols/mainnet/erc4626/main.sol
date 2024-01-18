@@ -3,6 +3,8 @@ pragma solidity >=0.8.0;
 import "./interfaces.sol";
 
 contract Resolver {
+    address internal constant MORPHO_BLUE = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
+
     struct VaultData {
         bool isToken;
         string name;
@@ -25,6 +27,18 @@ contract Resolver {
         uint256 previewMint;
         uint256 previewWithdraw;
         uint256 previewRedeem;
+        uint256 decimals;
+        uint256 underlyingDecimals;
+    }
+
+    struct MetaMorphoDetails {
+        uint256 totalCap;
+        address loanToken;
+        address collateralToken;
+        uint256 lltv;
+        uint256 fee;
+        bool enabled; // Whether the market is in the withdraw queue
+        VaultData vaultData;
     }
 
     function getVaultDetails(address[] memory vaultAddresses) public view returns (VaultData[] memory) {
@@ -53,6 +67,8 @@ contract Resolver {
                 continue;
             }
 
+            TokenInterface _underlyingToken = TokenInterface(vaultToken.asset());
+
             _vaultData[i] = VaultData(
                 isToken,
                 vaultToken.name(),
@@ -61,8 +77,8 @@ contract Resolver {
                 vaultToken.asset(),
                 vaultToken.totalAssets(),
                 vaultToken.totalSupply(),
-                vaultToken.convertToShares(10**vaultToken.decimals()), // example convertToShares for 10 ** decimal
-                vaultToken.convertToAssets(10**vaultToken.decimals()) // example convertToAssets for 10 ** decimal
+                vaultToken.convertToShares(10 ** _underlyingToken.decimals()), // example convertToShares
+                vaultToken.convertToAssets(10 ** vaultToken.decimals()) // example convertToAssets for 10 ** decimal
             );
         }
 
@@ -95,11 +111,10 @@ contract Resolver {
         return _tokenAllowance;
     }
 
-    function getVaultPreview(uint256 amount, address[] memory vaultAddresses)
-        public
-        view
-        returns (VaultPreview[] memory)
-    {
+    function getVaultPreview(
+        uint256 amount,
+        address[] memory vaultAddresses
+    ) public view returns (VaultPreview[] memory) {
         VaultPreview[] memory _vaultPreview = new VaultPreview[](vaultAddresses.length);
 
         for (uint256 i = 0; i < vaultAddresses.length; i++) {
@@ -109,12 +124,52 @@ contract Resolver {
             _vaultPreview[i].previewMint = vaultToken.previewMint(amount);
             _vaultPreview[i].previewWithdraw = vaultToken.previewWithdraw(amount);
             _vaultPreview[i].previewRedeem = vaultToken.previewRedeem(amount);
+            _vaultPreview[i].decimals = vaultToken.decimals();
+            TokenInterface _underlyingToken = TokenInterface(vaultToken.asset());
+            _vaultPreview[i].underlyingDecimals = _underlyingToken.decimals();
         }
 
         return _vaultPreview;
     }
+
+    function getMetaMorphoDetails(address[] memory vaultAddresses) public view returns (MetaMorphoDetails[] memory) {
+        MetaMorphoDetails[] memory _metaMorphotData = new MetaMorphoDetails[](vaultAddresses.length);
+
+        VaultData[] memory _vaultDatas = getVaultDetails(vaultAddresses);
+
+        for (uint256 i = 0; i < vaultAddresses.length; i++) {
+            MetaMorphoInterface vaultToken = MetaMorphoInterface(vaultAddresses[i]);
+
+            try vaultToken.fee() {} catch {
+                continue;
+            }
+
+            try vaultToken.supplyQueue(0) {} catch {
+                continue;
+            }
+
+            (
+                _metaMorphotData[i].loanToken,
+                _metaMorphotData[i].collateralToken,
+                ,
+                ,
+                _metaMorphotData[i].lltv
+            ) = MorphoBlueInterface(MORPHO_BLUE).idToMarketParams(vaultToken.supplyQueue(0));
+
+            uint184 cap;
+            (cap, _metaMorphotData[i].enabled, ) = vaultToken.config(vaultToken.supplyQueue(0));
+
+            _metaMorphotData[i].totalCap = uint256(cap);
+
+            _metaMorphotData[i].fee = vaultToken.fee();
+
+            _metaMorphotData[i].vaultData = _vaultDatas[i];
+        }
+
+        return _metaMorphotData;
+    }
 }
 
 contract InstaERC4626Resolver is Resolver {
-    string public constant name = "ERC4626-Resolver-v1";
+    string public constant name = "ERC4626-Resolver-v1.1";
 }
