@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.19;
 
 import { Id, IMorpho, MarketParams, Position, Market } from "./interfaces/IMorpho.sol";
 import { IIrm } from "./interfaces/IIrm.sol";
@@ -21,7 +21,6 @@ contract Helpers {
 
     struct MarketData {
         Id id;
-        Market market;
         uint256 totalSuppliedAsset;
         uint256 totalSuppliedShares;
         uint256 totalBorrowedAsset;
@@ -30,6 +29,8 @@ contract Helpers {
         uint256 borrowAPY;
         uint256 lastUpdate;
         uint256 fee;
+        uint256 utilization;
+        uint256 borrowRateView;
     }
 
     struct UserData {
@@ -37,10 +38,9 @@ contract Helpers {
         uint256 totalBorrowedAssets;
         uint256 totalCollateralAssets;
         uint256 healthFactor;
-        Position position;
     }
 
-    IMorpho public immutable morpho = IMorpho(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE); // TODO: Update
+    IMorpho public immutable morpho = IMorpho(0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb);
 
     /**
      * @dev Return ethereum address
@@ -62,7 +62,6 @@ contract Helpers {
      */
     function getMarketConfig(MarketParams memory marketParams) public view returns (MarketData memory marketData) {
         marketData.id = marketParams.id();
-        marketData.market = morpho.market(marketData.id);
 
         // Expected market balances of a market after having accrued interest.
         (
@@ -72,9 +71,14 @@ contract Helpers {
             marketData.totalBorrowedShares
         ) = morpho.expectedMarketBalances(marketParams);
 
-        (marketData.supplyAPY, marketData.borrowAPY) = getSupplyAndBorrowAPY(
+        (
+            marketData.supplyAPY,
+            marketData.borrowAPY,
+            marketData.utilization,
+            marketData.borrowRateView
+        ) = getSupplyAndBorrowAPY(
             marketParams,
-            marketData.market,
+            morpho.market(marketData.id),
             marketData.totalSuppliedAsset,
             marketData.totalBorrowedAsset
         );
@@ -98,7 +102,6 @@ contract Helpers {
         userData.totalBorrowedAssets = borrowAssetsUser(marketParams, user);
         userData.totalCollateralAssets = collateralAssetsUser(id, user);
         userData.healthFactor = userHealthFactor(marketParams, id, user);
-        userData.position = morpho.position(id, user);
     }
 
     /**
@@ -106,21 +109,22 @@ contract Helpers {
      * borrow APY (Annual Percentage Yield) for a given market.
      * @param marketParams The parameters of the market.
      * @param market The market for which the supply APY is being calculated.
-     * @return supplyRate and borrowRate The calculated supply and borrow APY.
+     * @param totalSupplyAssets Total supplied assets of a market after having accrued interest
+     * @param totalBorrowAssets Total borrowed assets of a market after having accrued interest
      */
     function getSupplyAndBorrowAPY(
         MarketParams memory marketParams,
         Market memory market,
         uint256 totalSupplyAssets,
         uint256 totalBorrowAssets
-    ) public view returns (uint256 supplyRate, uint256 borrowRate) {
-        // (uint256 totalSupplyAssets, , uint256 totalBorrowAssets, ) = morpho.expectedMarketBalances(marketParams);
+    ) public view returns (uint256 supplyRate, uint256 borrowRate, uint256 utilization, uint256 borrowRateView) {
+        borrowRateView = IIrm(marketParams.irm).borrowRateView(marketParams, market);
 
         // Get the borrow rate
-        borrowRate = IIrm(marketParams.irm).borrowRateView(marketParams, market).wTaylorCompounded(1);
+        borrowRate = borrowRateView.wTaylorCompounded(1);
 
         // Get the supply rate
-        uint256 utilization = totalBorrowAssets == 0 ? 0 : totalBorrowAssets.wDivUp(totalSupplyAssets);
+        utilization = totalBorrowAssets == 0 ? 0 : totalBorrowAssets.wDivUp(totalSupplyAssets);
 
         supplyRate = borrowRate.wMulDown(1 ether - market.fee).wMulDown(utilization);
     }
