@@ -14,6 +14,14 @@ describe("Metamorpho Resolver", () => {
     '0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB',
   ];
 
+  const sender = '0x640428D38189B11B844dAEBDBAAbbdfbd8aE0143'
+  const morphoURD = '0x678dDC1d07eaa166521325394cDEb1E4c086DF43'
+  const wstethURD = '0x2EfD4625d0c149EbADf118EC5446c6de24d916A4'
+  const morphoAddress = '0x9994E35Db50125E0DF82e4c2dde62496CE330999'
+  const wstethAddress = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0'
+  const wstethEthId = "0xc54d7acf14de29e0e5527cabd7a576506870346a78a11a6762e2cca66322ec41"
+  const wstethUsdcId = "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc"
+
   before(async () => {
     await hre.network.provider.request({
       method: "hardhat_reset",
@@ -36,6 +44,20 @@ describe("Metamorpho Resolver", () => {
     let resolver: InstaMetamorphoResolver;
 
     before(async () => {
+      // await hre.network.provider.request({
+      //   method: "hardhat_reset",
+      //   params: [
+      //     {
+      //       forking: {
+      //         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //         // @ts-ignore
+      //         jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+      //         blockNumber: 19107703,
+      //       },
+      //     },
+      //   ],
+      // });
+
       const deployer = new InstaMetamorphoResolver__factory(signer);
       resolver = await deployer.deploy();
     });
@@ -86,6 +108,28 @@ describe("Metamorpho Resolver", () => {
       const _metamorphpDetails = await resolver.getMetaMorphoDetails(metaMorphoMarkets);
 
       console.log("_metamorphpDetails :>> ", _metamorphpDetails);
+    });
+
+    it("should get wsteth-eth reward details", async () => {
+      const rewards = await resolver.getRewardEmissions(
+        [sender, sender],
+        [morphoURD, wstethURD],
+        [morphoAddress, wstethAddress],
+        wstethEthId
+      );
+
+      console.log("rewards wsteth-eth:>> ", rewards);
+    });
+
+    it("should get wsteth-usdc reward details", async () => {
+      const rewards = await resolver.getRewardEmissions(
+        [sender, sender],
+        [morphoURD, wstethURD],
+        [morphoAddress, wstethAddress],
+        wstethUsdcId
+      );
+
+      console.log("rewards wsteth-usdc:>> ", rewards);
     });
   });
 });

@@ -67,3 +67,19 @@ interface MetaMorphoInterface {
     function supplyQueue(uint256) external view returns (Id);
     function config(Id) external view returns (uint184 cap, bool enabled, uint64 removableAt);
 }
+
+interface IRewardsEmissions {
+    function rewardsEmissions(
+        address sender, 
+        address urd,
+        address rewardToken, 
+        bytes32 marketId
+    )
+    external 
+    view 
+    returns (
+        uint256 supplyRewardTokensPerYear, 
+        uint256 borrowRewardTokensPerYear, 
+        uint256 collateralRewardTokensPerYear
+    );
+}
