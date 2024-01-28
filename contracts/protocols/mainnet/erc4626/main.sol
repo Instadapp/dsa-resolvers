@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
-import "./interfaces.sol";
+import "./interface.sol";
+import { MarketParams, Market, IMorpho } from "./interfaces/IMorpho.sol";
+import { IIrm } from "./interfaces/IIrm.sol";
+import { IMetaMorpho } from "./interfaces/IMetaMorpho.sol";
+import { MathLib } from "./libraries/MathLib.sol";
+import { MorphoBalancesLib } from "./libraries/periphery/MorphoBalancesLib.sol";
 
 contract Resolver {
+    using MathLib for uint256;
+    using MorphoBalancesLib for IMorpho;
+
     address internal constant MORPHO_BLUE = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
 
     struct VaultData {
@@ -38,6 +46,7 @@ contract Resolver {
         uint256 lltv;
         uint256 fee;
         bool enabled; // Whether the market is in the withdraw queue
+        uint256 apy;
         VaultData vaultData;
     }
 
@@ -140,6 +149,8 @@ contract Resolver {
         for (uint256 i = 0; i < vaultAddresses.length; i++) {
             MetaMorphoInterface vaultToken = MetaMorphoInterface(vaultAddresses[i]);
 
+            _metaMorphotData[i].apy = supplyAPYVault(vaultAddresses[i]);
+
             try vaultToken.fee() {} catch {
                 continue;
             }
@@ -167,6 +178,71 @@ contract Resolver {
         }
 
         return _metaMorphotData;
+    }
+
+    /// @notice Returns the current APY of the vault on a Morpho Blue market.
+    /// @param marketParams The morpho blue market parameters.
+    /// @param market The morpho blue market state.
+    function supplyAPYMarket(MarketParams memory marketParams, Market memory market)
+        public
+        view
+        returns (uint256 supplyRate)
+    {
+        // Get the borrow rate
+        uint256 borrowRate;
+        if (marketParams.irm == address(0)) {
+            return 0;
+        } else {
+            borrowRate = IIrm(marketParams.irm).borrowRateView(marketParams, market).wTaylorCompounded(365 days);
+        }
+
+        (uint256 totalSupplyAssets,, uint256 totalBorrowAssets,) =
+            IMorpho(MORPHO_BLUE).expectedMarketBalances(marketParams);
+
+        // Get the supply rate
+        uint256 utilization = totalBorrowAssets == 0 ? 0 : totalBorrowAssets.wDivUp(totalSupplyAssets);
+
+        supplyRate = borrowRate.wMulDown(1 ether - market.fee).wMulDown(utilization);
+    }
+
+    /// @notice Returns the current APY of a MetaMorpho vault.
+    /// @dev It is computed as the sum of all APY of enabled markets weighted by the supply on these markets.
+    /// @param vault The address of the MetaMorpho vault.
+    function supplyAPYVault(address vault) public view returns (uint256 avgSupplyRate) {
+        uint256 ratio;
+        uint256 queueLength = IMetaMorpho(vault).withdrawQueueLength();
+
+        uint256 totalAmount = totalDepositVault(vault);
+
+        for (uint256 i; i < queueLength; ++i) {
+            Id idMarket = IMetaMorpho(vault).withdrawQueue(i);
+
+            MarketParams memory marketParams = IMorpho(MORPHO_BLUE).idToMarketParams(idMarket);
+            Market memory market = IMorpho(MORPHO_BLUE).market(idMarket);
+
+            uint256 currentSupplyAPY = supplyAPYMarket(marketParams, market);
+            uint256 vaultAsset = vaultAssetsInMarket(vault, marketParams);
+            ratio += currentSupplyAPY.wMulDown(vaultAsset);
+        }
+
+        avgSupplyRate = ratio.wDivUp(totalAmount);
+    }
+
+    /// @notice Returns the total assets deposited into a MetaMorpho `vault`.
+    /// @param vault The address of the MetaMorpho vault.
+    function totalDepositVault(address vault) public view returns (uint256 totalAssets) {
+        totalAssets = IMetaMorpho(vault).totalAssets();
+    }
+
+    /// @notice Returns the total assets supplied into a specific morpho blue market by a MetaMorpho `vault`.
+    /// @param vault The address of the MetaMorpho vault.
+    /// @param marketParams The morpho blue market.
+    function vaultAssetsInMarket(address vault, MarketParams memory marketParams)
+        public
+        view
+        returns (uint256 assets)
+    {
+        assets = IMorpho(MORPHO_BLUE).expectedSupplyAssets(marketParams, vault);
     }
 }
 

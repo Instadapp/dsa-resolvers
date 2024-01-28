@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.19;
 
-type Id is bytes32;
+import {Id} from "./interfaces/IMorpho.sol";
 
 interface TokenInterface {
     function balanceOf(address) external view returns (uint256);
