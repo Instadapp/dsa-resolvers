@@ -49,7 +49,6 @@ contract MetamorphoResolver {
         uint256 fee;
         bool enabled; // Whether the market is in the withdraw queue
         uint256 apy;
-        uint256 underlyingDecimals;
         VaultData vaultData;
     }
 
