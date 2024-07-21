@@ -78,8 +78,11 @@ contract MorphoHelpers is DSMath {
 
     struct Flags {
         bool isCreated;
-        bool isPaused;
-        bool isPartiallyPaused;
+        bool isSupplyPaused;
+        bool isBorrowPaused;
+        bool isWithdrawPaused;
+        bool isRepayPaused;
+        bool isDeprecated;
         bool isP2PDisabled;
         bool isUnderlyingBorrowEnabled;
     }
@@ -180,12 +183,21 @@ contract MorphoHelpers is DSMath {
             tokenData_.underlyingToken,
             flags_.isCreated,
             flags_.isP2PDisabled,
-            flags_.isPaused,
-            flags_.isPartiallyPaused,
+            ,
+            ,
             ,
             ,
 
         ) = compLens.getMarketConfiguration(poolTokenAddress_);
+
+        ICompoundLens.MarketPauseStatus memory marketStatus = 
+            compLens.getMarketPauseStatus(poolTokenAddress_);
+
+        flags_.isSupplyPaused = marketStatus.isSupplyPaused;
+        flags_.isBorrowPaused = marketStatus.isBorrowPaused;
+        flags_.isWithdrawPaused = marketStatus.isWithdrawPaused;
+        flags_.isRepayPaused = marketStatus.isRepayPaused;
+        flags_.isDeprecated = marketStatus.isDeprecated;
 
         cf_.marketBorrowCap = comptroller.borrowCaps(poolTokenAddress_);
 
