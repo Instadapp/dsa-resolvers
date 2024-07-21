@@ -313,6 +313,21 @@ interface ICompoundLens {
     function getCurrentUserBorrowRatePerBlock(address _poolToken, address _user) external view returns (uint256);
 
     function getUserHealthFactor(address _user, address[] calldata _updatedMarkets) external view returns (uint256);
+
+    struct MarketPauseStatus {
+        bool isSupplyPaused; // Whether the supply is paused or not.
+        bool isBorrowPaused; // Whether the borrow is paused or not
+        bool isWithdrawPaused; // Whether the withdraw is paused or not.
+        bool isRepayPaused; // Whether the repay is paused or not.
+        bool isLiquidateCollateralPaused; // Whether the liquidation on this market as collateral is paused or not.
+        bool isLiquidateBorrowPaused; // Whether the liquidatation on this market as borrow is paused or not.
+        bool isDeprecated; // Whether a market is deprecated or not.
+    }
+
+    function getMarketPauseStatus(address _poolToken)
+        external
+        view
+        returns (MarketPauseStatus memory);
 }
 
 interface IComp is IComptroller {

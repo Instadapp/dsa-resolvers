@@ -90,8 +90,11 @@ contract MorphoHelpers is DSMath {
 
     struct Flags {
         bool isCreated;
-        bool isPaused;
-        bool isPartiallyPaused;
+        bool isSupplyPaused;
+        bool isBorrowPaused;
+        bool isWithdrawPaused;
+        bool isRepayPaused;
+        bool isDeprecated;
         bool isP2PDisabled;
         bool isUnderlyingBorrowEnabled;
     }
@@ -209,8 +212,8 @@ contract MorphoHelpers is DSMath {
             marketData_.config.underlyingToken,
             marketData_.flags.isCreated,
             marketData_.flags.isP2PDisabled,
-            marketData_.flags.isPaused,
-            marketData_.flags.isPartiallyPaused,
+            ,
+            ,
             ,
             ,
             ,
@@ -218,6 +221,15 @@ contract MorphoHelpers is DSMath {
             ,
             marketData_.config.decimals
         ) = aavelens.getMarketConfiguration(poolTokenAddress_);
+
+        IAaveLens.MarketPauseStatus memory marketStatus = 
+            aavelens.getMarketPauseStatus(poolTokenAddress_);
+
+        marketData_.flags.isSupplyPaused = marketStatus.isSupplyPaused;
+        marketData_.flags.isBorrowPaused = marketStatus.isBorrowPaused;
+        marketData_.flags.isWithdrawPaused = marketStatus.isWithdrawPaused;
+        marketData_.flags.isRepayPaused = marketStatus.isRepayPaused;
+        marketData_.flags.isDeprecated = marketStatus.isDeprecated;
 
         marketData_ = getLiquidatyData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
         marketData_ = getAaveHelperData(marketData_, poolTokenAddress_, marketData_.config.underlyingToken);
