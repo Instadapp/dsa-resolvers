@@ -12,8 +12,7 @@ contract MetamorphoResolver {
     using MorphoBalancesLib for IMorpho;
 
     address internal constant MORPHO_BLUE = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
-    address internal constant REWARDS_EMISSIONS = 0xf27fa85b6748c8a64d4b0D3D6083Eb26f18BDE8e;
-
+    
     struct VaultData {
         bool isToken;
         string name;
@@ -183,37 +182,6 @@ contract MetamorphoResolver {
         }
 
         return _metaMorphotData;
-    }
-
-    // Note sender, urd and rewardToken lengths must be equal.
-    function getRewardEmissions(
-        address[] memory sender, // Sender of each reward token
-        address[] memory urd, // Urd of each reward token
-        address[] memory rewardToken, // Array of all reward tokens
-        bytes32 marketId // Market ID whose rewards we need to calculate
-    ) public view returns (uint256[] memory, uint256[] memory, uint256[] memory) {
-        IRewardsEmissions rewardsContract = IRewardsEmissions(REWARDS_EMISSIONS);
-
-        uint256 length = rewardToken.length;
-
-        uint256[] memory supplyRewards = new uint256[](length);
-        uint256[] memory borrowRewards = new uint256[](length);
-        uint256[] memory collateralRewards = new uint256[](length);
-
-        for (uint8 i = 0; i < length; i++) {
-            (
-                supplyRewards[i],
-                borrowRewards[i],
-                collateralRewards[i]
-            ) = rewardsContract.rewardsEmissions(
-                sender[i],
-                urd[i],
-                rewardToken[i],
-                marketId
-            );
-        }
-
-        return (supplyRewards, borrowRewards, collateralRewards);
     }
 
     /// @notice Returns the current APY of the vault on a Morpho Blue market.
