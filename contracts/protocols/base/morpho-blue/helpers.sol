@@ -53,7 +53,7 @@ contract Helpers {
      * @dev Return Weth address
      */
     function getWethAddr() internal pure returns (address) {
-        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Mainnet WETH Address
+        return 0x4200000000000000000000000000000000000006; // Base WETH Address
     }
 
     /**
