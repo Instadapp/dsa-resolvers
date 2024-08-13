@@ -56,13 +56,13 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
 }
 
 function getNetworkUrl(networkType: string) {
-  //console.log(process.env);
+  // console.log('networkType: ', networkType);
   if (networkType === "avalanche") return "https://api.avax.network/ext/bc/C/rpc";
   else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "optimism") return `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
-  else if (networkType === "base") return `https://1rpc.io/base`;
+  else if (networkType === "base") return `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
@@ -92,7 +92,7 @@ const config: HardhatUserConfig = {
       url: `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       chainId: 10,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
-      gasPrice: 1000000, // 0.0001 GWEI
+      gasPrice: 1000000,
     },
     polygon: {
       url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
@@ -112,9 +112,9 @@ const config: HardhatUserConfig = {
       gasPrice: 15000000000,
     },
     base: {
-      url: `https://1rpc.io/base`,
+      url: `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
-      gasPrice: 150000,
+      gasPrice: 15000000,
     },
   },
   paths: {
