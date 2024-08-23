@@ -38,7 +38,7 @@ contract AaveV3Helper is DSMath {
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
-        return 0x54586bE62E3c3580375aE3723C145253060Ca0C2; //Mainnet address
+        return 0xE3C061981870C0C7b1f3C4F4bB36B95f1F260BE6; //Mainnet address
     }
 
     function getChainLinkFeed() internal pure returns (address) {
