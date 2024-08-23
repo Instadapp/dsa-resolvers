@@ -4,7 +4,7 @@ import "./helpers.sol";
 import "./interfaces.sol";
 
 /**
- *@title Aave v3 Resolver
+ *@title Aave v3 Lido Resolver
  *@dev get user position, user configuration & reserves list.
  */
 contract AaveV3LidoResolver is AaveV3Helper {
