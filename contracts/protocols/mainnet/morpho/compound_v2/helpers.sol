@@ -5,6 +5,12 @@ import { DSMath } from "../../../../utils/dsmath.sol";
 
 contract MorphoHelpers is DSMath {
     /**
+     * @dev Chainlink ETH/USD Price Oracle Interface
+     */
+    IChainlinkOracle internal constant ETH_PRICE_ORACLE = 
+        IChainlinkOracle(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+
+    /**
      *@dev Returns ethereum address
      */
     function getEthAddr() internal pure returns (address) {
@@ -118,7 +124,7 @@ contract MorphoHelpers is DSMath {
     IComp internal constant comptroller = IComp(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
 
     function getEthPriceInUsd() internal view returns (uint256 ethPriceInUsd) {
-        ethPriceInUsd = ICompoundOracle(comptroller.oracle()).price("ETH") * 1e12;
+        ethPriceInUsd = uint256(ETH_PRICE_ORACLE.latestAnswer()) ** 1e10;
     }
 
     function getTokenPrices(address cToken) internal view returns (uint256 priceInETH, uint256 priceInUSD) {

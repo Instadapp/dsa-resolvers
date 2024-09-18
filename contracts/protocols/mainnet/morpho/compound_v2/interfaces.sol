@@ -359,3 +359,7 @@ interface CTokenInterface {
 
     function getCash() external view returns (uint256);
 }
+
+interface IChainlinkOracle {
+    function latestAnswer() external view returns (int256);
+}
