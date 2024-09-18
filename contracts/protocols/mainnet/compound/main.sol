@@ -6,7 +6,7 @@ import "./helpers.sol";
 contract Resolver is Helpers {
     function getPriceInEth(CTokenInterface cToken) public view returns (uint priceInETH, uint priceInUSD) {
         uint decimals = getCETHAddress() == address(cToken) ? 18 : TokenInterface(cToken.underlying()).decimals();
-        uint ethPrice = uint(ETH_PRICE_ORACLE.latestAnswer()) / 10 ** ETH_PRICE_ORACLE.decimals();
+        uint ethPrice = uint(ETH_PRICE_ORACLE.latestAnswer()) ** 1e10;
         uint price = address(cToken) == getCETHAddress() ? ethPrice : OrcaleComp(getOracleAddress()).getUnderlyingPrice(address(cToken));
         priceInUSD = price / 10 ** (18 - decimals);
         priceInETH = wdiv(priceInUSD, ethPrice);
