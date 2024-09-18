@@ -124,7 +124,7 @@ contract MorphoHelpers is DSMath {
     IComp internal constant comptroller = IComp(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
 
     function getEthPriceInUsd() internal view returns (uint256 ethPriceInUsd) {
-        ethPriceInUsd = uint256(ETH_PRICE_ORACLE.latestAnswer()) ** 1e10;
+        ethPriceInUsd = uint256(ETH_PRICE_ORACLE.latestAnswer()) * 1e10;
     }
 
     function getTokenPrices(address cToken) internal view returns (uint256 priceInETH, uint256 priceInUSD) {
