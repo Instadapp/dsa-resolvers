@@ -81,4 +81,11 @@ interface CompReadInterface {
         ComptrollerLensInterface comptroller,
         address account
     ) external returns (CompBalanceMetadataExt memory);
+    
 }
+
+interface IChainlinkOracle {
+    function decimals() external view returns (uint8);
+    function latestAnswer() external view returns (int256);
+}
+
