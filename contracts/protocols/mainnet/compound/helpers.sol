@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
-import { ComptrollerLensInterface, TokenInterface } from "./interfaces.sol";
+import { ComptrollerLensInterface, TokenInterface, IChainlinkOracle } from "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
 contract Helpers is DSMath {
+    /**
+     * @dev Chainlink ETH/USD Price Oracle Interface
+     */
+    IChainlinkOracle internal constant ETH_PRICE_ORACLE = 
+        IChainlinkOracle(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    
     /**
      * @dev get Compound Comptroller
      */

@@ -45,5 +45,5 @@ contract MorphoResolver is MorphoHelpers {
 }
 
 contract InstaCompoundV2MorphoResolver is MorphoResolver {
-    string public constant name = "Morpho-Compound-Resolver-v1.1";
+    string public constant name = "Morpho-Compound-Resolver-v1.2";
 }
