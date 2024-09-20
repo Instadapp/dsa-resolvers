@@ -20,7 +20,11 @@ contract AaveV3Resolver is AaveV3Helper {
      *@return AaveV3TokenData details of tokens (e.g. symbol, decimals, ltv etc.).
      *@return ReserveIncentiveData details of user's rewards corresponding to the tokens passed.
      */
-    function getPosition(address user, address[] memory tokens, address poolAddressProvider)
+    function getPosition(
+        address user,
+        address[] memory tokens,
+        address poolAddressProvider
+    )
         public
         view
         returns (
@@ -59,7 +63,10 @@ contract AaveV3Resolver is AaveV3Helper {
      *@return AaveV3TokenData details of tokens (e.g. symbol, decimals, ltv etc.).
      *@return ReserveIncentiveData details of user's rewards corresponding to the tokens in the market.
      */
-    function getPositionAll(address user, address poolAddressProvider)
+    function getPositionAll(
+        address user,
+        address poolAddressProvider
+    )
         public
         view
         returns (
@@ -81,8 +88,10 @@ contract AaveV3Resolver is AaveV3Helper {
      *@return borrowed array with an element as true if 
      the corresponding token is borrowed by the user, false otherwise.
      */
-    function getConfiguration(address user, address poolAddressProvider) public view returns (bool[] memory collateral, bool[] memory borrowed) {
-        
+    function getConfiguration(
+        address user,
+        address poolAddressProvider
+    ) public view returns (bool[] memory collateral, bool[] memory borrowed) {
         uint256 data = getConfig(user, poolAddressProvider).data;
         address[] memory reserveIndex = getList(poolAddressProvider);
 
