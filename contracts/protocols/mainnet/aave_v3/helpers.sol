@@ -4,8 +4,6 @@ import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
 contract AaveV3Helper is DSMath {
-    // ----------------------- USING LATEST ADDRESSES -----------------------------
-
     /**
      *@dev Returns ethereum address
      */
@@ -27,15 +25,23 @@ contract AaveV3Helper is DSMath {
         return 0x54586bE62E3c3580375aE3723C145253060Ca0C2; //Mainnet address
     }
 
+    /**
+     *@dev Returns Chainlink Feed Address
+     */
     function getChainLinkFeed() internal pure returns (address) {
-        //todo: confirm
         return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     }
 
+    /**
+     *@dev Returns UI Incentives Provider Feed Address
+     */
     function getUiIncetivesProvider() internal pure returns (address) {
         return 0x162A7AC02f547ad796CA549f757e2b8d1D9b10a6;
     }
 
+    /**
+     *@dev Returns Rewards Controller Address
+     */
     function getRewardsController() internal pure returns (address) {
         return 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
     }
@@ -371,9 +377,10 @@ contract AaveV3Helper is DSMath {
         address poolAddressProvider
     ) internal view returns (AaveV3TokenData memory aaveTokenData) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
-
+        
         aaveTokenData.asset = token;
         aaveTokenData.symbol = IERC20Detailed(token).symbol();
+
         (
             aaveTokenData.decimals,
             aaveTokenData.ltv,
@@ -402,8 +409,8 @@ contract AaveV3Helper is DSMath {
         address poolAddressProvider
     ) internal view returns (AaveV3UserTokenData memory tokenData) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
-
         tokenData.price = IPriceOracle(poolInfo.provider.getPriceOracle()).getAssetPrice(token);
+        
         (
             tokenData.supplyBalance,
             tokenData.stableBorrowBalance,
@@ -448,9 +455,8 @@ contract AaveV3Helper is DSMath {
     }
 
     function getList(address poolAddressProvider) public view returns (address[] memory data) {
-        IPoolAddressesProvider provider = IPoolAddressesProvider(poolAddressProvider);
-        IPool pool = IPool(provider.getPool());
-        data = pool.getReservesList();
+        PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
+        data = poolInfo.pool.getReservesList();
     }
 
     function isUsingAsCollateralOrBorrowing(uint256 self, uint256 reserveIndex) public pure returns (bool) {
@@ -472,9 +478,8 @@ contract AaveV3Helper is DSMath {
         address user,
         address poolAddressProvider
     ) public view returns (UserConfigurationMap memory data) {
-        IPoolAddressesProvider provider = IPoolAddressesProvider(poolAddressProvider);
-        IPool pool = IPool(provider.getPool());
-        data = pool.getUserConfiguration(user);
+        PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
+        data = poolInfo.pool.getUserConfiguration(user);
     }
 
     function getPoolSpecificInfo(address poolAddressProvider) internal view returns (PoolSpecificInfo memory poolInfo) {
