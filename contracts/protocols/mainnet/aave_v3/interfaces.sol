@@ -176,7 +176,7 @@ interface IPool {
     //@return emode id of the user
     function getUserEMode(address user) external view returns (uint256);
 
-    function getReservesList() external view virtual returns (address[] memory);
+    function getReservesList() external view returns (address[] memory);
 
     function getUserConfiguration(address user) external view returns (UserConfigurationMap memory);
 

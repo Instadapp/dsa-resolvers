@@ -21,20 +21,6 @@ contract AaveV3Helper is DSMath {
     }
 
     /**
-     *@dev Returns Pool AddressProvider Address
-     */
-    function getPoolAddressProvider() internal pure returns (address) {
-        return 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e; //Mainnet PoolAddressesProvider address
-    }
-
-    /**
-     *@dev Returns Pool DataProvider Address
-     */
-    function getPoolDataProvider() internal pure returns (address) {
-        return 0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3; //Mainnet PoolDataProvider address
-    }
-
-    /**
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
@@ -167,10 +153,13 @@ contract AaveV3Helper is DSMath {
         uint256 precision;
     }
 
-    IPoolAddressesProvider internal provider = IPoolAddressesProvider(getPoolAddressProvider());
+    struct PoolSpecificInfo {
+        IPoolAddressesProvider provider;
+        IPool pool;
+        IAaveProtocolDataProvider aaveData;
+    }
+
     IAaveOracle internal aaveOracle = IAaveOracle(getAaveOracle());
-    IAaveProtocolDataProvider internal aaveData = IAaveProtocolDataProvider(provider.getPoolDataProvider());
-    IPool internal pool = IPool(provider.getPool());
     IUiIncentiveDataProviderV3 internal uiIncentives = IUiIncentiveDataProviderV3(getUiIncetivesProvider());
     IRewardsController internal rewardsCntr = IRewardsController(getRewardsController());
 
@@ -185,8 +174,10 @@ contract AaveV3Helper is DSMath {
         }
     }
 
-    function getIncentivesInfo(address user) internal view returns (ReserveIncentiveData[] memory incentives) {
-        AggregatedReserveIncentiveData[] memory _aggregateIncentive = uiIncentives.getReservesIncentivesData(provider);
+    function getIncentivesInfo(address user, address poolAddressProvider) internal view returns (ReserveIncentiveData[] memory incentives) {
+        PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
+
+        AggregatedReserveIncentiveData[] memory _aggregateIncentive = uiIncentives.getReservesIncentivesData(poolInfo.provider);
         incentives = new ReserveIncentiveData[](_aggregateIncentive.length);
         for (uint256 i = 0; i < _aggregateIncentive.length; i++) {
             address[] memory rToken = new address[](1);
@@ -222,7 +213,6 @@ contract AaveV3Helper is DSMath {
     }
 
     function getRewardInfo(RewardInfo[] memory rewards) internal pure returns (RewardsInfo[] memory rewardData) {
-        // console.log(rewards.length);
         rewardData = new RewardsInfo[](rewards.length);
         for (uint256 i = 0; i < rewards.length; i++) {
             rewardData[i] = RewardsInfo(
@@ -260,11 +250,13 @@ contract AaveV3Helper is DSMath {
         tokenPrices = IPriceOracle(priceOracleAddr).getAssetsPrices(tokens);
     }
 
-    function getIsolationDebt(address token) internal view returns (uint256 isolationDebt) {
+    function getIsolationDebt(address token, IPool pool) internal view returns (uint256 isolationDebt) {
         isolationDebt = uint256(pool.getReserveData(token).isolationModeTotalDebt);
     }
 
-    function getUserData(address user) internal view returns (AaveV3UserData memory userData) {
+    function getUserData(address user, address poolAddressProvider) internal view returns (AaveV3UserData memory userData) {
+        PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
+        
         (
             userData.totalCollateralBase,
             userData.totalBorrowsBase,
@@ -272,13 +264,13 @@ contract AaveV3Helper is DSMath {
             userData.currentLiquidationThreshold,
             userData.ltv,
             userData.healthFactor
-        ) = pool.getUserAccountData(user);
+        ) = poolInfo.pool.getUserAccountData(user);
 
         userData.base = getBaseCurrencyDetails();
-        userData.eModeId = pool.getUserEMode(user);
+        userData.eModeId = poolInfo.pool.getUserEMode(user);
     }
 
-    function getFlags(address token) internal view returns (Flags memory flag) {
+    function getFlags(address token, IAaveProtocolDataProvider aaveData) internal view returns (Flags memory flag) {
         (
             ,
             ,
@@ -293,13 +285,13 @@ contract AaveV3Helper is DSMath {
         ) = aaveData.getReserveConfigurationData(token);
     }
 
-    function getIsolationBorrowStatus(address token) internal view returns (bool iBorrowStatus) {
+    function getIsolationBorrowStatus(address token, IPool pool) internal view returns (bool iBorrowStatus) {
         ReserveConfigurationMap memory self = (pool.getReserveData(token)).configuration;
         uint256 BORROWABLE_IN_ISOLATION_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFFFFFFFFFFFFF;
         return (self.data & ~BORROWABLE_IN_ISOLATION_MASK) != 0;
     }
 
-    function getV3Token(address token) internal view returns (AaveV3Token memory tokenData) {
+    function getV3Token(address token, IPool pool, IAaveProtocolDataProvider aaveData) internal view returns (AaveV3Token memory tokenData) {
         (
             (tokenData.borrowCap, tokenData.supplyCap),
             tokenData.eModeCategory,
@@ -318,7 +310,7 @@ contract AaveV3Helper is DSMath {
             aaveData.getFlashLoanEnabled(token)
         );
         {
-            (tokenData.isolationBorrowEnabled) = getIsolationBorrowStatus(token);
+            (tokenData.isolationBorrowEnabled) = getIsolationBorrowStatus(token, pool);
         }
     }
 
@@ -326,14 +318,14 @@ contract AaveV3Helper is DSMath {
         ethPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
     }
 
-    function getEmodeCategoryData(uint8 id) external view returns (EmodeData memory eModeData) {
+    function getEmodeCategoryData(uint8 id, IPool pool) external view returns (EmodeData memory eModeData) {
         EModeCategory memory data_ = pool.getEModeCategoryData(id);
         {
             eModeData.data = data_;
         }
     }
 
-    function reserveConfig(address token)
+    function reserveConfig(address token, IAaveProtocolDataProvider aaveData)
         internal
         view
         returns (
@@ -346,7 +338,7 @@ contract AaveV3Helper is DSMath {
         (decimals, ltv, threshold, , reserveFactor, , , , , ) = aaveData.getReserveConfigurationData(token);
     }
 
-    function resData(address token)
+    function resData(address token, IAaveProtocolDataProvider aaveData)
         internal
         view
         returns (
@@ -358,7 +350,7 @@ contract AaveV3Helper is DSMath {
         (, , availableLiquidity, totalStableDebt, totalVariableDebt, , , , , , , ) = aaveData.getReserveData(token);
     }
 
-    function getAaveTokensData(address token) internal view returns (ReserveAddresses memory reserve) {
+    function getAaveTokensData(address token, IAaveProtocolDataProvider aaveData) internal view returns (ReserveAddresses memory reserve) {
         (
             reserve.aToken.tokenAddress,
             reserve.stableDebtToken.tokenAddress,
@@ -372,7 +364,9 @@ contract AaveV3Helper is DSMath {
         reserve.variableDebtToken.decimals = IERC20Detailed(reserve.variableDebtToken.tokenAddress).decimals();
     }
 
-    function userCollateralData(address token) internal view returns (AaveV3TokenData memory aaveTokenData) {
+    function userCollateralData(address token, address poolAddressProvider) internal view returns (AaveV3TokenData memory aaveTokenData) {
+        PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
+
         aaveTokenData.asset = token;
         aaveTokenData.symbol = IERC20Detailed(token).symbol();
         (
@@ -380,31 +374,31 @@ contract AaveV3Helper is DSMath {
             aaveTokenData.ltv,
             aaveTokenData.threshold,
             aaveTokenData.reserveFactor
-        ) = reserveConfig(token);
+        ) = reserveConfig(token, poolInfo.aaveData);
 
         {
             (
                 aaveTokenData.availableLiquidity,
                 aaveTokenData.totalStableDebt,
                 aaveTokenData.totalVariableDebt
-            ) = resData(token);
+            ) = resData(token, poolInfo.aaveData);
         }
 
-        aaveTokenData.token = getV3Token(token);
+        aaveTokenData.token = getV3Token(token, poolInfo.pool, poolInfo.aaveData);
 
         //-------------INCENTIVE DETAILS---------------
 
-        aaveTokenData.reserves = getAaveTokensData(token);
+        aaveTokenData.reserves = getAaveTokensData(token, poolInfo.aaveData);
     }
 
-    function getUserTokenData(address user, address token)
+    function getUserTokenData(address user, address token, address poolAddressProvider)
         internal
         view
         returns (AaveV3UserTokenData memory tokenData)
     {
-        uint256 basePrice = IPriceOracle(IPoolAddressesProvider(getPoolAddressProvider()).getPriceOracle())
-            .getAssetPrice(token);
-        tokenData.price = basePrice;
+        PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
+
+        tokenData.price = IPriceOracle(poolInfo.provider.getPriceOracle()).getAssetPrice(token);
         (
             tokenData.supplyBalance,
             tokenData.stableBorrowBalance,
@@ -415,11 +409,11 @@ contract AaveV3Helper is DSMath {
             tokenData.supplyRate,
             ,
             tokenData.isCollateral
-        ) = aaveData.getUserReserveData(token, user);
+        ) = poolInfo.aaveData.getUserReserveData(token, user);
 
         {
-            tokenData.flag = getFlags(token);
-            (, , , , , , tokenData.variableBorrowRate, tokenData.stableBorrowRate, , , , ) = aaveData.getReserveData(
+            tokenData.flag = getFlags(token, poolInfo.aaveData);
+            (, , , , , , tokenData.variableBorrowRate, tokenData.stableBorrowRate, , , , ) = poolInfo.aaveData.getReserveData(
                 token
             );
         }
@@ -448,7 +442,9 @@ contract AaveV3Helper is DSMath {
         // }
     }
 
-    function getList() public view returns (address[] memory data) {
+    function getList(address poolAddressProvider) public view returns (address[] memory data) {
+        IPoolAddressesProvider provider = IPoolAddressesProvider(poolAddressProvider);
+        IPool pool = IPool(provider.getPool());
         data = pool.getReservesList();
     }
 
@@ -467,7 +463,15 @@ contract AaveV3Helper is DSMath {
         return (self >> (reserveIndex * 2)) & 1 != 0;
     }
 
-    function getConfig(address user) public view returns (UserConfigurationMap memory data) {
+    function getConfig(address user, address poolAddressProvider) public view returns (UserConfigurationMap memory data) {
+        IPoolAddressesProvider provider = IPoolAddressesProvider(poolAddressProvider);
+        IPool pool = IPool(provider.getPool());
         data = pool.getUserConfiguration(user);
+    }
+
+    function getPoolSpecificInfo(address poolAddressProvider) internal view returns (PoolSpecificInfo memory poolInfo){
+        poolInfo.provider = IPoolAddressesProvider(poolAddressProvider);
+        poolInfo.pool = IPool(poolInfo.provider.getPool());
+        poolInfo.aaveData = IAaveProtocolDataProvider(poolInfo.provider.getPoolDataProvider());
     }
 }
