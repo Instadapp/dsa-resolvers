@@ -334,8 +334,12 @@ contract AaveV3Helper is DSMath {
         ethPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
     }
 
-    function getEmodeCategoryData(uint8 id, IPool pool) external view returns (EmodeData memory eModeData) {
-        EModeCategory memory data_ = pool.getEModeCategoryData(id);
+    function getEmodeCategoryData(
+        uint8 id,
+        address poolAddressProvider
+    ) external view returns (EmodeData memory eModeData) {
+        PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
+        EModeCategory memory data_ = poolInfo.pool.getEModeCategoryData(id);
         {
             eModeData.data = data_;
         }
@@ -377,7 +381,7 @@ contract AaveV3Helper is DSMath {
         address poolAddressProvider
     ) internal view returns (AaveV3TokenData memory aaveTokenData) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
-        
+
         aaveTokenData.asset = token;
         aaveTokenData.symbol = IERC20Detailed(token).symbol();
 
@@ -410,7 +414,7 @@ contract AaveV3Helper is DSMath {
     ) internal view returns (AaveV3UserTokenData memory tokenData) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
         tokenData.price = IPriceOracle(poolInfo.provider.getPriceOracle()).getAssetPrice(token);
-        
+
         (
             tokenData.supplyBalance,
             tokenData.stableBorrowBalance,

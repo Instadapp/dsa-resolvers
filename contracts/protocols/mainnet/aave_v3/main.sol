@@ -76,7 +76,8 @@ contract AaveV3Resolver is AaveV3Helper {
             ReserveIncentiveData[] memory
         )
     {
-        return getPosition(user, getList(poolAddressProvider), poolAddressProvider);
+        address[] memory tokens = getList(poolAddressProvider);
+        return getPosition(user, tokens, poolAddressProvider);
     }
 
     /**
