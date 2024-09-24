@@ -159,7 +159,9 @@ struct AggregatedReserveData {
 }
 
 interface IPool {
-    function getUserAccountData(address user)
+    function getUserAccountData(
+        address user
+    )
         external
         view
         returns (
@@ -176,7 +178,7 @@ interface IPool {
     //@return emode id of the user
     function getUserEMode(address user) external view returns (uint256);
 
-    function getReservesList() external view virtual returns (address[] memory);
+    function getReservesList() external view returns (address[] memory);
 
     function getUserConfiguration(address user) external view returns (UserConfigurationMap memory);
 
@@ -208,14 +210,7 @@ interface IAaveIncentivesController {
 
     // @dev Returns the configuration of the distribution for a certain asset
     // @return The asset index, the emission per second and the last updated timestamp
-    function assets(address asset)
-        external
-        view
-        returns (
-            uint128,
-            uint128,
-            uint256
-        );
+    function assets(address asset) external view returns (uint128, uint128, uint256);
 }
 
 interface IAaveOracle is IPriceOracleGetter {
@@ -242,7 +237,9 @@ interface IPoolAddressesProvider {
 
 interface IPoolDataProvider {
     // @notice Returns the reserve data
-    function getReserveData(address asset)
+    function getReserveData(
+        address asset
+    )
         external
         view
         returns (
@@ -274,7 +271,9 @@ interface IStableDebtToken {
 }
 
 interface IAaveProtocolDataProvider is IPoolDataProvider {
-    function getReserveConfigurationData(address asset)
+    function getReserveConfigurationData(
+        address asset
+    )
         external
         view
         returns (
@@ -313,7 +312,9 @@ interface IAaveProtocolDataProvider is IPoolDataProvider {
 
     function getATokenTotalSupply(address asset) external view returns (uint256);
 
-    function getReserveData(address asset)
+    function getReserveData(
+        address asset
+    )
         external
         view
         override
@@ -332,7 +333,10 @@ interface IAaveProtocolDataProvider is IPoolDataProvider {
             uint40 lastUpdateTimestamp
         );
 
-    function getUserReserveData(address asset, address user)
+    function getUserReserveData(
+        address asset,
+        address user
+    )
         external
         view
         returns (
@@ -347,14 +351,9 @@ interface IAaveProtocolDataProvider is IPoolDataProvider {
             bool usageAsCollateralEnabled
         );
 
-    function getReserveTokensAddresses(address asset)
-        external
-        view
-        returns (
-            address aTokenAddress,
-            address stableDebtTokenAddress,
-            address variableDebtTokenAddress
-        );
+    function getReserveTokensAddresses(
+        address asset
+    ) external view returns (address aTokenAddress, address stableDebtTokenAddress, address variableDebtTokenAddress);
 }
 
 //chainlink price feed
@@ -364,13 +363,7 @@ interface AggregatorV3Interface {
     function latestRoundData()
         external
         view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        );
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
 
     function latestAnswer() external view returns (int256);
 }
@@ -382,29 +375,24 @@ interface IERC20Detailed {
 }
 
 interface IUiIncentiveDataProviderV3 {
-    function getReservesIncentivesData(IPoolAddressesProvider provider)
-        external
-        view
-        returns (AggregatedReserveIncentiveData[] memory);
+    function getReservesIncentivesData(
+        IPoolAddressesProvider provider
+    ) external view returns (AggregatedReserveIncentiveData[] memory);
 
-    function getUserReservesIncentivesData(IPoolAddressesProvider provider, address user)
-        external
-        view
-        returns (UserReserveIncentiveData[] memory);
+    function getUserReservesIncentivesData(
+        IPoolAddressesProvider provider,
+        address user
+    ) external view returns (UserReserveIncentiveData[] memory);
 
     // generic method with full data
-    function getFullReservesIncentiveData(IPoolAddressesProvider provider, address user)
-        external
-        view
-        returns (AggregatedReserveIncentiveData[] memory, UserReserveIncentiveData[] memory);
+    function getFullReservesIncentiveData(
+        IPoolAddressesProvider provider,
+        address user
+    ) external view returns (AggregatedReserveIncentiveData[] memory, UserReserveIncentiveData[] memory);
 }
 
 interface IRewardsDistributor {
-    function getUserAssetData(
-        address user,
-        address asset,
-        address reward
-    ) external view returns (uint256);
+    function getUserAssetData(address user, address asset, address reward) external view returns (uint256);
 
     /**
      * @dev Returns the configuration of the distribution for a certain asset
@@ -412,15 +400,7 @@ interface IRewardsDistributor {
      * @param reward The reward token of the incentivized asset
      * @return The asset index, the emission per second, the last updated timestamp and the distribution end timestamp
      **/
-    function getRewardsData(address asset, address reward)
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        );
+    function getRewardsData(address asset, address reward) external view returns (uint256, uint256, uint256, uint256);
 
     /**
      * @dev Returns the list of available reward token addresses of an incentivized asset
@@ -451,11 +431,7 @@ interface IRewardsDistributor {
      * @param reward The address of the reward token
      * @return The rewards amount
      **/
-    function getUserRewards(
-        address[] calldata assets,
-        address user,
-        address reward
-    ) external view returns (uint256);
+    function getUserRewards(address[] calldata assets, address user, address reward) external view returns (uint256);
 
     /**
      * @dev Returns a list all rewards of an user, including already accrued and unrealized claimable rewards
@@ -463,10 +439,10 @@ interface IRewardsDistributor {
      * @param user The address of the user
      * @return The function returns a Tuple of rewards list and the unclaimed rewards list
      **/
-    function getAllUserRewards(address[] calldata assets, address user)
-        external
-        view
-        returns (address[] memory, uint256[] memory);
+    function getAllUserRewards(
+        address[] calldata assets,
+        address user
+    ) external view returns (address[] memory, uint256[] memory);
 
     /**
      * @dev Returns the decimals of an asset to calculate the distribution delta
