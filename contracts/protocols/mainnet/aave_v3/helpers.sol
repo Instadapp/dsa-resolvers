@@ -339,7 +339,21 @@ contract AaveV3Helper is DSMath {
         address poolAddressProvider
     ) external view returns (EmodeData memory eModeData) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
-        EModeCategory memory data_ = poolInfo.pool.getEModeCategoryData(id);
+        
+        EModeCollateralConfig memory config_ = poolInfo.pool.getEModeCategoryCollateralConfig(id);
+        string memory label = poolInfo.pool.getEModeCategoryLabel(id);
+        uint128 isCollateralBitmap = poolInfo.pool.getEModeCategoryCollateralBitmap(id);
+        uint128 isBorrowableBitmap = poolInfo.pool.getEModeCategoryBorrowableBitmap(id);
+
+        EModeCategory memory data_ = EModeCategory(
+            config_.ltv,
+            config_.liquidationThreshold,
+            config_.liquidationBonus,
+            label,
+            isCollateralBitmap,
+            isBorrowableBitmap
+        );
+
         {
             eModeData.data = data_;
         }
