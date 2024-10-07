@@ -118,7 +118,6 @@ contract AaveV3Helper is DSMath {
     struct AaveV3Token {
         uint256 supplyCap;
         uint256 borrowCap;
-        uint256 eModeCategory;
         uint256 debtCeiling;
         uint256 debtCeilingDecimals;
         uint256 liquidationFee;
@@ -310,7 +309,6 @@ contract AaveV3Helper is DSMath {
     ) internal view returns (AaveV3Token memory tokenData) {
         (
             (tokenData.borrowCap, tokenData.supplyCap),
-            tokenData.eModeCategory,
             tokenData.debtCeiling,
             tokenData.debtCeilingDecimals,
             tokenData.liquidationFee,
@@ -318,7 +316,6 @@ contract AaveV3Helper is DSMath {
             tokenData.flashLoanEnabled
         ) = (
             aaveData.getReserveCaps(token),
-            aaveData.getReserveEModeCategory(token),
             aaveData.getDebtCeiling(token),
             aaveData.getDebtCeilingDecimals(),
             aaveData.getLiquidationProtocolFee(token),

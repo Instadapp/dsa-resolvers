@@ -312,8 +312,6 @@ interface IAaveProtocolDataProvider is IPoolDataProvider {
 
     function getLiquidationProtocolFee(address asset) external view returns (uint256);
 
-    function getReserveEModeCategory(address asset) external view returns (uint256);
-
     function getReserveCaps(address asset) external view returns (uint256 borrowCap, uint256 supplyCap);
 
     // @notice Returns the debt ceiling of the reserve
