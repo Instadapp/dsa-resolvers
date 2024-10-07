@@ -127,13 +127,8 @@ interface IPoolConfigurator {
      */
     event UnbackedMintCapChanged(address indexed asset, uint256 oldUnbackedMintCap, uint256 newUnbackedMintCap);
 
-    /**
-     * @dev Emitted when the category of an asset in eMode is changed.
-     * @param asset The address of the underlying asset of the reserve
-     * @param oldCategoryId The old eMode asset category
-     * @param newCategoryId The new eMode asset category
-     */
-    event EModeAssetCategoryChanged(address indexed asset, uint8 oldCategoryId, uint8 newCategoryId);
+    event AssetCollateralInEModeChanged(address indexed asset, uint8 categoryId, bool collateral);
+    event AssetBorrowableInEModeChanged(address indexed asset, uint8 categoryId, bool borrowable);
 
     /**
      * @dev Emitted when a new eMode category is added.
