@@ -1,31 +1,45 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import hre from "hardhat";
 import { expect } from "chai";
 import { formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
-import { InstaAaveV3ResolverOptimism, InstaAaveV3ResolverOptimism__factory } from "../../typechain";
+import { InstaAaveV3ResolverArbitrum, InstaAaveV3ResolverArbitrum__factory } from "../../typechain";
 import { Tokens } from "../consts";
-import BigNumber from "bignumber.js";
 
 describe("Aave", () => {
+  const POOL_ADDRESS_PROVIDER_OPTIMISM = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'
   let signer: SignerWithAddress;
-  // const account = "0xde33f4573bB315939a9D1E65522575E1a9fC3e74";
-  const account = "0xF1229410497686300cca7Bf6CCa3ba582cF872f7";
+  const account = "0xf7CA1F0ff0995c84feF530F7c74C69fb80331E81";
 
   before(async () => {
     [signer] = await ethers.getSigners();
   });
 
   describe("Aave V3 Resolver", () => {
-    let resolver: InstaAaveV3ResolverOptimism;
+    let resolver: InstaAaveV3ResolverArbitrum;
     before(async () => {
-      const deployer = new InstaAaveV3ResolverOptimism__factory(signer);
+      await hre.network.provider.request({
+        method: "hardhat_reset",
+        params: [
+          {
+            forking: {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              jsonRpcUrl: hre.config.networks.optimism.url,
+              blockNumber: 126415487,
+            },
+          },
+        ],
+      });
+
+      const deployer = new InstaAaveV3ResolverArbitrum__factory(signer);
       resolver = await deployer.deploy();
       await resolver.deployed();
     });
 
     it("should get user configurations and reserves list", async () => {
-      const reservesList = await resolver.getReservesList();
-      const reserves = await resolver.getConfiguration(account);
+      const reservesList = await resolver.getReservesList(POOL_ADDRESS_PROVIDER_OPTIMISM);
+      const reserves = await resolver.getConfiguration(account, POOL_ADDRESS_PROVIDER_OPTIMISM);
       console.log("Collateral Reserves Address");
       console.log(reservesList);
       console.log(reserves);
@@ -44,9 +58,8 @@ describe("Aave", () => {
 
     it("Returns the positions on AaveV3", async () => {
       const results = await resolver.callStatic.getPosition(account, [
-        "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-        "0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
-      ]);
+        "0x4200000000000000000000000000000000000006",
+      ], POOL_ADDRESS_PROVIDER_OPTIMISM);
       const userTokenData = results[1];
       const tokenData = results[2];
       const userData = results[0];
@@ -74,7 +87,7 @@ describe("Aave", () => {
     });
 
     it("Returns the user's positions on AaveV3 for all assets", async () => {
-      const results = await resolver.callStatic.getPositionAll(account);
+      const results = await resolver.callStatic.getPositionAll(account, POOL_ADDRESS_PROVIDER_OPTIMISM);
       const userTokenData = results[1];
       const tokenData = results[2];
       const userData = results[0];
@@ -146,7 +159,6 @@ describe("Aave", () => {
           console.log(`Reward token precision: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].precision}`);
           console.log(`Emission rate per second: ${rewards[i].aIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
         }
-
         for (let j = 0; j < rewards[i].aIncentiveData.userRewards.rewardsToken.length; j++) {
           console.log(
             `Unclaimed Reward: ${rewards[i].aIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].aIncentiveData.userRewards.rewardsToken[j]}`,
@@ -165,9 +177,9 @@ describe("Aave", () => {
           console.log(`Reward token precision: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].precision}`);
           console.log(`Emission rate per second: ${rewards[i].sIncentiveData.rewardsTokenInfo[j].emissionPerSecond}`);
         }
-        for (let j = 0; j < rewards[i].vIncentiveData.userRewards.rewardsToken.length; j++) {
+        for (let j = 0; j < rewards[i].sIncentiveData.userRewards.rewardsToken.length; j++) {
           console.log(
-            `Unclaimed Reward: ${rewards[i].vIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].vIncentiveData.userRewards.rewardsToken[j]}`,
+            `Unclaimed Reward: ${rewards[i].sIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].sIncentiveData.userRewards.rewardsToken[j]}`,
           );
         }
         console.log("----------------------------------------------------");
@@ -185,11 +197,12 @@ describe("Aave", () => {
         }
         for (let j = 0; j < rewards[i].vIncentiveData.userRewards.rewardsToken.length; j++) {
           console.log(
-            `Unclaimed Reward: ${rewards[i].vIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].sIncentiveData.userRewards.rewardsToken[j]}`,
+            `Unclaimed Reward: ${rewards[i].vIncentiveData.userRewards.unbalancedAmounts[j]} for ${rewards[i].vIncentiveData.userRewards.rewardsToken[j]}`,
           );
         }
         console.log();
-        console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);
+
+        // console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);
         console.log(
           "Debt ceiling: ",
           formatUnits(tokenData[i].token.debtCeiling, tokenData[i].token.debtCeilingDecimals),
@@ -202,10 +215,7 @@ describe("Aave", () => {
     });
 
     it("Returns the e-mode category details of e-modeID", async () => {
-      const emodeData = await resolver.getEmodeCategoryData(1, [
-        "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-        "0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
-      ]);
+      const emodeData = await resolver.getEmodeCategoryData(1, POOL_ADDRESS_PROVIDER_OPTIMISM);
       console.log();
       console.log("*************************************************");
       console.log("E-Mode category Data");
@@ -213,8 +223,9 @@ describe("Aave", () => {
       console.log(`e-mode LTV: ${emodeData.data.ltv}`);
       console.log(`e-mode liquidation threshold: ${emodeData.data.liquidationThreshold}`);
       console.log(`e-mode liquidation bonus: ${emodeData.data.liquidationBonus}`);
-      console.log(`e-mode price oracle: ${emodeData.data.priceSource}`);
       console.log(`e-mode label: ${emodeData.data.label}`);
+      console.log(`e-mode is colleteral bitmap: ${emodeData.data.isCollateralBitmap}`);
+      console.log(`e-mode is borrowable bitmap: ${emodeData.data.isBorrowableBitmap}`);
     });
 
     it("Returns the ethPrice", async () => {
