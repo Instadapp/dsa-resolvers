@@ -36,7 +36,7 @@ contract AaveV3Helper is DSMath {
      *@dev Returns UI Incentives Provider Feed Address
      */
     function getUiIncetivesProvider() internal pure returns (address) {
-        return 0x162A7AC02f547ad796CA549f757e2b8d1D9b10a6;
+        return 0x5a40cDe2b76Da2beD545efB3ae15708eE56aAF9c;
     }
 
     /**
