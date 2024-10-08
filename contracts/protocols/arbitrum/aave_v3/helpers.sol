@@ -18,10 +18,6 @@ contract AaveV3Helper is DSMath {
         return 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1; //Arbitrum WETH Address
     }
 
-    function getUiDataProvider() internal pure returns (address) {
-        return 0xE92cd6164CE7DC68e740765BC1f2a091B6CBc3e4; //Arbitrum UiPoolDataProvider Address
-    }
-
     /**
      *@dev Returns Aave Data Provider Address
      */
@@ -41,7 +37,7 @@ contract AaveV3Helper is DSMath {
     }
 
     function getUiIncetivesProvider() internal pure returns (address) {
-        return 0xEFdd7374551897B11a23Ec7b5694C713DFDa76f1;
+        return 0xE92cd6164CE7DC68e740765BC1f2a091B6CBc3e4;
     }
 
     function getChainLinkFeed() internal pure returns (address) {

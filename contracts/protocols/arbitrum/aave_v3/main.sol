@@ -13,7 +13,6 @@ contract AaveV3Resolver is AaveV3Helper {
      *@notice get position of user, including details of user's overall position, rewards and assets owned for the tokens passed.
      *@param user The address of the user whose details are needed.
      *@param tokens Array of token addresses corresponding to which user details are needed.
-
      *@return AaveV3UserData user's overall position (e.g. total collateral, total borrows, e-mode id etc.).
      *@return AaveV3UserTokenData details of user's tokens for the tokens passed (e.g. supplied amount, borrowed amount, supply rate etc.).
      *@return AaveV3TokenData details of tokens (e.g. symbol, decimals, ltv etc.).
