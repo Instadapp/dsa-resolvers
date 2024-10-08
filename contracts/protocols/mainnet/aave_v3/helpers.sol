@@ -379,11 +379,10 @@ contract AaveV3Helper is DSMath {
             reserve.stableDebtToken.tokenAddress,
             reserve.variableDebtToken.tokenAddress
         ) = aaveData.getReserveTokensAddresses(token);
+        
         reserve.aToken.symbol = IERC20Detailed(reserve.aToken.tokenAddress).symbol();
-        reserve.stableDebtToken.symbol = IERC20Detailed(reserve.stableDebtToken.tokenAddress).symbol();
         reserve.variableDebtToken.symbol = IERC20Detailed(reserve.variableDebtToken.tokenAddress).symbol();
         reserve.aToken.decimals = IERC20Detailed(reserve.aToken.tokenAddress).decimals();
-        reserve.stableDebtToken.decimals = IERC20Detailed(reserve.stableDebtToken.tokenAddress).decimals();
         reserve.variableDebtToken.decimals = IERC20Detailed(reserve.variableDebtToken.tokenAddress).decimals();
     }
 
