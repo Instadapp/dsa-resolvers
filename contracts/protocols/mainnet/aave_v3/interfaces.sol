@@ -28,8 +28,15 @@ struct EModeCategory {
     uint16 liquidationThreshold;
     uint16 liquidationBonus;
     // each eMode category may or may not have a custom oracle to override the individual assets price oracles
-    address priceSource;
     string label;
+    uint128 isCollateralBitmap;
+    uint128 isBorrowableBitmap;
+}
+
+struct EModeCollateralConfig {
+    uint16 ltv;
+    uint16 liquidationThreshold;
+    uint16 liquidationBonus;
 }
 
 struct ReserveConfigurationMap {
@@ -153,7 +160,8 @@ struct AggregatedReserveData {
     uint16 eModeLtv;
     uint16 eModeLiquidationThreshold;
     uint16 eModeLiquidationBonus;
-    address eModePriceSource;
+    uint128 isCollateralBitmap;
+    uint128 isBorrowableBitmap;
     string eModeLabel;
     bool borrowableInIsolation;
 }
@@ -173,7 +181,11 @@ interface IPool {
             uint256 healthFactor
         );
 
-    function getEModeCategoryData(uint8 id) external view returns (EModeCategory memory);
+    // 3.2 Updated Interface for eMode
+    function getEModeCategoryCollateralConfig(uint8 id) external view returns (EModeCollateralConfig memory);
+    function getEModeCategoryLabel(uint8 id) external view returns (string memory);
+    function getEModeCategoryCollateralBitmap(uint8 id) external view returns (uint128);
+    function getEModeCategoryBorrowableBitmap(uint8 id) external view returns (uint128);
 
     //@return emode id of the user
     function getUserEMode(address user) external view returns (uint256);
@@ -299,8 +311,6 @@ interface IAaveProtocolDataProvider is IPoolDataProvider {
     function getFlashLoanEnabled(address asset) external view returns (bool);
 
     function getLiquidationProtocolFee(address asset) external view returns (uint256);
-
-    function getReserveEModeCategory(address asset) external view returns (uint256);
 
     function getReserveCaps(address asset) external view returns (uint256 borrowCap, uint256 supplyCap);
 
