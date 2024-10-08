@@ -13,12 +13,17 @@ contract AaveV3Resolver is AaveV3Helper {
      *@notice get position of user, including details of user's overall position, rewards and assets owned for the tokens passed.
      *@param user The address of the user whose details are needed.
      *@param tokens Array of token addresses corresponding to which user details are needed.
+
      *@return AaveV3UserData user's overall position (e.g. total collateral, total borrows, e-mode id etc.).
      *@return AaveV3UserTokenData details of user's tokens for the tokens passed (e.g. supplied amount, borrowed amount, supply rate etc.).
      *@return AaveV3TokenData details of tokens (e.g. symbol, decimals, ltv etc.).
      *@return ReserveIncentiveData details of user's rewards corresponding to the tokens passed.
      */
-    function getPosition(address user, address[] memory tokens)
+    function getPosition(
+        address user,
+        address[] memory tokens,
+        address poolAddressProvider
+    )
         public
         view
         returns (
@@ -35,18 +40,18 @@ contract AaveV3Resolver is AaveV3Helper {
             _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
         }
 
-        AaveV3UserData memory userDetails = getUserData(user);
+        AaveV3UserData memory userDetails = getUserData(user, poolAddressProvider);
         // (TokenPrice[] memory tokenPrices, ) = getTokensPrices(userDetails.base.baseInUSD, _tokens);
 
         AaveV3UserTokenData[] memory tokensData = new AaveV3UserTokenData[](length);
         AaveV3TokenData[] memory collData = new AaveV3TokenData[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            tokensData[i] = getUserTokenData(user, _tokens[i]);
-            collData[i] = userCollateralData(_tokens[i]);
+            tokensData[i] = getUserTokenData(user, _tokens[i], poolAddressProvider);
+            collData[i] = userCollateralData(_tokens[i], poolAddressProvider);
         }
 
-        return (userDetails, tokensData, collData, getIncentivesInfo(user));
+        return (userDetails, tokensData, collData, getIncentivesInfo(user, poolAddressProvider));
     }
 
     /**
@@ -58,7 +63,10 @@ contract AaveV3Resolver is AaveV3Helper {
      *@return AaveV3TokenData details of tokens (e.g. symbol, decimals, ltv etc.).
      *@return ReserveIncentiveData details of user's rewards corresponding to the tokens in the market.
      */
-    function getPositionAll(address user)
+    function getPositionAll(
+        address user,
+        address poolAddressProvider
+    )
         public
         view
         returns (
@@ -68,7 +76,8 @@ contract AaveV3Resolver is AaveV3Helper {
             ReserveIncentiveData[] memory
         )
     {
-        return getPosition(user, getList());
+        address[] memory tokens = getList(poolAddressProvider);
+        return getPosition(user, tokens, poolAddressProvider);
     }
 
     /**
@@ -78,9 +87,12 @@ contract AaveV3Resolver is AaveV3Helper {
      *@return collateral array with an element as true if the corresponding token is used as collateral by the user, false otherwise.
      *@return borrowed array with an element as true if the corresponding token is borrowed by the user, false otherwise.
      */
-    function getConfiguration(address user) public view returns (bool[] memory collateral, bool[] memory borrowed) {
-        uint256 data = getConfig(user).data;
-        address[] memory reserveIndex = getList();
+    function getConfiguration(
+        address user,
+        address poolAddressProvider
+    ) public view returns (bool[] memory collateral, bool[] memory borrowed) {
+        uint256 data = getConfig(user, poolAddressProvider).data;
+        address[] memory reserveIndex = getList(poolAddressProvider);
 
         collateral = new bool[](reserveIndex.length);
         borrowed = new bool[](reserveIndex.length);
@@ -98,11 +110,11 @@ contract AaveV3Resolver is AaveV3Helper {
      *@notice get list of all tokens available in the market.
      *@return data array of token addresses available in the market.
      */
-    function getReservesList() public view returns (address[] memory data) {
-        data = getList();
+    function getReservesList(address poolAddressProvider) public view returns (address[] memory data) {
+        data = getList(poolAddressProvider);
     }
 }
 
 contract InstaAaveV3ResolverArbitrum is AaveV3Resolver {
-    string public constant name = "AaveV3-Resolver-v1.0";
+    string public constant name = "AaveV3-Resolver-v1.1";
 }
