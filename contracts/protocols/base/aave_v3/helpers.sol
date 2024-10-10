@@ -4,6 +4,8 @@ import "./interfaces.sol";
 import { DSMath } from "../../../utils/dsmath.sol";
 
 contract AaveV3Helper is DSMath {
+    uint16 internal constant MAX_RESERVES_COUNT = 128;
+
     /**
      *@dev Returns ethereum address
      */
@@ -66,6 +68,8 @@ contract AaveV3Helper is DSMath {
 
     struct EmodeData {
         EModeCategory data;
+        address[] collateralTokens;
+        address[] borrowableTokens;
     }
 
     struct AaveV3UserTokenData {
@@ -337,11 +341,30 @@ contract AaveV3Helper is DSMath {
         address poolAddressProvider
     ) external view returns (EmodeData memory eModeData) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
-        
+
+        // Get Reserves List
+        address[] memory list = getList(poolAddressProvider);
+
         EModeCollateralConfig memory config_ = poolInfo.pool.getEModeCategoryCollateralConfig(id);
         string memory label = poolInfo.pool.getEModeCategoryLabel(id);
         uint128 isCollateralBitmap = poolInfo.pool.getEModeCategoryCollateralBitmap(id);
         uint128 isBorrowableBitmap = poolInfo.pool.getEModeCategoryBorrowableBitmap(id);
+
+        address[] memory collateralTokens_ = new address[](list.length);
+        address[] memory borrowableTokens_ = new address[](list.length);
+
+        // Iterate over the list of reserves and populate the collateral and borrowable tokens for the eMode
+        for (uint16 i = 0; i < list.length;) {
+            if (isReserveEnabledOnBitmap(isCollateralBitmap, i)) {
+                collateralTokens_[i] = list[i];
+            }
+            if (isReserveEnabledOnBitmap(isBorrowableBitmap, i)) {
+                borrowableTokens_[i] = list[i];
+            }
+            unchecked {
+                i++;
+            }
+        }
 
         EModeCategory memory data_ = EModeCategory(
             config_.ltv,
@@ -353,6 +376,8 @@ contract AaveV3Helper is DSMath {
         );
         {
             eModeData.data = data_;
+            eModeData.collateralTokens = collateralTokens_;
+            eModeData.borrowableTokens = borrowableTokens_;
         }
     }
 
@@ -502,5 +527,18 @@ contract AaveV3Helper is DSMath {
         poolInfo.provider = IPoolAddressesProvider(poolAddressProvider);
         poolInfo.pool = IPool(poolInfo.provider.getPool());
         poolInfo.aaveData = IAaveProtocolDataProvider(poolInfo.provider.getPoolDataProvider());
+    }
+
+    /**
+     * @notice Validates if a reserveIndex is flagged as enabled on a given bitmap
+     * @param bitmap The bitmap
+     * @param reserveIndex The index of the reserve in the bitmap
+     * @return True if the reserveindex is flagged true
+     */
+    function isReserveEnabledOnBitmap(uint128 bitmap, uint256 reserveIndex) internal pure returns (bool) {
+        unchecked {
+            require(reserveIndex < MAX_RESERVES_COUNT, "74"); //'Invalid reserve index'
+            return (bitmap >> reserveIndex) & 1 != 0;
+        }
     }
 }
