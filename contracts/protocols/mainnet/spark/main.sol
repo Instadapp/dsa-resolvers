@@ -108,5 +108,5 @@ contract SparkResolver is SparkHelper {
 }
 
 contract InstaSparkResolver is SparkResolver {
-    string public constant name = "Spark-Resolver-v1.0";
+    string public constant name = "Spark-Resolver-v1.1";
 }
