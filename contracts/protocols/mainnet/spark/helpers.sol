@@ -51,7 +51,7 @@ contract SparkHelper is DSMath {
     }
 
     function getRewardsController() internal pure returns (address) {
-        return 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
+        return 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
     }
 
     struct BaseCurrency {
