@@ -36,7 +36,7 @@ contract AaveV3Helper is DSMath {
      *@dev Returns UI Incentives Provider Feed Address
      */
     function getUiIncetivesProvider() internal pure returns (address) {
-        return 0x162A7AC02f547ad796CA549f757e2b8d1D9b10a6;
+        return 0x5a40cDe2b76Da2beD545efB3ae15708eE56aAF9c;
     }
 
     /**
@@ -118,7 +118,6 @@ contract AaveV3Helper is DSMath {
     struct AaveV3Token {
         uint256 supplyCap;
         uint256 borrowCap;
-        uint256 eModeCategory;
         uint256 debtCeiling;
         uint256 debtCeilingDecimals;
         uint256 liquidationFee;
@@ -310,7 +309,6 @@ contract AaveV3Helper is DSMath {
     ) internal view returns (AaveV3Token memory tokenData) {
         (
             (tokenData.borrowCap, tokenData.supplyCap),
-            tokenData.eModeCategory,
             tokenData.debtCeiling,
             tokenData.debtCeilingDecimals,
             tokenData.liquidationFee,
@@ -318,7 +316,6 @@ contract AaveV3Helper is DSMath {
             tokenData.flashLoanEnabled
         ) = (
             aaveData.getReserveCaps(token),
-            aaveData.getReserveEModeCategory(token),
             aaveData.getDebtCeiling(token),
             aaveData.getDebtCeilingDecimals(),
             aaveData.getLiquidationProtocolFee(token),
@@ -339,7 +336,21 @@ contract AaveV3Helper is DSMath {
         address poolAddressProvider
     ) external view returns (EmodeData memory eModeData) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
-        EModeCategory memory data_ = poolInfo.pool.getEModeCategoryData(id);
+        
+        EModeCollateralConfig memory config_ = poolInfo.pool.getEModeCategoryCollateralConfig(id);
+        string memory label = poolInfo.pool.getEModeCategoryLabel(id);
+        uint128 isCollateralBitmap = poolInfo.pool.getEModeCategoryCollateralBitmap(id);
+        uint128 isBorrowableBitmap = poolInfo.pool.getEModeCategoryBorrowableBitmap(id);
+
+        EModeCategory memory data_ = EModeCategory(
+            config_.ltv,
+            config_.liquidationThreshold,
+            config_.liquidationBonus,
+            label,
+            isCollateralBitmap,
+            isBorrowableBitmap
+        );
+
         {
             eModeData.data = data_;
         }
@@ -368,11 +379,10 @@ contract AaveV3Helper is DSMath {
             reserve.stableDebtToken.tokenAddress,
             reserve.variableDebtToken.tokenAddress
         ) = aaveData.getReserveTokensAddresses(token);
+        
         reserve.aToken.symbol = IERC20Detailed(reserve.aToken.tokenAddress).symbol();
-        reserve.stableDebtToken.symbol = IERC20Detailed(reserve.stableDebtToken.tokenAddress).symbol();
         reserve.variableDebtToken.symbol = IERC20Detailed(reserve.variableDebtToken.tokenAddress).symbol();
         reserve.aToken.decimals = IERC20Detailed(reserve.aToken.tokenAddress).decimals();
-        reserve.stableDebtToken.decimals = IERC20Detailed(reserve.stableDebtToken.tokenAddress).decimals();
         reserve.variableDebtToken.decimals = IERC20Detailed(reserve.variableDebtToken.tokenAddress).decimals();
     }
 

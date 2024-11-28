@@ -26,7 +26,7 @@ describe("AaveV3", () => {
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-              blockNumber: 20821179,
+              blockNumber: 20921330,
             },
           },
         ],
@@ -208,7 +208,7 @@ describe("AaveV3", () => {
           );
         }
         console.log();
-        console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);
+        // console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);
         console.log(
           "Debt ceiling: ",
           formatUnits(tokenData[i].token.debtCeiling, tokenData[i].token.debtCeilingDecimals),
@@ -229,8 +229,9 @@ describe("AaveV3", () => {
       console.log(`e-mode LTV: ${emodeData.data.ltv}`);
       console.log(`e-mode liquidation threshold: ${emodeData.data.liquidationThreshold}`);
       console.log(`e-mode liquidation bonus: ${emodeData.data.liquidationBonus}`);
-      console.log(`e-mode price oracle: ${emodeData.data.priceSource}`);
       console.log(`e-mode label: ${emodeData.data.label}`);
+      console.log(`e-mode is colleteral bitmap: ${emodeData.data.isCollateralBitmap}`);
+      console.log(`e-mode is borrowable bitmap: ${emodeData.data.isBorrowableBitmap}`);
     });
 
     it("Returns the ethPrice", async () => {
