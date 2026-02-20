@@ -28,6 +28,7 @@ const chainIds = {
   polygon: 137,
   optimism: 10,
   fantom: 250,
+  plasma: 9745,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -56,13 +57,13 @@ function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig 
 }
 
 function getNetworkUrl(networkType: string) {
-  // console.log('networkType: ', networkType);
   if (networkType === "avalanche") return "https://api.avax.network/ext/bc/C/rpc";
   else if (networkType === "polygon") return `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "arbitrum") return `https://arb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "optimism") return `https://opt-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
   else if (networkType === "base") return `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+  else if (networkType === "plasma") return `https://rpc.plasma.to`;
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
@@ -115,6 +116,11 @@ const config: HardhatUserConfig = {
       url: `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
       gasPrice: 15000000,
+    },
+    plasma: {
+      url: `https://rpc.plasma.to`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 100000,
     },
   },
   paths: {
@@ -196,15 +202,24 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      mainnet: String(process.env.ETHERSCAN_API_KEY),
-      optimisticEthereum: String(process.env.OPTIMISM_API_KEY),
-      polygon: String(process.env.POLYGONSCAN_API),
-      arbitrumOne: String(process.env.ARBISCAN_API_KEY),
+      mainnet: String(process.env.SCAN_API_KEY),
+      optimisticEthereum: String(process.env.SCAN_API_KEY),
+      polygon: String(process.env.SCAN_API_KEY),
+      arbitrumOne: String(process.env.SCAN_API_KEY),
       avalanche: String(process.env.SNOWTRACE_API),
-      opera: String(process.env.FANTOM_API_KEY),
-      base: String(process.env.BASE_ETHSCAN_KEY),
+      opera: String(process.env.SCAN_API_KEY),
+      base: String(process.env.SCAN_API_KEY),
+      plasma: String(process.env.SCAN_API_KEY),
     },
     customChains: [
+      {
+        network: "plasma",
+        chainId: 9745,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=9745",
+          browserURL: "https://plasmascan.to/"
+        },
+      },
       {
         network: "base",
         chainId: 8453,
