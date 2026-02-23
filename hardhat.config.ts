@@ -64,6 +64,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
   else if (networkType === "base") return `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "plasma") return `https://rpc.plasma.to`;
+  else if (networkType === "bsc") return `https://1rpc.io/bnb`;
   else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
 }
 
@@ -106,6 +107,11 @@ const config: HardhatUserConfig = {
     fantom: {
       url: `https://rpc.ftm.tools/`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
+    },
+    bsc: {
+      url: `https://1rpc.io/bnb`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      gasPrice: 0.1 * 10 ** 9,
     },
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
@@ -210,6 +216,7 @@ const config: HardhatUserConfig = {
       opera: String(process.env.SCAN_API_KEY),
       base: String(process.env.SCAN_API_KEY),
       plasma: String(process.env.SCAN_API_KEY),
+      bsc: String(process.env.SCAN_API_KEY),
     },
     customChains: [
       {
@@ -226,6 +233,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.basescan.org/api",
           browserURL: "https://basescan.org",
+        },
+      },
+      {
+        network: "bsc",
+        chainId: 56,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=56",
+          browserURL: "https://bscscan.org",
         },
       },
     ],
