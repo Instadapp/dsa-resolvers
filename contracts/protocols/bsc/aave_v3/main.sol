@@ -117,6 +117,6 @@ contract AaveV3Resolver is AaveV3Helper {
     }
 }
 
-contract InstaAaveV3ResolverPlasma is AaveV3Resolver {
-    string public constant name = "AaveV3-Resolver-Plasma-v1.0";
+contract InstaAaveV3ResolverBSC is AaveV3Resolver {
+    string public constant name = "AaveV3-Resolver-BSC-v1.0";
 }
