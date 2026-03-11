@@ -1,15 +1,15 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import hre from "hardhat";
 import { expect } from "chai";
 import { formatUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import { InstaAaveV3ResolverArbitrum, InstaAaveV3ResolverArbitrum__factory } from "../../typechain";
 import { Tokens } from "../consts";
-import BigNumber from "bignumber.js";
 
 describe("Aave", () => {
+  const POOL_ADDRESS_PROVIDER_ARBITRUM = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'
   let signer: SignerWithAddress;
-  // const account = "0xde33f4573bB315939a9D1E65522575E1a9fC3e74";
-  const account = "0xF1229410497686300cca7Bf6CCa3ba582cF872f7";
+  const account = "0x545358c58C1dE83b54759f1A64487c83Cb6fdf26";
 
   before(async () => {
     [signer] = await ethers.getSigners();
@@ -18,14 +18,28 @@ describe("Aave", () => {
   describe("Aave V3 Resolver", () => {
     let resolver: InstaAaveV3ResolverArbitrum;
     before(async () => {
+      await hre.network.provider.request({
+        method: "hardhat_reset",
+        params: [
+          {
+            forking: {
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              jsonRpcUrl: hre.config.networks.arbitrum.url,
+              blockNumber: 261807484,
+            },
+          },
+        ],
+      });
+
       const deployer = new InstaAaveV3ResolverArbitrum__factory(signer);
       resolver = await deployer.deploy();
       await resolver.deployed();
     });
 
     it("should get user configurations and reserves list", async () => {
-      const reservesList = await resolver.getReservesList();
-      const reserves = await resolver.getConfiguration(account);
+      const reservesList = await resolver.getReservesList(POOL_ADDRESS_PROVIDER_ARBITRUM);
+      const reserves = await resolver.getConfiguration(account, POOL_ADDRESS_PROVIDER_ARBITRUM);
       console.log("Collateral Reserves Address");
       console.log(reservesList);
       console.log(reserves);
@@ -46,7 +60,7 @@ describe("Aave", () => {
       const results = await resolver.callStatic.getPosition(account, [
         "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
         "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
-      ]);
+      ], POOL_ADDRESS_PROVIDER_ARBITRUM);
       const userTokenData = results[1];
       const tokenData = results[2];
       const userData = results[0];
@@ -74,7 +88,7 @@ describe("Aave", () => {
     });
 
     it("Returns the user's positions on AaveV3 for all assets", async () => {
-      const results = await resolver.callStatic.getPositionAll(account);
+      const results = await resolver.callStatic.getPositionAll(account, POOL_ADDRESS_PROVIDER_ARBITRUM);
       const userTokenData = results[1];
       const tokenData = results[2];
       const userData = results[0];
@@ -189,7 +203,7 @@ describe("Aave", () => {
         }
         console.log();
 
-        console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);
+        // console.log(`E-Mode category: ${tokenData[i].token.eModeCategory}`);
         console.log(
           "Debt ceiling: ",
           formatUnits(tokenData[i].token.debtCeiling, tokenData[i].token.debtCeilingDecimals),
@@ -202,10 +216,7 @@ describe("Aave", () => {
     });
 
     it("Returns the e-mode category details of e-modeID", async () => {
-      const emodeData = await resolver.getEmodeCategoryData(1, [
-        "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-        "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
-      ]);
+      const emodeData = await resolver.getEmodeCategoryData(1, POOL_ADDRESS_PROVIDER_ARBITRUM);
       console.log();
       console.log("*************************************************");
       console.log("E-Mode category Data");
@@ -213,8 +224,9 @@ describe("Aave", () => {
       console.log(`e-mode LTV: ${emodeData.data.ltv}`);
       console.log(`e-mode liquidation threshold: ${emodeData.data.liquidationThreshold}`);
       console.log(`e-mode liquidation bonus: ${emodeData.data.liquidationBonus}`);
-      console.log(`e-mode price oracle: ${emodeData.data.priceSource}`);
       console.log(`e-mode label: ${emodeData.data.label}`);
+      console.log(`e-mode is colleteral bitmap: ${emodeData.data.isCollateralBitmap}`);
+      console.log(`e-mode is borrowable bitmap: ${emodeData.data.isBorrowableBitmap}`);
     });
 
     it("Returns the ethPrice", async () => {
