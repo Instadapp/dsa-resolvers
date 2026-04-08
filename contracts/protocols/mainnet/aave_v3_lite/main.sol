@@ -34,7 +34,7 @@ contract AaveV3Resolver is AaveV3Helper {
         address[] memory _tokens = new address[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            _tokens[i] = tokens[i] == getXplAddr() ? getWXplAddr() : tokens[i];
+            _tokens[i] = tokens[i] == getEthAddr() ? getWethAddr() : tokens[i];
         }
 
         AaveV3UserData memory userDetails = getUserData(user, poolAddressProvider);
@@ -109,6 +109,6 @@ contract AaveV3Resolver is AaveV3Helper {
     }
 }
 
-contract InstaAaveV3ResolverPlasma is AaveV3Resolver {
+contract InstaAaveV3ResolverLite is AaveV3Resolver {
     string public constant name = "AaveV3-Resolver-v1.2";
 }

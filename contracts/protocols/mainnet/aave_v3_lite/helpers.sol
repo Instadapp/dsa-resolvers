@@ -5,47 +5,47 @@ import { DSMath } from "../../../utils/dsmath.sol";
 
 contract AaveV3Helper is DSMath {
     /**
-     *@dev Returns XPL address
+     *@dev Returns ethereum address
      */
-    function getXplAddr() internal pure returns (address) {
+    function getEthAddr() internal pure returns (address) {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
     /**
-     *@dev Returns WXPL address
+     *@dev Returns WETH address
      */
-    function getWXplAddr() internal pure returns (address) {
-        return 0x6100E367285b01F48D07953803A2d8dCA5D19873; //Plasma WXPL Address
+    function getWethAddr() internal pure returns (address) {
+        return 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; //Mainnet WETH Address
     }
 
     /**
      *@dev Returns Aave Data Provider Address
      */
     function getAaveDataProvider() internal pure returns (address) {
-        return 0xf2D6E38B407e31E7E7e4a16E6769728b76c7419F; //Plasma address
+        return 0x0a16f2FCC0D44FaE41cc54e079281D84A363bECD; //Mainnet address
     }
 
     function getAaveIncentivesAddress() internal pure returns (address) {
-        return 0x3A57eAa3Ca3794D66977326af7991eB3F6dD5a5A; //Plasma IncentivesProxyAddress
+        return 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb; // Mainnet IncentivesProxyAddress
     }
 
     /**
      *@dev Returns AaveOracle Address
      */
     function getAaveOracle() internal pure returns (address) {
-        return 0x33E0b3fc976DC9C516926BA48CfC0A9E10a2aAA5; //Plasma address
+        return 0x54586bE62E3c3580375aE3723C145253060Ca0C2; //Mainnet address
     }
 
     function getUiIncetivesProvider() internal pure returns (address) {
-        return 0xcb85C501B3A5e9851850d66648d69B26A4c90942;
+        return 0x5a40cDe2b76Da2beD545efB3ae15708eE56aAF9c;
     }
 
     function getChainLinkFeed() internal pure returns (address) {
-        return 0xF932477C37715aE6657Ab884414Bd9876FE3f750;
+        return 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     }
 
     function getRewardsController() internal pure returns (address) {
-        return 0x3A57eAa3Ca3794D66977326af7991eB3F6dD5a5A;
+        return 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
     }
 
     struct BaseCurrency {
@@ -127,6 +127,7 @@ contract AaveV3Helper is DSMath {
         bool isPaused;
     }
 
+    //Rewards details
     struct ReserveIncentiveData {
         address underlyingAsset;
         IncentivesData aIncentiveData;
@@ -154,7 +155,7 @@ contract AaveV3Helper is DSMath {
     }
 
     struct TokenPrice {
-        uint256 priceInXpl;
+        uint256 priceInEth;
         uint256 priceInUsd;
     }
 
@@ -185,8 +186,9 @@ contract AaveV3Helper is DSMath {
     ) internal view returns (ReserveIncentiveData[] memory incentives) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
 
-        AggregatedReserveIncentiveData[] memory _aggregateIncentive = uiIncentives.getReservesIncentivesData(poolInfo.provider);
-        
+        AggregatedReserveIncentiveData[] memory _aggregateIncentive = uiIncentives.getReservesIncentivesData(
+            poolInfo.provider
+        );
         incentives = new ReserveIncentiveData[](_aggregateIncentive.length);
         for (uint256 i = 0; i < _aggregateIncentive.length; i++) {
             address[] memory rToken = new address[](1);
@@ -237,14 +239,14 @@ contract AaveV3Helper is DSMath {
     function getTokensPrices(
         uint256 basePriceInUSD,
         address[] memory tokens
-    ) internal view returns (TokenPrice[] memory tokenPrices, uint256 xplPrice) {
+    ) internal view returns (TokenPrice[] memory tokenPrices, uint256 ethPrice) {
         uint256[] memory _tokenPrices = aaveOracle.getAssetsPrices(tokens);
         tokenPrices = new TokenPrice[](_tokenPrices.length);
-        xplPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
+        ethPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
 
         for (uint256 i = 0; i < _tokenPrices.length; i++) {
             tokenPrices[i] = TokenPrice(
-                (_tokenPrices[i] * basePriceInUSD * 10 ** 10) / xplPrice,
+                (_tokenPrices[i] * basePriceInUSD * 10 ** 10) / ethPrice,
                 wmul(_tokenPrices[i] * 10 ** 10, basePriceInUSD * 10 ** 10)
             );
         }
@@ -419,6 +421,7 @@ contract AaveV3Helper is DSMath {
         }
 
         aaveTokenData.token = getV3Token(token, poolInfo.pool, poolInfo.aaveData);
+
         aaveTokenData.reserves = getAaveTokensData(token, poolAddressProvider);
     }
 
@@ -450,8 +453,8 @@ contract AaveV3Helper is DSMath {
         }
     }
 
-    function getXplPrice() public view returns (uint256 xplPrice) {
-        xplPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
+    function getEthPrice() public view returns (uint256 ethPrice) {
+        ethPrice = uint256(AggregatorV3Interface(getChainLinkFeed()).latestAnswer());
     }
 
     function getPrices(bytes memory data) internal pure returns (uint256) {

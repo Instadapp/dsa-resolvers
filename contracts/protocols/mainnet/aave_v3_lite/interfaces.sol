@@ -197,7 +197,7 @@ interface IPriceOracleGetter {
     function BASE_CURRENCY() external view returns (address);
 
     // @notice Returns the base currency unit
-    // @dev 1 XPL for XPL, 1e8 for USD.
+    // @dev 1 ether for ETH, 1e8 for USD.
     function BASE_CURRENCY_UNIT() external view returns (uint256);
 
     // @notice Returns the asset price in the base currency
