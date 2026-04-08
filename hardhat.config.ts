@@ -65,7 +65,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "base") return `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "plasma") return `https://rpc.plasma.to`;
   else if (networkType === "bsc") return `https://1rpc.io/bnb`;
-  else return `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`;
+  else return `https://eth.llamarpc.com`;
 }
 
 const config: HardhatUserConfig = {
@@ -114,9 +114,9 @@ const config: HardhatUserConfig = {
       gasPrice: 0.1 * 10 ** 9,
     },
     mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
+      url: `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
-      gasPrice: 15000000000,
+      gasPrice: 0.045 * 10 ** 9,
     },
     base: {
       url: `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
@@ -211,7 +211,7 @@ const config: HardhatUserConfig = {
       mainnet: String(process.env.SCAN_API_KEY),
       optimisticEthereum: String(process.env.SCAN_API_KEY),
       polygon: String(process.env.SCAN_API_KEY),
-      arbitrumOne: String(process.env.SCAN_API_KEY),
+      arbitrum: String(process.env.SCAN_API_KEY),
       avalanche: String(process.env.SNOWTRACE_API),
       opera: String(process.env.SCAN_API_KEY),
       base: String(process.env.SCAN_API_KEY),
@@ -219,6 +219,14 @@ const config: HardhatUserConfig = {
       bsc: String(process.env.SCAN_API_KEY),
     },
     customChains: [
+      {
+        network: "mainnet",
+        chainId: 1,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=1",
+          browserURL: "https://etherscan.io",
+        },
+      },
       {
         network: "plasma",
         chainId: 9745,
@@ -243,6 +251,14 @@ const config: HardhatUserConfig = {
           browserURL: "https://bscscan.org",
         },
       },
+      {
+        network: "arbitrum",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
+          browserURL: "https://arbiscan.io",
+        },
+      }
     ],
   },
 };
