@@ -64,7 +64,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
   else if (networkType === "base") return `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "plasma") return `https://rpc.plasma.to`;
-  else if (networkType === "bsc") return `https://1rpc.io/bnb`;
+  else if (networkType === "bsc") return `https://bnb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else return `https://eth.llamarpc.com`;
 }
 
@@ -85,6 +85,7 @@ const config: HardhatUserConfig = {
       forking: {
         url: String(getNetworkUrl(String(process.env.networkType))),
       },
+      // hardfork: "cancun", // TODO: enable once Hardhat supports Cancun — needed for BSC Venus oracle fork tests
     },
     goerli: createTestnetConfig("goerli"),
     kovan: createTestnetConfig("kovan"),
@@ -109,7 +110,7 @@ const config: HardhatUserConfig = {
       accounts: [`0x${process.env.PRIVATE_KEY}`],
     },
     bsc: {
-      url: `https://1rpc.io/bnb`,
+      url: `https://bnb-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
       gasPrice: 0.1 * 10 ** 9,
     },

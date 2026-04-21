@@ -1,7 +1,7 @@
 import hre from "hardhat";
 
 async function main() {
-  const address = "0x2fDd379D7Ca2B7d154d61eD8488189Cb38084D52";
+  const address = "0xA126B30C6719dD676B140386f45a4A254A88924B";
   const chain = String(hre.network.name);
   if (chain !== "hardhat") {
     await hre.run("verify:verify", {

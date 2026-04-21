@@ -37,7 +37,7 @@
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.2.0",
     "fs-extra": "^10.0.0",
-    "hardhat": "^2.14.0",
+    "hardhat": "^2.19.2",
     "hardhat-gas-reporter": "^1.0.6",
     "inquirer": "^8.1.1",
     "lint-staged": "^11.0.0",
