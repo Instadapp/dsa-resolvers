@@ -29,6 +29,7 @@ const chainIds = {
   optimism: 10,
   fantom: 250,
   plasma: 9745,
+  ink: 57073,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -64,6 +65,7 @@ function getNetworkUrl(networkType: string) {
   else if (networkType === "fantom") return `https://rpc.ftm.tools/`;
   else if (networkType === "base") return `https://base-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "plasma") return `https://rpc.plasma.to`;
+  else if (networkType === "ink") return `https://ink-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
   else if (networkType === "bsc") return `https://1rpc.io/bnb`;
   else return `https://eth.llamarpc.com`;
 }
@@ -127,6 +129,11 @@ const config: HardhatUserConfig = {
       url: `https://rpc.plasma.to`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
       gasPrice: 100000,
+    },
+    ink: {
+      url: `https://ink-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      chainId: 57073,
     },
   },
   paths: {
@@ -217,6 +224,7 @@ const config: HardhatUserConfig = {
       base: String(process.env.SCAN_API_KEY),
       plasma: String(process.env.SCAN_API_KEY),
       bsc: String(process.env.SCAN_API_KEY),
+      ink: String(process.env.SCAN_API_KEY),
     },
     customChains: [
       {
@@ -257,6 +265,15 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
           browserURL: "https://arbiscan.io",
+        },
+      },
+      {
+        network: "ink",
+        chainId: 57073,
+        urls: {
+          // Etherscan V2 doesn't support Ink (57073); using Blockscout's Etherscan-compatible API.
+          apiURL: "https://explorer.inkonchain.com/api",
+          browserURL: "https://explorer.inkonchain.com",
         },
       }
     ],
