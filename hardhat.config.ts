@@ -271,7 +271,8 @@ const config: HardhatUserConfig = {
         network: "ink",
         chainId: 57073,
         urls: {
-          apiURL: "https://api.etherscan.io/v2/api?chainid=57073",
+          // Etherscan V2 doesn't support Ink (57073); using Blockscout's Etherscan-compatible API.
+          apiURL: "https://explorer.inkonchain.com/api",
           browserURL: "https://explorer.inkonchain.com",
         },
       }
