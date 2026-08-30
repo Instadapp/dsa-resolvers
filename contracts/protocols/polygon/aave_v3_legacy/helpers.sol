@@ -361,19 +361,24 @@ contract AaveV3Helper is DSMath {
     function getV3Token(address token) internal view returns (AaveV3Token memory tokenData) {
         (
             (tokenData.borrowCap, tokenData.supplyCap),
-            tokenData.eModeCategory,
             tokenData.debtCeiling,
             tokenData.debtCeilingDecimals,
             tokenData.liquidationFee,
             tokenData.isPaused
         ) = (
             aaveData.getReserveCaps(token),
-            aaveData.getReserveEModeCategory(token),
             aaveData.getDebtCeiling(token),
             aaveData.getDebtCeilingDecimals(),
             aaveData.getLiquidationProtocolFee(token),
             aaveData.getPaused(token)
         );
+        // getReserveEModeCategory was removed from the PoolDataProvider in Aave v3.2
+        // (eMode rework). Zero the field if the live DP no longer exposes it.
+        try aaveData.getReserveEModeCategory(token) returns (uint256 eModeCategory_) {
+            tokenData.eModeCategory = eModeCategory_;
+        } catch {
+            tokenData.eModeCategory = 0;
+        }
         {
             (tokenData.isolationBorrowEnabled) = getIsolationBorrowStatus(token);
         }
