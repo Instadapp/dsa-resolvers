@@ -181,7 +181,9 @@ contract AaveV3Helper is DSMath {
         address[] memory assets,
         RewardsInfo[] memory _rewards
     ) internal view returns (UserRewards memory unclaimedRewards) {
-        if (_rewards.length > 0) {
+        // zd79: skip when the asset is address(0) — Aave v3.3 removed stable debt, so
+        // sIncentiveData.tokenAddress is address(0); getAllUserRewards would revert on it.
+        if (_rewards.length > 0 && assets[0] != address(0)) {
             (address[] memory reserves, uint256[] memory rewards) = rewardsCntr.getAllUserRewards(assets, user);
             unclaimedRewards = UserRewards(reserves, rewards);
         }
@@ -193,9 +195,26 @@ contract AaveV3Helper is DSMath {
     ) internal view returns (ReserveIncentiveData[] memory incentives) {
         PoolSpecificInfo memory poolInfo = getPoolSpecificInfo(poolAddressProvider);
 
-        AggregatedReserveIncentiveData[] memory _aggregateIncentive = uiIncentives.getReservesIncentivesData(
-            poolInfo.provider
-        );
+        // zd79: the Aave periphery UiIncentiveDataProviderV3 (0x5c5228aC8BC1528482514aF3e27E692495148717)
+        // currently reverts: it unconditionally reads reward price oracles, and one reward's Chainlink
+        // EACAggregatorProxy (0x97371dF4492605486e23Da797fA68e55Fc38a13f) has been deprecated —
+        // aggregator() == address(0) — so decimals()/latestAnswer() on it revert. That contract is
+        // outside our control; degrade gracefully to an empty incentives array instead of reverting
+        // the whole position call.
+        try uiIncentives.getReservesIncentivesData(poolInfo.provider) returns (
+            AggregatedReserveIncentiveData[] memory _aggregateIncentive
+        ) {
+            incentives = _buildIncentives(user, _aggregateIncentive);
+        } catch {
+            incentives = new ReserveIncentiveData[](0);
+        }
+    }
+
+    function _buildIncentives(address user, AggregatedReserveIncentiveData[] memory _aggregateIncentive)
+        internal
+        view
+        returns (ReserveIncentiveData[] memory incentives)
+    {
         incentives = new ReserveIncentiveData[](_aggregateIncentive.length);
         for (uint256 i = 0; i < _aggregateIncentive.length; i++) {
             address[] memory rToken = new address[](1);
